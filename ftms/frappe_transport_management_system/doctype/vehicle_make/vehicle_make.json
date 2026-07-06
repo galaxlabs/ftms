@@ -1,0 +1,35 @@
+{
+ "allow_rename": 1,
+ "autoname": "field:make_name",
+ "creation": "2026-07-02 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["make_name", "make_name_ar", "make_code", "country_of_origin", "image", "status", "is_active", "notes"],
+ "fields": [
+  {"fieldname": "make_name", "fieldtype": "Data", "in_list_view": 1, "label": "Make Name", "reqd": 1, "unique": 1},
+  {"fieldname": "make_name_ar", "fieldtype": "Data", "label": "Make Name Arabic"},
+  {"fieldname": "make_code", "fieldtype": "Data", "in_list_view": 1, "label": "Make Code"},
+  {"fieldname": "country_of_origin", "fieldtype": "Data", "label": "Country of Origin"},
+  {"fieldname": "image", "fieldtype": "Attach Image", "label": "Logo"},
+  {"default": "Active", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Draft\nActive\nInactive"},
+  {"default": "1", "fieldname": "is_active", "fieldtype": "Check", "label": "Is Active"},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-02 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Frappe Transport Management System",
+ "name": "Vehicle Make",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1}
+ ],
+ "search_fields": "make_name, make_code, country_of_origin",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "make_name",
+ "track_changes": 1
+}
