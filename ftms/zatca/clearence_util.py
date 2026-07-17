@@ -31,7 +31,8 @@ def generate_einvoice(doc, submit_now=True, skip_success_message=False):
     zatca_enabled = company.get("enable_zatca_e_invoicing")
     if not zatca_enabled and not is_test:
         return
-    if company.country != "Saudi Arabia":
+    company_country = company.get("country")
+    if company_country and company_country != "Saudi Arabia":
         return
     if zatca_enabled and company.get("zatca_phase") != "ZATCA Phase 2":
         return
@@ -74,13 +75,14 @@ def _get_config(company, doc):
     compliance = doc.get("compliance_csid") or doc.get("custom_compliance")
     if is_test:
         csid = frappe.get_doc("Compliance CSID", compliance)
+        compliance_csid = csid
     else:
         csid = frappe.get_doc("Production CSID", company.production_csid)
-    compliance_csid = frappe.get_doc("Compliance CSID", csid.compliance_csid)
+        compliance_csid = frappe.get_doc("Compliance CSID", csid.compliance_csid)
     csr_settings = frappe.get_doc("Zatca CSR Settings", compliance_csid.csr_settings)
     zatca_environment = frappe.get_doc("ZATCA Environment", csr_settings.zatca_environment)
     return {
-        "production_csid": csid if not doc.custom_is_zatca_test else None,
+        "production_csid": csid if not (doc.get("is_zatca_test") or doc.get("custom_is_zatca_test")) else None,
         "compliance_csid": compliance_csid,
         "csr_settings": csr_settings,
         "zatca_environment": zatca_environment,
@@ -225,7 +227,7 @@ def _save_xml(doc, xml_content):
         "is_private": False,
     })
     file_doc.insert()
-    doc.custom_invoice_xml = file_doc.file_url
+    _set_field(doc, "invoice_xml", file_doc.file_url)
 
 def _save_qr(doc, cleared_invoice_xml):
     if not cleared_invoice_xml:
@@ -262,7 +264,7 @@ def _save_qr(doc, cleared_invoice_xml):
             "is_private": False,
         })
         file_doc.insert()
-        doc.custom_invoice_qr_code = file_doc.file_url
+        _set_field(doc, "invoice_qr_code", file_doc.file_url)
 
 def _get_compliance_type(doc, customer_type):
     is_return = doc.get("is_return") or False
