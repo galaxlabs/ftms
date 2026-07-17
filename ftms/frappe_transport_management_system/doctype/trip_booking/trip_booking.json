@@ -6,7 +6,8 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "booking_title",
+   "company",
+   "booking_title",
   "booking_date",
   "trip",
   "route",
@@ -29,7 +30,8 @@
   "notes"
  ],
  "fields": [
-  {"fieldname": "booking_title", "fieldtype": "Data", "in_list_view": 1, "label": "Booking Title", "reqd": 1, "unique": 1},
+   {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Transportation Company", "reqd": 1},
+   {"fieldname": "booking_title", "fieldtype": "Data", "in_list_view": 1, "label": "Booking Title", "reqd": 1, "unique": 1},
   {"default": "Today", "fieldname": "booking_date", "fieldtype": "Date", "in_list_view": 1, "label": "Booking Date"},
   {"fieldname": "trip", "fieldtype": "Link", "in_list_view": 1, "label": "Trip", "options": "Trip"},
   {"fetch_from": "trip.route", "fieldname": "route", "fieldtype": "Link", "in_list_view": 1, "label": "Route", "options": "Route", "read_only": 1},

@@ -9,7 +9,7 @@ from ftms.tenant import company_filters, resolve_company
 def list_routes(company=None, limit=50):
 	filters = company_filters(company=company)
 	return frappe.get_all(
-		"FTMS Route",
+		"Route",
 		filters=filters,
 		fields=["name", "company", "route_title", "route_code", "source", "destination", "status"],
 		order_by="modified desc",
@@ -19,7 +19,7 @@ def list_routes(company=None, limit=50):
 
 @frappe.whitelist()
 def get_route(name, company=None):
-	doc = frappe.get_doc("FTMS Route", name)
+	doc = frappe.get_doc("Route", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
 	if resolved_company and doc.company != resolved_company:
 		frappe.throw("Not permitted for this company")

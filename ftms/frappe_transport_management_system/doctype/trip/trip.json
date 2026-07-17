@@ -6,7 +6,8 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "trip_title",
+   "company",
+   "trip_title",
   "trip_code",
   "trip_date",
   "trip_status",
@@ -60,7 +61,8 @@
   "trip_staff"
  ],
  "fields": [
-  {"fieldname": "trip_title", "fieldtype": "Data", "in_list_view": 1, "label": "Trip Title", "reqd": 1},
+   {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Transportation Company", "reqd": 1},
+   {"fieldname": "trip_title", "fieldtype": "Data", "in_list_view": 1, "label": "Trip Title", "reqd": 1},
   {"fieldname": "trip_code", "fieldtype": "Data", "label": "Trip Code", "unique": 1, "read_only": 1},
   {"default": "Today", "fieldname": "trip_date", "fieldtype": "Date", "in_list_view": 1, "label": "Trip Date", "reqd": 1},
   {"default": "Draft", "fieldname": "trip_status", "fieldtype": "Select", "in_list_view": 1, "label": "Trip Status", "options": "Draft\nScheduled\nDeparted\nArrived\nCompleted\nCancelled"},

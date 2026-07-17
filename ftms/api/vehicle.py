@@ -9,7 +9,7 @@ from ftms.tenant import company_filters, resolve_company
 def list_vehicles(company=None, limit=50):
 	filters = company_filters(company=company)
 	return frappe.get_all(
-		"FTMS Vehicle",
+		"Vehicle",
 		filters=filters,
 		fields=["name", "company", "vehicle_code", "vehicle_name", "plate_no", "vehicle_type", "status"],
 		order_by="modified desc",
@@ -19,7 +19,7 @@ def list_vehicles(company=None, limit=50):
 
 @frappe.whitelist()
 def get_vehicle(name, company=None):
-	doc = frappe.get_doc("FTMS Vehicle", name)
+	doc = frappe.get_doc("Vehicle", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
 	if resolved_company and doc.company != resolved_company:
 		frappe.throw("Not permitted for this company")

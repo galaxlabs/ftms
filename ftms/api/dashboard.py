@@ -10,8 +10,8 @@ def overview(company=None):
 	company = resolve_company(company=company, allow_missing=True)
 	filters = company_filters(company=company)
 
-	trip_count = frappe.db.count("FTMS Trip", filters=filters)
-	booking_count = frappe.db.count("FTMS Trip Booking", filters=filters)
+	trip_count = frappe.db.count("Trip", filters=filters)
+	booking_count = frappe.db.count("Trip Booking", filters=filters)
 	invoice_where = ["1=1"]
 	invoice_params = {}
 	if company:
@@ -20,7 +20,7 @@ def overview(company=None):
 	invoice_stats = frappe.db.sql(
 		f"""
 		SELECT COUNT(name) AS invoice_count, COALESCE(SUM(COALESCE(vat_amount, 0)), 0) AS vat_total
-		FROM `tabFTMS Trip Invoice`
+		FROM `tabTrip Invoice`
 		WHERE {' AND '.join(invoice_where)}
 		""",
 		invoice_params,

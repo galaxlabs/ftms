@@ -1,0 +1,37 @@
+{
+  "actions": [],
+  "autoname": "field:environment_name",
+  "creation": "2026-07-17 00:00:00",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "environment_name",
+    "environment",
+    "section_urls",
+    "compliance_csid_api",
+    "production_csid_api",
+    "invoice_clearance_api",
+    "invoice_reporting_api"
+  ],
+  "fields": [
+    {"fieldname": "environment_name", "fieldtype": "Data", "in_list_view": 1, "label": "Environment Name", "reqd": 1, "unique": 1},
+    {"default": "Sandbox Portal", "fieldname": "environment", "fieldtype": "Select", "label": "Environment", "options": "Sandbox Portal\nSimulation Portal\nProduction Portal"},
+    {"fieldname": "section_urls", "fieldtype": "Section Break", "label": "API URLs"},
+    {"default": "https://gw-apic-gov.gazt.gov.sa/e-invoicing/developer-portal/compliance", "fieldname": "compliance_csid_api", "fieldtype": "Data", "label": "Compliance CSID API"},
+    {"default": "https://gw-apic-gov.gazt.gov.sa/e-invoicing/developer-portal/production/csids", "fieldname": "production_csid_api", "fieldtype": "Data", "label": "Production CSID API"},
+    {"default": "https://gw-apic-gov.gazt.gov.sa/e-invoicing/developer-portal/production/clearance/single", "fieldname": "invoice_clearance_api", "fieldtype": "Data", "label": "Invoice Clearance API"},
+    {"default": "https://gw-apic-gov.gazt.gov.sa/e-invoicing/developer-portal/production/reporting/single", "fieldname": "invoice_reporting_api", "fieldtype": "Data", "label": "Invoice Reporting API"}
+  ],
+  "grid_page_length": 50,
+  "modified": "2026-07-17 00:00:00",
+  "modified_by": "Administrator",
+  "module": "Frappe Transport Management System",
+  "name": "ZATCA Environment",
+  "naming_rule": "By fieldname",
+  "permissions": [
+    {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1}
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "track_changes": 1
+}

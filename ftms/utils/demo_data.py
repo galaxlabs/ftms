@@ -24,11 +24,11 @@ def seed_demo_transport_cycle(company, route=None):
 	company_doc = frappe.get_doc("Transportation Company", company)
 
 	if not route:
-		route = frappe.db.exists("FTMS Route", {"company": company, "route_title": "Demo Route"})
+		route = frappe.db.exists("Route", {"company": company, "route_title": "Demo Route"})
 		if not route:
 			route_doc = frappe.get_doc(
 				{
-					"doctype": "FTMS Route",
+					"doctype": "Route",
 					"company": company,
 					"route_title": "Demo Route",
 					"source": "Demo Origin",
@@ -39,26 +39,26 @@ def seed_demo_transport_cycle(company, route=None):
 			route_doc.insert(ignore_permissions=True)
 			route = route_doc.name
 
-	vehicle_category = frappe.db.exists("FTMS Vehicle Category", "Passenger") or _ensure_doc(
-		"FTMS Vehicle Category", "Passenger", {"category_name": "Passenger", "status": "Active"}
+	vehicle_category = frappe.db.exists("Vehicle Category", "Passenger") or _ensure_doc(
+		"Vehicle Category", "Passenger", {"category_name": "Passenger", "status": "Active"}
 	)
-	vehicle_type = frappe.db.exists("FTMS Vehicle Type", "Bus") or _ensure_doc(
-		"FTMS Vehicle Type", "Bus", {"type_name": "Bus", "vehicle_category": vehicle_category, "default_seating_capacity": 30, "status": "Active"}
+	vehicle_type = frappe.db.exists("Vehicle Type", "Bus") or _ensure_doc(
+		"Vehicle Type", "Bus", {"type_name": "Bus", "vehicle_category": vehicle_category, "default_seating_capacity": 30, "status": "Active"}
 	)
-	vehicle_make = frappe.db.exists("FTMS Vehicle Make", "Toyota") or _ensure_doc(
-		"FTMS Vehicle Make", "Toyota", {"make_name": "Toyota", "country_of_origin": "Japan", "status": "Active"}
+	vehicle_make = frappe.db.exists("Vehicle Make", "Toyota") or _ensure_doc(
+		"Vehicle Make", "Toyota", {"make_name": "Toyota", "country_of_origin": "Japan", "status": "Active"}
 	)
-	vehicle_model = frappe.db.exists("FTMS Vehicle Model", "Coaster") or _ensure_doc(
-		"FTMS Vehicle Model",
+	vehicle_model = frappe.db.exists("Vehicle Model", "Coaster") or _ensure_doc(
+		"Vehicle Model",
 		"Coaster",
 		{"model_name": "Coaster", "vehicle_make": vehicle_make, "vehicle_type": vehicle_type, "vehicle_category": vehicle_category, "seat_capacity": 30, "status": "Active"},
 	)
 
-	vehicle = frappe.db.exists("FTMS Vehicle", {"company": company, "vehicle_name": "Demo Bus"})
+	vehicle = frappe.db.exists("Vehicle", {"company": company, "vehicle_name": "Demo Bus"})
 	if not vehicle:
 		vehicle_doc = frappe.get_doc(
 			{
-				"doctype": "FTMS Vehicle",
+				"doctype": "Vehicle",
 				"company": company,
 				"vehicle_name": "Demo Bus",
 				"vehicle_make": vehicle_make,
@@ -89,7 +89,7 @@ def seed_demo_transport_cycle(company, route=None):
 
 	trip = frappe.get_doc(
 		{
-			"doctype": "FTMS Trip",
+			"doctype": "Trip",
 			"company": company,
 			"route": route,
 			"vehicle": vehicle,
@@ -107,7 +107,7 @@ def seed_demo_transport_cycle(company, route=None):
 
 	booking = frappe.get_doc(
 		{
-			"doctype": "FTMS Trip Booking",
+			"doctype": "Trip Booking",
 			"company": company,
 			"trip": trip.name,
 			"booking_title": f"{company_doc.company_name} Demo Booking",
@@ -123,7 +123,7 @@ def seed_demo_transport_cycle(company, route=None):
 
 	invoice = frappe.get_doc(
 		{
-			"doctype": "FTMS Trip Invoice",
+			"doctype": "Trip Invoice",
 			"company": company,
 			"trip": trip.name,
 			"customer": customer,

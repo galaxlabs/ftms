@@ -34,10 +34,10 @@ def create_booking(**kwargs):
 	trip = data.get("trip")
 	route = data.get("route")
 	if trip and not route:
-		route = frappe.db.get_value("FTMS Trip", trip, "route")
+		route = frappe.db.get_value("Trip", trip, "route")
 	company = data.get("company")
 	if trip and not company:
-		company = frappe.db.get_value("FTMS Trip", trip, "company")
+		company = frappe.db.get_value("Trip", trip, "company")
 
 	passengers = _coerce_passengers(data.get("passengers"))
 	seat_count = data.get("seat_count") or data.get("passenger_count") or len(passengers) or 1
@@ -47,7 +47,7 @@ def create_booking(**kwargs):
 
 	doc = frappe.get_doc(
 		{
-			"doctype": "FTMS Trip Booking",
+			"doctype": "Trip Booking",
 			"company": company,
 			"booking_title": booking_title,
 			"booking_date": data.get("booking_date") or today(),
@@ -82,7 +82,7 @@ def create_booking(**kwargs):
 def list_bookings(company=None, limit=50):
 	filters = company_filters(company=company)
 	return frappe.get_all(
-		"FTMS Trip Booking",
+		"Trip Booking",
 		filters=filters,
 		fields=["name", "company", "booking_title", "booking_date", "customer_name", "mobile_no", "trip", "route", "booking_status"],
 		order_by="booking_date desc, modified desc",
@@ -92,7 +92,7 @@ def list_bookings(company=None, limit=50):
 
 @frappe.whitelist()
 def get_booking(name, company=None):
-	doc = frappe.get_doc("FTMS Trip Booking", name)
+	doc = frappe.get_doc("Trip Booking", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
 	if resolved_company and getattr(doc, "company", None) != resolved_company:
 		frappe.throw("Not permitted for this company")

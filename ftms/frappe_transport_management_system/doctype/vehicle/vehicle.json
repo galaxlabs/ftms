@@ -6,7 +6,8 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "vehicle_code",
+   "company",
+   "vehicle_code",
   "vehicle_name",
   "vehicle_name_ar",
   "vehicle_make",
@@ -35,7 +36,8 @@
   "documents"
  ],
  "fields": [
-  {"fieldname": "vehicle_code", "fieldtype": "Data", "in_list_view": 1, "label": "Vehicle Code", "read_only": 1, "unique": 1},
+   {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Transportation Company", "reqd": 1},
+   {"fieldname": "vehicle_code", "fieldtype": "Data", "in_list_view": 1, "label": "Vehicle Code", "read_only": 1, "unique": 1},
   {"fieldname": "vehicle_name", "fieldtype": "Data", "in_list_view": 1, "label": "Vehicle Name", "reqd": 1},
   {"fieldname": "vehicle_name_ar", "fieldtype": "Data", "label": "Vehicle Name Arabic"},
   {"fieldname": "vehicle_make", "fieldtype": "Link", "in_list_view": 1, "label": "Make", "options": "Vehicle Make", "reqd": 1},

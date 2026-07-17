@@ -1,0 +1,66 @@
+@font-face {
+  font-family: 'Almarai';
+  src: url('/assets/ftms/fonts/Almarai-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Almarai';
+  src: url('/assets/ftms/fonts/Almarai-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Almarai';
+  src: url('/assets/ftms/fonts/Almarai-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Almarai';
+  src: url('/assets/ftms/fonts/Almarai-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Noto Naskh Arabic';
+  src: url('/assets/ftms/fonts/NotoNaskhArabic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Noto Sans Arabic';
+  src: url('/assets/ftms/fonts/NotoSansArabic-VariableFont_wdth,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Noto Kufi Arabic';
+  src: url('/assets/ftms/fonts/NotoKufiArabic-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Noto Kufi Arabic';
+  src: url('/assets/ftms/fonts/NotoKufiArabic-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  src: url('/assets/ftms/fonts/IBMPlexSansArabic-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  src: url('/assets/ftms/fonts/IBMPlexSansArabic-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Saudi Riyal';
+  src: url('/assets/ftms/fonts/saudiriyalsymbol.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

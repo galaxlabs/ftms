@@ -1,0 +1,58 @@
+DocType,Transportation Company,شركة النقل
+DocType,Trip,رحلة
+DocType,Route,طريق
+DocType,Vehicle,مركبة
+DocType,Vehicle Make,صنع المركبة
+DocType,Vehicle Model,موديل المركبة
+DocType,Vehicle Type,نوع المركبة
+DocType,Vehicle Category,فئة المركبة
+DocType,Customer,عميل
+DocType,Employee,موظف
+DocType,Trip Booking,حجز رحلة
+DocType,Trip Invoice,فاتورة رحلة
+DocType,Trip Passenger,راكب رحلة
+DocType,Trip Pricing Rule,قاعدة تسعير رحلة
+DocType,Trip Invoice Item,بند فاتورة رحلة
+DocType,Trip Staff Assignment,تعيين موظف رحلة
+DocType,Transport Settings,إعدادات النقل
+DocType,Employee Transport Contract,عقد نقل موظف
+DocType,Passenger Identity Map,هوية الراكب
+DocType,User Company Link,ربط مستخدم بشركة
+DocType,Route Stop,محطة طريق
+DocType,Contract Employee,موظف عقد
+DocType,Contract Passenger,راكب عقد
+DocType,Vehicle Document,وثيقة مركبة
+DocType,Vehicle Inspection Checklist Item,بند فحص المركبة
+DocType,Vehicle Inspection Item,بند فحص
+DocType,Vehicle Inspection Log,سجل فحص المركبة
+DocType,Transportation Domain,مجال النقل
+DocType,Tenant Policy,سياسة المستأجر
+DocType,ZATCA Environment,بيئة زاتكا
+DocType,Zatca CSR Settings,إعدادات CSR زاتكا
+DocType,Compliance CSID,CSID الامتثال
+DocType,Production CSID,CSID الإنتاج
+DocType,Zatca Transactions,معاملات زاتكا
+Field,Transportation Company,company_name_ar,اسم الشركة (عربي)
+Field,Transportation Company,vat_no,الرقم الضريبي
+Field,Transportation Company,tax_id,المعرف الضريبي
+Field,Transportation Company,cr_no,رقم السجل التجاري
+Field,Trip,hijri_date,التاريخ الهجري
+Field,Trip,trip_title,عنوان الرحلة
+Field,Trip,trip_status,حالة الرحلة
+Field,Route,route_name_ar,اسم الطريق (عربي)
+Field,Route,source,من
+Field,Route,destination,إلى
+Field,Vehicle,vehicle_name_ar,اسم المركبة (عربي)
+Field,Vehicle,plate_no_ar,رقم اللوحة (عربي)
+Field,Vehicle,vehicle_make,صنع المركبة
+Field,Vehicle,vehicle_model,موديل المركبة
+Field,Customer,customer_name_ar,اسم العميل (عربي)
+Field,Employee,employee_name_ar,اسم الموظف (عربي)
+Field,Employee,national_id,رقم الهوية
+Field,Vehicle Type,type_name_ar,اسم النوع (عربي)
+Field,Vehicle Make,make_name_ar,اسم الصنع (عربي)
+Field,Vehicle Model,model_name_ar,اسم الموديل (عربي)
+Field,Vehicle Category,category_name_ar,اسم الفئة (عربي)
+Field,Trip Passenger,passenger_name_ar,اسم الراكب (عربي)
+Field,Passenger Identity Map,passenger_name_ar,اسم الراكب (عربي)
+Field,Route Stop,stop_name_ar,اسم المحطة (عربي)

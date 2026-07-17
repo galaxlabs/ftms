@@ -1,0 +1,11 @@
+[
+ {"doctype": "Custom Field", "dt": "Address", "fieldname": "sb_location", "fieldtype": "Section Break", "label": "Location & Map", "insert_after": "email_id"},
+ {"doctype": "Custom Field", "dt": "Address", "fieldname": "latitude", "fieldtype": "Float", "label": "Latitude", "insert_after": "sb_location"},
+ {"doctype": "Custom Field", "dt": "Address", "fieldname": "longitude", "fieldtype": "Float", "label": "Longitude", "insert_after": "latitude"},
+ {"doctype": "Custom Field", "dt": "Address", "fieldname": "map_view", "fieldtype": "HTML", "label": "Map View", "insert_after": "longitude", "read_only": 1},
+ {"doctype": "Custom Field", "dt": "Address", "fieldname": "sb_zatca", "fieldtype": "Section Break", "label": "Saudi Address (ZATCA)", "insert_after": "map_view"},
+ {"doctype": "Custom Field", "dt": "Address", "fieldname": "building_no", "fieldtype": "Data", "label": "Building Number", "insert_after": "sb_zatca", "length": 4},
+ {"doctype": "Custom Field", "dt": "Address", "fieldname": "street_name", "fieldtype": "Data", "label": "Street Name", "insert_after": "building_no"},
+ {"doctype": "Custom Field", "dt": "Address", "fieldname": "district", "fieldtype": "Data", "label": "District", "insert_after": "street_name"},
+ {"doctype": "Custom Field", "dt": "Address", "fieldname": "additional_no", "fieldtype": "Data", "label": "Additional Number", "insert_after": "district"}
+]
