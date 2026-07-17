@@ -125,7 +125,7 @@ def _submit_clearance_request(config, payload):
         headers=_get_headers(),
         auth=HTTPBasicAuth(csid.binary_security_token, csid.secret),
         json=payload,
-        timeout=30,
+        timeout=(10, 30),
     )
     return resp, {"duration": time.time() - start}
 
@@ -138,7 +138,7 @@ def _submit_reporting_request(config, payload):
         headers=_get_headers(),
         auth=HTTPBasicAuth(csid.binary_security_token, csid.secret),
         json=payload,
-        timeout=30,
+        timeout=(10, 30),
     )
     return resp, {"duration": time.time() - start}
 
