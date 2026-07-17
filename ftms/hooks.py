@@ -1,9 +1,11 @@
+from . import __version__ as app_version
+
 app_name = "ftms"
 app_title = "Frappe Transport Management System"
 app_publisher = "Galaxy Labs"
 app_description = "Unified transport, trip, fleet, and route management for Frappe"
 app_email = "galaxylab2020@gmail.com"
-app_license = "mit"
+app_license = "MIT"
 
 # Apps
 # ------------------

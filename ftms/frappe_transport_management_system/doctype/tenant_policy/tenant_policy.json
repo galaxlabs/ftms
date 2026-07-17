@@ -1,0 +1,39 @@
+{
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "domain",
+    "enforce_company_isolation",
+    "allow_cross_company_sync",
+    "allow_cross_company_chat",
+    "allow_auction_requests",
+    "allow_contracts",
+    "allow_zatca",
+    "allow_light_accounting",
+    "allow_background_jobs",
+    "require_company_approval",
+    "default_role_for_passenger"
+  ],
+  "fields": [
+    {"fieldname": "domain", "fieldtype": "Link", "label": "Domain", "options": "Transportation Domain"},
+    {"default": "1", "fieldname": "enforce_company_isolation", "fieldtype": "Check", "label": "Enforce Company Isolation"},
+    {"default": "0", "fieldname": "allow_cross_company_sync", "fieldtype": "Check", "label": "Allow Cross Company Sync"},
+    {"default": "0", "fieldname": "allow_cross_company_chat", "fieldtype": "Check", "label": "Allow Cross Company Chat"},
+    {"default": "1", "fieldname": "allow_auction_requests", "fieldtype": "Check", "label": "Allow Auction Requests"},
+    {"default": "1", "fieldname": "allow_contracts", "fieldtype": "Check", "label": "Allow Contracts"},
+    {"default": "1", "fieldname": "allow_zatca", "fieldtype": "Check", "label": "Allow ZATCA"},
+    {"default": "1", "fieldname": "allow_light_accounting", "fieldtype": "Check", "label": "Allow Light Accounting"},
+    {"default": "0", "fieldname": "allow_background_jobs", "fieldtype": "Check", "label": "Allow Background Jobs"},
+    {"default": "1", "fieldname": "require_company_approval", "fieldtype": "Check", "label": "Require Company Approval"},
+    {"default": "Passenger", "fieldname": "default_role_for_passenger", "fieldtype": "Select", "label": "Default Role for Passenger", "options": "Passenger\nViewer\nGuest"}
+  ],
+  "issingle": 1,
+  "links": [],
+  "modified": "2026-07-02 00:00:00",
+  "modified_by": "Administrator",
+  "module": "Frappe Transport Management System",
+  "name": "Tenant Policy",
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "print": 1, "share": 1, "email": 1}
+  ]
+}

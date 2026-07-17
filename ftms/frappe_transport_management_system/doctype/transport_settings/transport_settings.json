@@ -1,0 +1,37 @@
+{
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "default_currency",
+    "default_booking_channel",
+    "default_pricing_rule",
+    "default_inspection_mode",
+    "seat_allocation_mode",
+    "enforce_vehicle_identifier_uniqueness",
+    "enforce_vehicle_driver_overlap",
+    "auto_generate_codes",
+    "website_booking_enabled",
+    "public_booking_note"
+  ],
+  "fields": [
+    {"fieldname": "default_currency", "fieldtype": "Link", "label": "Default Currency", "options": "Currency"},
+    {"default": "Desk", "fieldname": "default_booking_channel", "fieldtype": "Select", "label": "Default Booking Channel", "options": "Desk\nWebsite\nAPI\nAgent\nWhatsApp\nOther"},
+    {"fieldname": "default_pricing_rule", "fieldtype": "Link", "label": "Default Pricing Rule", "options": "Trip Pricing Rule"},
+    {"default": "Pre-Trip", "fieldname": "default_inspection_mode", "fieldtype": "Select", "label": "Default Inspection Mode", "options": "Pre-Trip\nPost-Trip\nDaily\nPeriodic\nOther"},
+    {"default": "Manual", "fieldname": "seat_allocation_mode", "fieldtype": "Select", "label": "Seat Allocation Mode", "options": "Manual\nAutomatic\nOptional"},
+    {"default": "1", "fieldname": "enforce_vehicle_identifier_uniqueness", "fieldtype": "Check", "label": "Enforce Vehicle Identifier Uniqueness"},
+    {"default": "1", "fieldname": "enforce_vehicle_driver_overlap", "fieldtype": "Check", "label": "Enforce Vehicle / Driver Overlap"},
+    {"default": "1", "fieldname": "auto_generate_codes", "fieldtype": "Check", "label": "Auto Generate Codes"},
+    {"default": "0", "fieldname": "website_booking_enabled", "fieldtype": "Check", "label": "Website Booking Enabled"},
+    {"fieldname": "public_booking_note", "fieldtype": "Small Text", "label": "Public Booking Note"}
+  ],
+  "issingle": 1,
+  "links": [],
+  "modified": "2026-07-02 00:00:00",
+  "modified_by": "Administrator",
+  "module": "Frappe Transport Management System",
+  "name": "Transport Settings",
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "print": 1, "share": 1, "email": 1}
+  ]
+}

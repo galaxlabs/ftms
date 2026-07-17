@@ -1,0 +1,32 @@
+{
+ "actions": [],
+ "creation": "2026-07-02 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "staff",
+  "role_type",
+  "is_primary",
+  "notes"
+ ],
+ "fields": [
+  {"fieldname": "staff", "fieldtype": "Link", "in_list_view": 1, "label": "Employee", "options": "Employee", "reqd": 1},
+  {"fieldname": "role_type", "fieldtype": "Select", "in_list_view": 1, "label": "Role Type", "options": "Driver\nConductor\nAssistant\nSupervisor\nOther", "reqd": 1},
+  {"fieldname": "is_primary", "fieldtype": "Check", "label": "Is Primary"},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+ ],
+ "grid_page_length": 50,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-02 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Frappe Transport Management System",
+ "name": "FTMS Trip Staff Assignment",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
