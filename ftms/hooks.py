@@ -37,9 +37,9 @@ doc_events = {
     "Transportation Company": {
         "after_insert": "ftms.accounts.utils.auto_setup_accounts",
     },
-    "Sales Invoice": {
-        "validate": "ftms.zatca.common_util.validate_sales_invoice",
-        "on_submit": "ftms.zatca.clearence_util.generate_einvoice_on_submit",
+    "Trip Invoice": {
+        "validate": "ftms.zatca.trip_adapter.validate_trip_invoice",
+        "on_submit": "ftms.zatca.trip_adapter.on_submit_trip_invoice",
     },
 }
 

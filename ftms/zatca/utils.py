@@ -148,7 +148,10 @@ def get_pem_details(invoice):
 
 def get_prod_csid(invoice):
     company_doc = frappe.get_doc("Transportation Company", invoice.company)
-    prod_csid = frappe.get_doc("Production CSID", company_doc.production_csid)
+    prod_csid_name = company_doc.get("production_csid")
+    if not prod_csid_name:
+        frappe.throw("Production CSID not set for company: " + invoice.company)
+    prod_csid = frappe.get_doc("Production CSID", prod_csid_name)
     return prod_csid
 
 def get_previous_invoice_counter(production_csid):
@@ -199,11 +202,13 @@ def _clean_pem(pem_key, keyword):
         return ""
     return "".join(line for line in pem_key.strip().splitlines() if keyword not in line)
 
-def get_address(sales_invoice_doc):
-    if sales_invoice_doc.custom_is_zatca_test:
-        compliance_csid = frappe.get_doc("Compliance CSID", sales_invoice_doc.custom_compliance)
+def get_address(invoice_doc):
+    is_test = invoice_doc.get("is_zatca_test") or invoice_doc.get("custom_is_zatca_test")
+    compliance = invoice_doc.get("compliance_csid") or invoice_doc.get("custom_compliance")
+    if is_test:
+        compliance_csid = frappe.get_doc("Compliance CSID", compliance)
     else:
-        production_csid = get_prod_csid(sales_invoice_doc)
+        production_csid = get_prod_csid(invoice_doc)
         compliance_csid = frappe.get_doc("Compliance CSID", production_csid.compliance_csid)
     csr_settings = frappe.get_doc("Zatca CSR Settings", compliance_csid.csr_settings)
     company_address = {
@@ -216,28 +221,33 @@ def get_address(sales_invoice_doc):
         "registration_name": str(csr_settings.csrorganizationname or ""),
         "company_tax_id": str(csr_settings.csrorganizationidentifier or ""),
     }
-    customer_doc = frappe.get_doc("Customer", sales_invoice_doc.customer)
-    address_name = None
-    if customer_doc.customer_primary_address:
-        address_name = customer_doc.customer_primary_address
-    else:
-        customer_link = frappe.get_all("Dynamic Link",
-            filters={"link_doctype": "Customer", "link_name": sales_invoice_doc.customer, "parenttype": "Address"},
-            fields=["parent"], limit=1)
-        if customer_link:
-            address_name = customer_link[0].parent
-    if address_name:
-        address_fields = ["address_line1", "address_line2", "city", "pincode", "state", "country"]
-        customer_address = frappe.get_value("Address", address_name, address_fields, as_dict=True)
+    customer_name = invoice_doc.get("customer")
+    if customer_name:
+        customer_doc = frappe.get_doc("Customer", customer_name)
+        address_name = None
+        if customer_doc.customer_primary_address:
+            address_name = customer_doc.customer_primary_address
+        else:
+            customer_link = frappe.get_all("Dynamic Link",
+                filters={"link_doctype": "Customer", "link_name": customer_name, "parenttype": "Address"},
+                fields=["parent"], limit=1)
+            if customer_link:
+                address_name = customer_link[0].parent
+        if address_name:
+            address_fields = ["address_line1", "address_line2", "city", "pincode", "state", "country"]
+            customer_address = frappe.get_value("Address", address_name, address_fields, as_dict=True)
+        else:
+            customer_address = {}
     else:
         customer_address = {}
     return company_address, customer_address
 
 def get_zatca_tax_category_details(invoice_doc):
-    if not invoice_doc.taxes or not invoice_doc.taxes_and_charges:
+    taxes_field = invoice_doc.get("taxes_and_charges") or invoice_doc.get("vat_template")
+    if not taxes_field:
         return {"category": "Standard Rate", "rate": 15.0, "code": "S",
                 "exemption_reason_code": None, "exemption_reason_text": None}
-    template = frappe.get_doc("Sales Taxes and Charges Template", invoice_doc.taxes_and_charges)
+    template = frappe.get_doc("Sales Taxes and Charges Template", taxes_field)
     tax_type = template.get("custom_tax_type", "Standard Rate")
     rate = template.get("tax_rate", 15.0)
     if template.taxes:

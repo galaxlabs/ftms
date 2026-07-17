@@ -32,6 +32,22 @@ def create_custom_fields():
         {"dt": "Address", "fieldname": "street_name", "fieldtype": "Data", "label": "Street Name", "insert_after": "building_no"},
         {"dt": "Address", "fieldname": "district", "fieldtype": "Data", "label": "District", "insert_after": "street_name"},
         {"dt": "Address", "fieldname": "additional_no", "fieldtype": "Data", "label": "Additional Number", "insert_after": "district"},
+        {"dt": "Sales Invoice", "fieldname": "sb_zatca", "fieldtype": "Section Break", "label": "ZATCA E-Invoicing", "insert_after": "taxes_and_charges"},
+        {"dt": "Sales Invoice", "fieldname": "custom_is_zatca_test", "fieldtype": "Check", "label": "Is ZATCA Test Invoice", "insert_after": "sb_zatca"},
+        {"dt": "Sales Invoice", "fieldname": "custom_compliance", "fieldtype": "Link", "label": "Compliance CSID", "options": "Compliance CSID", "insert_after": "custom_is_zatca_test"},
+        {"dt": "Sales Invoice", "fieldname": "custom_zatca_submit_status", "fieldtype": "Data", "label": "ZATCA Submit Status", "read_only": 1, "insert_after": "custom_compliance"},
+        {"dt": "Sales Invoice", "fieldname": "custom_invoice_type", "fieldtype": "Data", "label": "ZATCA Invoice Type", "read_only": 1, "insert_after": "custom_zatca_submit_status"},
+        {"dt": "Sales Invoice", "fieldname": "custom_invoice_hash", "fieldtype": "Data", "label": "ZATCA Invoice Hash", "read_only": 1, "insert_after": "custom_invoice_type"},
+        {"dt": "Sales Invoice", "fieldname": "custom_invoice_unique_identifier", "fieldtype": "Data", "label": "ZATCA Invoice UUID", "read_only": 1, "insert_after": "custom_invoice_hash"},
+        {"dt": "Sales Invoice", "fieldname": "custom_invoice_icv", "fieldtype": "Int", "label": "ZATCA ICV", "read_only": 1, "insert_after": "custom_invoice_unique_identifier"},
+        {"dt": "Sales Invoice", "fieldname": "custom_zatca_submit_time", "fieldtype": "Datetime", "label": "ZATCA Submit Time", "read_only": 1, "insert_after": "custom_invoice_icv"},
+        {"dt": "Sales Invoice", "fieldname": "custom_seller_name", "fieldtype": "Data", "label": "ZATCA Seller Name", "read_only": 1, "insert_after": "custom_zatca_submit_time"},
+        {"dt": "Sales Invoice", "fieldname": "custom_seller_vat", "fieldtype": "Data", "label": "ZATCA Seller VAT", "read_only": 1, "insert_after": "custom_seller_name"},
+        {"dt": "Sales Invoice", "fieldname": "custom_buyer_name", "fieldtype": "Data", "label": "ZATCA Buyer Name", "read_only": 1, "insert_after": "custom_seller_vat"},
+        {"dt": "Sales Invoice", "fieldname": "custom_buyer_vat", "fieldtype": "Data", "label": "ZATCA Buyer VAT", "read_only": 1, "insert_after": "custom_buyer_name"},
+        {"dt": "Sales Invoice", "fieldname": "custom_invoice_xml", "fieldtype": "Code", "label": "ZATCA Invoice XML", "read_only": 1, "insert_after": "custom_buyer_vat"},
+        {"dt": "Sales Invoice", "fieldname": "custom_invoice_qr_code", "fieldtype": "Code", "label": "ZATCA QR Code", "read_only": 1, "insert_after": "custom_invoice_xml"},
+        {"dt": "Sales Invoice", "fieldname": "custom_validation_results", "fieldtype": "Long Text", "label": "ZATCA Validation Results", "read_only": 1, "insert_after": "custom_invoice_qr_code"},
     ]
     for cf in custom_fields:
         dt = cf.pop("dt")
@@ -42,5 +58,5 @@ def create_custom_fields():
             existing.save()
         else:
             doc = frappe.get_doc({"doctype": "Custom Field", "dt": dt, **cf})
-            doc.insert()
+            doc.insert(ignore_links=True)
     frappe.db.commit()

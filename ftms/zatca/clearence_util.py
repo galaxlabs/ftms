@@ -14,7 +14,6 @@ from frappe.utils import get_datetime
 from requests.auth import HTTPBasicAuth
 
 from ftms.zatca.common_util import (
-    decode_invoice,
     generate_invoice_hash,
     get_buyer_information,
     get_seller_information,
@@ -28,17 +27,21 @@ from ftms.zatca.utils import (
 
 def generate_einvoice(doc, submit_now=True, skip_success_message=False):
     company = frappe.get_doc("Transportation Company", doc.company)
-    if not company.enable_zatca_e_invoicing and not doc.custom_is_zatca_test:
+    is_test = doc.get("is_zatca_test") or doc.get("custom_is_zatca_test")
+    zatca_enabled = company.get("enable_zatca_e_invoicing")
+    if not zatca_enabled and not is_test:
         return
     if company.country != "Saudi Arabia":
         return
-    if company.enable_zatca_e_invoicing and company.zatca_phase != "ZATCA Phase 2":
+    if zatca_enabled and company.get("zatca_phase") != "ZATCA Phase 2":
         return
 
     config = _get_config(company, doc)
-    customer = frappe.get_doc("Customer", doc.customer)
-    customer_type = customer.customer_type
-    compliance_type = _get_compliance_type(doc, customer_type)
+    customer_name = doc.get("customer")
+    customer_type = "Individual"
+    if customer_name and frappe.db.exists("Customer", customer_name):
+        customer = frappe.get_doc("Customer", customer_name)
+        customer_type = customer.customer_type
 
     invoice_data = _prepare_invoice_data(doc, config, customer_type)
     payload = {
@@ -48,7 +51,7 @@ def generate_einvoice(doc, submit_now=True, skip_success_message=False):
     }
 
     if customer_type == "Individual" and not submit_now:
-        doc.custom_zatca_submit_status = "PENDING"
+        _set_field(doc, "zatca_submit_status", "PENDING")
         return
 
     try:
@@ -67,29 +70,36 @@ def generate_einvoice(doc, submit_now=True, skip_success_message=False):
     _handle_response(doc, response, invoice_data, payload, zatca_status_field)
 
 def _get_config(company, doc):
-    if doc.custom_is_zatca_test:
-        csid = frappe.get_doc("Compliance CSID", doc.custom_compliance)
+    is_test = doc.get("is_zatca_test") or doc.get("custom_is_zatca_test")
+    compliance = doc.get("compliance_csid") or doc.get("custom_compliance")
+    if is_test:
+        csid = frappe.get_doc("Compliance CSID", compliance)
     else:
         csid = frappe.get_doc("Production CSID", company.production_csid)
     compliance_csid = frappe.get_doc("Compliance CSID", csid.compliance_csid)
     csr_settings = frappe.get_doc("Zatca CSR Settings", compliance_csid.csr_settings)
+    zatca_environment = frappe.get_doc("ZATCA Environment", csr_settings.zatca_environment)
     return {
         "production_csid": csid if not doc.custom_is_zatca_test else None,
         "compliance_csid": compliance_csid,
         "csr_settings": csr_settings,
+        "zatca_environment": zatca_environment,
         "company": company,
     }
 
 def _prepare_invoice_data(doc, config, customer_type):
     invoice_type = "0100000" if customer_type == "Company" else "0200000"
     seller = get_seller_information(config["csr_settings"])
-    buyer = get_buyer_information(doc.customer)
+    customer_name = doc.get("customer")
+    buyer = get_buyer_information(customer_name) if customer_name else {"organizationName": "Walk-in Customer"}
     previous_counter = get_previous_invoice_counter(config["production_csid"].name) if config["production_csid"] else random.randint(1, 20)
     previous_hash = get_previous_invoice_hash(config["production_csid"].name) if config["production_csid"] else generate_invoice_hash()
     invoice_counter = previous_counter + 1
     invoice_uuid = str(uuid.uuid4())
-    invoice_date = doc.posting_date.strftime("%Y-%m-%d") if isinstance(doc.posting_date, date) else datetime.strptime(doc.posting_date, "%Y-%m-%d").strftime("%Y-%m-%d")
-    invoice_time = time_formatter(doc.posting_time)
+    posting_date = doc.get("posting_date") or doc.get("invoice_date")
+    posting_time = doc.get("posting_time") or "12:00:00"
+    invoice_date = posting_date.strftime("%Y-%m-%d") if isinstance(posting_date, date) else datetime.strptime(str(posting_date)[:10], "%Y-%m-%d").strftime("%Y-%m-%d")
+    invoice_time = time_formatter(posting_time)
     return {
         "customer_type": customer_type,
         "invoice_type": invoice_type,
@@ -106,20 +116,24 @@ def _prepare_invoice_data(doc, config, customer_type):
 
 def _submit_clearance_request(config, payload):
     start = time.time()
+    env = config["zatca_environment"]
+    csid = config["compliance_csid"] if not config.get("production_csid") else config["production_csid"]
     resp = requests.post(
-        config["csr_settings"].invoice_clearance_api,
+        env.invoice_clearance_api,
         headers=_get_headers(),
-        auth=HTTPBasicAuth(config["production_csid"].binary_security_token, config["production_csid"].secret),
+        auth=HTTPBasicAuth(csid.binary_security_token, csid.secret),
         json=payload,
     )
     return resp, {"duration": time.time() - start}
 
 def _submit_reporting_request(config, payload):
     start = time.time()
+    env = config["zatca_environment"]
+    csid = config["compliance_csid"] if not config.get("production_csid") else config["production_csid"]
     resp = requests.post(
-        config["csr_settings"].invoice_reporting_api,
+        env.invoice_reporting_api,
         headers=_get_headers(),
-        auth=HTTPBasicAuth(config["production_csid"].binary_security_token, config["production_csid"].secret),
+        auth=HTTPBasicAuth(csid.binary_security_token, csid.secret),
         json=payload,
     )
     return resp, {"duration": time.time() - start}
@@ -146,10 +160,10 @@ def _save_transaction(doc, invoice_data, payload, response, config):
         "production_csid": config["production_csid"].name if config["production_csid"] else "",
         "request_body": str(payload),
         "response_code": response.status_code,
-        "response_body": json.dumps(response_data),
+        "response_body": json.dumps(response_data) if isinstance(response_data, dict) else str(response_data),
         "transaction_time": frappe.utils.now_datetime(),
     })
-    txn.insert()
+    txn.insert(ignore_permissions=True)
 
 def _handle_response(doc, response, invoice_data, payload, zatca_status):
     response_json = response.json()
@@ -166,23 +180,33 @@ def _handle_response(doc, response, invoice_data, payload, zatca_status):
         _handle_error(doc, "FAILED", json.dumps(response_json))
 
 def _handle_success(doc, response_json, invoice_data, payload, status):
-    doc.custom_invoice_type = invoice_data["invoice_type"]
-    doc.custom_invoice_hash = payload.get("invoiceHash")
-    doc.custom_invoice_unique_identifier = invoice_data["uuid"]
-    doc.custom_invoice_icv = invoice_data["invoice_counter"]
-    doc.custom_zatca_submit_status = status
-    doc.custom_zatca_submit_time = frappe.utils.now_datetime()
-    doc.custom_seller_name = invoice_data["seller"].get("organizationName")
-    doc.custom_seller_vat = invoice_data["seller"].get("vatNumber")
-    doc.custom_buyer_name = invoice_data["buyer"].get("organizationName")
-    doc.custom_buyer_vat = invoice_data["buyer"].get("vatNumber")
+    _set_field(doc, "invoice_type", invoice_data["invoice_type"])
+    _set_field(doc, "invoice_hash", payload.get("invoiceHash"))
+    _set_field(doc, "invoice_unique_identifier", invoice_data["uuid"])
+    _set_field(doc, "invoice_icv", invoice_data["invoice_counter"])
+    _set_field(doc, "zatca_submit_status", status)
+    _set_field(doc, "zatca_submit_time", frappe.utils.now_datetime())
+    _set_field(doc, "seller_name", invoice_data["seller"].get("organizationName"))
+    _set_field(doc, "seller_vat", invoice_data["seller"].get("vatNumber"))
+    _set_field(doc, "buyer_name", invoice_data["buyer"].get("organizationName"))
+    _set_field(doc, "buyer_vat", invoice_data["buyer"].get("vatNumber"))
     cleared_invoice_xml = _get_cleared_invoice(response_json, payload, invoice_data["customer_type"])
     _save_xml(doc, cleared_invoice_xml)
     _save_qr(doc, cleared_invoice_xml)
+    doc.save(ignore_permissions=True)
 
 def _handle_error(doc, status, validation_results):
-    frappe.db.set_value("Sales Invoice", doc.name, "custom_zatca_submit_status", status, update_modified=True)
-    frappe.db.set_value("Sales Invoice", doc.name, "custom_validation_results", validation_results, update_modified=True)
+    _set_field(doc, "zatca_submit_status", status)
+    _set_field(doc, "validation_results", validation_results)
+    doc.save(ignore_permissions=True)
+
+def _set_field(doc, fieldname, value):
+    if hasattr(doc, fieldname) or fieldname in doc.as_dict():
+        doc.set(fieldname, value)
+    else:
+        prefixed = "custom_" + fieldname
+        if hasattr(doc, prefixed) or prefixed in doc.as_dict():
+            doc.set(prefixed, value)
 
 def _get_cleared_invoice(response_json, payload, customer_type):
     if customer_type == "Company":
@@ -241,17 +265,19 @@ def _save_qr(doc, cleared_invoice_xml):
         doc.custom_invoice_qr_code = file_doc.file_url
 
 def _get_compliance_type(doc, customer_type):
-    if customer_type == "Individual" and not doc.is_return and not doc.is_debit_note:
+    is_return = doc.get("is_return") or False
+    is_debit = doc.get("is_debit_note") or False
+    if customer_type == "Individual" and not is_return and not is_debit:
         return "1"
-    elif customer_type == "Company" and not doc.is_return and not doc.is_debit_note:
+    elif customer_type == "Company" and not is_return and not is_debit:
         return "2"
-    elif customer_type == "Individual" and doc.is_return:
+    elif customer_type == "Individual" and is_return:
         return "3"
-    elif customer_type == "Company" and doc.is_return:
+    elif customer_type == "Company" and is_return:
         return "4"
-    elif customer_type == "Individual" and doc.is_debit_note:
+    elif customer_type == "Individual" and is_debit:
         return "5"
-    elif customer_type == "Company" and doc.is_debit_note:
+    elif customer_type == "Company" and is_debit:
         return "6"
     return "0"
 
@@ -271,7 +297,7 @@ def bulk_resend_einvoices(invoice_names):
     if isinstance(invoice_names, str):
         invoice_names = json.loads(invoice_names)
     if not invoice_names:
-        frappe.throw("Select at least one Sales Invoice")
+        frappe.throw("Select at least one invoice")
     success = []
     failed = []
     skipped = []
@@ -286,14 +312,15 @@ def bulk_resend_einvoices(invoice_names):
             if doc.docstatus != 1:
                 skipped.append({"name": name, "message": "Not submitted"})
                 continue
-            status = doc.get("custom_zatca_submit_status")
+            status = doc.get("zatca_submit_status") or doc.get("custom_zatca_submit_status")
             if status in ("REPORTED", "CLEARED"):
                 skipped.append({"name": name, "message": f"Already {status}"})
                 continue
             try:
                 generate_einvoice(doc, skip_success_message=True)
                 doc.reload()
-                if doc.custom_zatca_submit_status in ("REPORTED", "CLEARED"):
+                final_status = doc.get("zatca_submit_status") or doc.get("custom_zatca_submit_status")
+                if final_status in ("REPORTED", "CLEARED"):
                     success.append(name)
                 else:
                     skipped.append({"name": name, "message": "Not REPORTED/CLEARED"})

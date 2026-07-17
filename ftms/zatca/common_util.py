@@ -5,34 +5,33 @@ import xml.etree.ElementTree as ET
 import frappe
 
 def validate_sales_invoice(doc, method):
-    if not doc.taxes_and_charges:
-        frappe.throw("Sales Taxes and Charges Template must be provided.")
-    if doc.is_return and (not doc.return_against and not doc.custom_cn_ref):
+    taxes_field = doc.get("taxes_and_charges") or doc.get("vat_template")
+    if not taxes_field:
+        frappe.throw("Tax Template must be provided.")
+    if doc.get("is_return") and (not doc.get("return_against") and not doc.get("custom_cn_ref")):
         frappe.throw("Go to credit note details and fetch return invoices")
 
 def get_buyer_information(customer_name):
+    if not customer_name or not frappe.db.exists("Customer", customer_name):
+        return {"organizationName": customer_name or "Walk-in Customer"}
     customer = frappe.get_doc("Customer", customer_name)
     if customer.customer_type == "Company":
-        address = frappe.get_doc("Address", customer.customer_primary_address)
-        if not address:
-            frappe.throw("Customer must have a primary address")
-        if not customer.custom_vat_number and not customer.custom_registration_scheme:
-            frappe.throw("Either VAT Number or Registration Scheme/Number required for Company")
+        address = None
+        if customer.customer_primary_address:
+            address = frappe.get_doc("Address", customer.customer_primary_address)
         return {
             "organizationName": customer.customer_name,
-            "vatNumber": customer.custom_vat_number,
-            "registrationScheme": _get_registration_scheme_code(customer.custom_registration_scheme),
-            "registrationNumber": customer.custom_registration_number,
-            "streetName": address.address_line1,
-            "buildingNumber": address.address_line2,
-            "citySubdivisionName": address.city,
-            "cityName": address.county,
-            "postalZone": address.pincode,
-            "countryCode": _get_country_code(address.country),
+            "vatNumber": getattr(customer, "custom_vat_number", None),
+            "registrationScheme": _get_registration_scheme_code(getattr(customer, "custom_registration_scheme", None)),
+            "registrationNumber": getattr(customer, "custom_registration_number", None),
+            "streetName": address.address_line1 if address else "",
+            "buildingNumber": address.address_line2 if address else "",
+            "citySubdivisionName": address.city if address else "",
+            "cityName": address.county if address else "",
+            "postalZone": address.pincode if address else "",
+            "countryCode": _get_country_code(address.country) if address else "SA",
         }
-    elif customer.customer_type == "Individual":
-        return {"organizationName": customer.customer_name}
-    return {}
+    return {"organizationName": customer.customer_name}
 
 def get_seller_information(csr_settings):
     return {
