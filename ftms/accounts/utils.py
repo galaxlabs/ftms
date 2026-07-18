@@ -9,7 +9,7 @@ def setup_chart_of_accounts(company):
         return "Accounts already exist for " + company
 
     accounts = [
-        {"account_name": "Assets", "parent_account": None, "is_group": 1, "account_type": "Asset", "root_type": "Asset"},
+        {"account_name": "Assets", "parent_account": None, "is_group": 1, "root_type": "Asset"},
         {"account_name": "Current Assets", "parent_account": "Assets", "is_group": 1, "root_type": "Asset"},
         {"account_name": "Cash", "parent_account": "Current Assets", "is_group": 0, "account_type": "Cash", "root_type": "Asset"},
         {"account_name": "Bank", "parent_account": "Current Assets", "is_group": 0, "account_type": "Bank", "root_type": "Asset"},
@@ -17,15 +17,15 @@ def setup_chart_of_accounts(company):
         {"account_name": "Stock Assets", "parent_account": "Current Assets", "is_group": 0, "account_type": "Stock", "root_type": "Asset"},
         {"account_name": "Fixed Assets", "parent_account": "Assets", "is_group": 1, "root_type": "Asset"},
         {"account_name": "Vehicles", "parent_account": "Fixed Assets", "is_group": 0, "account_type": "Fixed Asset", "root_type": "Asset"},
-        {"account_name": "Liabilities", "parent_account": None, "is_group": 1, "account_type": "Liability", "root_type": "Liability"},
+        {"account_name": "Liabilities", "parent_account": None, "is_group": 1, "root_type": "Liability"},
         {"account_name": "Current Liabilities", "parent_account": "Liabilities", "is_group": 1, "root_type": "Liability"},
         {"account_name": "Creditors", "parent_account": "Current Liabilities", "is_group": 0, "account_type": "Payable", "root_type": "Liability"},
         {"account_name": "VAT Payable", "parent_account": "Current Liabilities", "is_group": 0, "account_type": "Tax", "root_type": "Liability"},
         {"account_name": "Accrued Expenses", "parent_account": "Current Liabilities", "is_group": 0, "root_type": "Liability"},
-        {"account_name": "Income", "parent_account": None, "is_group": 1, "account_type": "Income", "root_type": "Income"},
+        {"account_name": "Income", "parent_account": None, "is_group": 1, "root_type": "Income"},
         {"account_name": "Transport Revenue", "parent_account": "Income", "is_group": 0, "account_type": "Income Account", "root_type": "Income"},
         {"account_name": "Service Income", "parent_account": "Income", "is_group": 0, "account_type": "Income Account", "root_type": "Income"},
-        {"account_name": "Expenses", "parent_account": None, "is_group": 1, "account_type": "Expense", "root_type": "Expense"},
+        {"account_name": "Expenses", "parent_account": None, "is_group": 1, "root_type": "Expense"},
         {"account_name": "Fuel Expenses", "parent_account": "Expenses", "is_group": 0, "account_type": "Expense Account", "root_type": "Expense"},
         {"account_name": "Vehicle Maintenance", "parent_account": "Expenses", "is_group": 0, "account_type": "Expense Account", "root_type": "Expense"},
         {"account_name": "Salaries", "parent_account": "Expenses", "is_group": 0, "account_type": "Expense Account", "root_type": "Expense"},
@@ -38,6 +38,7 @@ def setup_chart_of_accounts(company):
     ]
 
     name_map = {}
+    created = []
     for acc in accounts:
         pname = acc["account_name"]
         existing = frappe.db.get_value("Account", {"account_name": pname, "company": company})
