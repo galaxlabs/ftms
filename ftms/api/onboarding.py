@@ -32,6 +32,15 @@ def _default_domain(domain=None):
     return frappe.db.get_value("Transportation Domain", {}, "name")
 
 
+def _send_reset_password_email(user_doc):
+    try:
+        user_doc.reset_password(send_email=True)
+        return True, None
+    except Exception as exc:
+        frappe.log_error(frappe.get_traceback(), "FTMS signup reset password email failed")
+        return False, str(exc)
+
+
 @frappe.whitelist(allow_guest=True)
 def signup(company_name, email, username=None, first_name=None, last_name=None, domain=None):
     """Public onboarding: create a company admin user and active company link."""
@@ -105,6 +114,8 @@ def signup(company_name, email, username=None, first_name=None, last_name=None, 
         })
         link_doc.insert(ignore_permissions=True)
 
+    reset_email_sent, reset_email_error = _send_reset_password_email(user_doc)
+
     frappe.db.commit()
     return {
         "status": "ok",
@@ -113,6 +124,8 @@ def signup(company_name, email, username=None, first_name=None, last_name=None, 
         "company_name": company_name,
         "role": "Company Admin",
         "link": link_doc.name,
+        "reset_email_sent": reset_email_sent,
+        "reset_email_error": reset_email_error,
     }
 
 

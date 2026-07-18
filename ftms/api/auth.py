@@ -43,6 +43,8 @@ def get_current_user():
         "user": user,
         "name": user_doc.name,
         "email": user_doc.email,
+        "first_name": user_doc.first_name,
+        "last_name": user_doc.last_name,
         "full_name": user_doc.full_name,
         "mobile_no": user_doc.mobile_no,
         "roles": roles,
@@ -52,6 +54,23 @@ def get_current_user():
         "subscription": subscription,
         "permissions": _get_permissions(link),
     }
+
+
+@frappe.whitelist()
+def update_profile(first_name=None, last_name=None, mobile_no=None):
+    user = frappe.session.user
+    if not user or user == "Guest":
+        frappe.throw("Not authenticated", frappe.PermissionError)
+
+    user_doc = frappe.get_doc("User", user)
+    if first_name is not None:
+        user_doc.first_name = (first_name or "").strip()
+    if last_name is not None:
+        user_doc.last_name = (last_name or "").strip()
+    if mobile_no is not None:
+        user_doc.mobile_no = (mobile_no or "").strip()
+    user_doc.save(ignore_permissions=True)
+    return get_current_user()
 
 
 def _find_active_link(user=None):
