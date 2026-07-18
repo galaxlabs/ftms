@@ -1,0 +1,9 @@
+[
+ {"doctype": "Vehicle Category", "category_name": "Sedan", "category_name_ar": "سيدان", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Category", "category_name": "SUV", "category_name_ar": "دفع رباعي", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Category", "category_name": "Van", "category_name_ar": "فان", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Category", "category_name": "Bus", "category_name_ar": "حافلة", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Category", "category_name": "Truck", "category_name_ar": "شاحنة", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Category", "category_name": "Minibus", "category_name_ar": "حافلة صغيرة", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Category", "category_name": "Luxury", "category_name_ar": "فاخر", "status": "Active", "is_active": 1}
+]

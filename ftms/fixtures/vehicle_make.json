@@ -1,0 +1,12 @@
+[
+ {"doctype": "Vehicle Make", "make_name": "Toyota", "make_name_ar": "تويوتا", "make_code": "TYT", "country_of_origin": "Japan", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Make", "make_name": "Nissan", "make_name_ar": "نيسان", "make_code": "NSN", "country_of_origin": "Japan", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Make", "make_name": "Hyundai", "make_name_ar": "هيونداي", "make_code": "HYD", "country_of_origin": "South Korea", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Make", "make_name": "Kia", "make_name_ar": "كيا", "make_code": "KIA", "country_of_origin": "South Korea", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Make", "make_name": "Ford", "make_name_ar": "فورد", "make_code": "FRD", "country_of_origin": "USA", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Make", "make_name": "GMC", "make_name_ar": "جمس", "make_code": "GMC", "country_of_origin": "USA", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Make", "make_name": "Chevrolet", "make_name_ar": "شيفروليه", "make_code": "CHV", "country_of_origin": "USA", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Make", "make_name": "Mercedes-Benz", "make_name_ar": "مرسيدس بنز", "make_code": "MBZ", "country_of_origin": "Germany", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Make", "make_name": "BMW", "make_name_ar": "بي إم دبليو", "make_code": "BMW", "country_of_origin": "Germany", "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Make", "make_name": "Mitsubishi", "make_name_ar": "ميتسوبيشي", "make_code": "MTS", "country_of_origin": "Japan", "status": "Active", "is_active": 1}
+]

@@ -76,8 +76,6 @@ def setup_chart_of_accounts(company):
 def auto_setup_accounts(doc, method=None):
     if method != "after_insert":
         return
-    if not frappe.db.exists("DocType", "GL Entry"):
-        return
     setup_chart_of_accounts(doc.name)
 
 def calc_line_amounts(doc):

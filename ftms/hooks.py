@@ -89,6 +89,10 @@ get_permission_query_conditions = {
 }
 
 fixtures = [
+    {"dt": "Vehicle Category", "filters": [["is_active", "=", 1]]},
+    {"dt": "Vehicle Type", "filters": [["is_active", "=", 1]]},
+    {"dt": "Vehicle Make", "filters": [["is_active", "=", 1]]},
+    {"dt": "Vehicle Model", "filters": [["is_active", "=", 1]]},
     {"dt": "Print Format", "filters": [["module", "=", "Frappe Transport Management System"]]},
 ]
 

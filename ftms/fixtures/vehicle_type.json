@@ -1,0 +1,11 @@
+[
+ {"doctype": "Vehicle Type", "type_name": "Compact Sedan", "type_name_ar": "سيدان صغيرة", "type_code": "CMP-SED", "vehicle_category": "Sedan", "default_seating_capacity": 4, "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Type", "type_name": "Full-size Sedan", "type_name_ar": "سيدان كبيرة", "type_code": "FUL-SED", "vehicle_category": "Sedan", "default_seating_capacity": 5, "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Type", "type_name": "Compact SUV", "type_name_ar": "دفع رباعي صغيرة", "type_code": "CMP-SUV", "vehicle_category": "SUV", "default_seating_capacity": 5, "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Type", "type_name": "Full-size SUV", "type_name_ar": "دفع رباعي كبيرة", "type_code": "FUL-SUV", "vehicle_category": "SUV", "default_seating_capacity": 7, "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Type", "type_name": "Passenger Van", "type_name_ar": "فان ركاب", "type_code": "PSG-VAN", "vehicle_category": "Van", "default_seating_capacity": 8, "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Type", "type_name": "Mini Bus", "type_name_ar": "حافلة صغيرة", "type_code": "MIN-BUS", "vehicle_category": "Minibus", "default_seating_capacity": 14, "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Type", "type_name": "Standard Bus", "type_name_ar": "حافلة عادية", "type_code": "STD-BUS", "vehicle_category": "Bus", "default_seating_capacity": 30, "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Type", "type_name": "Luxury Sedan", "type_name_ar": "سيدان فاخرة", "type_code": "LXS-SED", "vehicle_category": "Luxury", "default_seating_capacity": 4, "status": "Active", "is_active": 1},
+ {"doctype": "Vehicle Type", "type_name": "Light Truck", "type_name_ar": "شاحنة خفيفة", "type_code": "LGT-TRK", "vehicle_category": "Truck", "default_seating_capacity": 2, "status": "Active", "is_active": 1}
+]

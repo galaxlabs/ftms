@@ -12,6 +12,7 @@ def after_migrate():
     create_custom_fields()
     seed_existing_subscriptions()
     sync_print_branding()
+    seed_ksa_cities()
 
 def sync_print_branding():
     from ftms.printing.letterhead import sync_all_letterheads
@@ -70,3 +71,8 @@ def create_custom_fields():
             doc = frappe.get_doc({"doctype": "Custom Field", "dt": dt, **cf})
             doc.insert(ignore_links=True)
     frappe.db.commit()
+
+
+def seed_ksa_cities():
+    from ftms.setup.seed_ksa_cities import seed
+    seed()
