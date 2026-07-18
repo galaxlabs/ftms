@@ -37,7 +37,8 @@ override_doctype_dashboards = {
 
 doc_events = {
     "Transportation Company": {
-        "after_insert": "ftms.accounts.utils.auto_setup_accounts",
+        "after_insert": ["ftms.accounts.utils.auto_setup_accounts", "ftms.printing.letterhead.sync_letterhead"],
+        "on_update": "ftms.printing.letterhead.sync_letterhead",
     },
     "User Company Link": {
         "after_insert": "ftms.subscriptions.utils.create_subscription_on_link",
@@ -89,4 +90,9 @@ get_permission_query_conditions = {
 
 fixtures = [
     {"dt": "Print Format", "filters": [["module", "=", "Frappe Transport Management System"]]},
+    {"dt": "Letterhead", "filters": [["module", "=", "Frappe Transport Management System"]]},
 ]
+
+default_print_format = {
+    "Trip Invoice": "Trip Invoice KSA",
+}

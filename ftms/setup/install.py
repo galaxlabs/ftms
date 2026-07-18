@@ -11,6 +11,11 @@ def after_migrate():
     sync_customizations()
     create_custom_fields()
     seed_existing_subscriptions()
+    sync_print_branding()
+
+def sync_print_branding():
+    from ftms.printing.letterhead import sync_all_letterheads
+    sync_all_letterheads()
 
 def seed_existing_subscriptions():
     """Create trial subscriptions for existing active User Company Links."""
