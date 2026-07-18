@@ -11,7 +11,17 @@ def list_routes(company=None, limit=50):
 	return frappe.get_all(
 		"Route",
 		filters=filters,
-		fields=["name", "company", "route_title", "route_code", "source", "destination", "status"],
+		fields=[
+			"name",
+			"company",
+			"route_title",
+			"route_code",
+			"source",
+			"destination",
+			"distance_km",
+			"estimated_duration_minutes",
+			"status",
+		],
 		order_by="modified desc",
 		limit_page_length=int(limit),
 	)

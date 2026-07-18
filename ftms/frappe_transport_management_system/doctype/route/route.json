@@ -6,6 +6,7 @@
   "doctype": "DocType",
   "engine": "InnoDB",
   "field_order": [
+    "company",
     "route_title",
     "route_name",
     "route_code",
@@ -38,6 +39,7 @@
     "notes"
   ],
   "fields": [
+    {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Transportation Company", "reqd": 1},
     {"fieldname": "route_title", "fieldtype": "Data", "in_list_view": 1, "label": "Route Title", "reqd": 1, "unique": 1},
     {"fieldname": "route_name", "fieldtype": "Data", "in_list_view": 1, "label": "Route Name"},
     {"fieldname": "route_code", "fieldtype": "Data", "in_list_view": 1, "label": "Route Code"},
