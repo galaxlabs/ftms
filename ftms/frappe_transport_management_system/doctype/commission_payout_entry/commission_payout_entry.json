@@ -1,0 +1,78 @@
+{
+ "actions": [],
+ "creation": "2026-07-18 17:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "commission_entry",
+  "employee",
+  "employee_name",
+  "trip",
+  "trip_date",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "commission_entry",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Commission Entry",
+   "options": "Commission Entry",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "commission_entry.employee",
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "commission_entry.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "commission_entry.trip",
+   "fieldname": "trip",
+   "fieldtype": "Data",
+   "label": "Trip",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "commission_entry.trip_date",
+   "fieldname": "trip_date",
+   "fieldtype": "Date",
+   "label": "Trip Date",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "commission_entry.amount",
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "indexes": [],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-18 17:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Frappe Transport Management System",
+ "name": "Commission Payout Entry",
+ "naming_rule": "Autoincrement",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

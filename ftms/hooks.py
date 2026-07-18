@@ -44,6 +44,7 @@ doc_events = {
     },
     "Trip": {
         "validate": ["ftms.api.permissions.validate_user_access", "ftms.subscriptions.utils.enforce_subscription"],
+        "on_update": "ftms.commissions.engine.accrue_commissions",
     },
     "Trip Invoice": {
         "validate": ["ftms.api.permissions.validate_user_access", "ftms.subscriptions.utils.enforce_subscription", "ftms.zatca.trip_adapter.validate_trip_invoice"],
@@ -63,6 +64,7 @@ doc_events = {
 scheduler_events = {
     "daily": [
         "ftms.subscriptions.utils.daily_subscription_sync",
+        "ftms.commissions.engine.daily_commission_summary",
     ],
     "hourly": [
         "ftms.subscriptions.utils.hourly_trial_check",
