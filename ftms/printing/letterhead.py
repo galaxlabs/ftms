@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import frappe
 from frappe import _
-from frappe.utils import get_link_to_form
 
 
 def sync_letterhead(company_doc, method=None):
-    """Auto-create/update a Letterhead from Transportation Company branding."""
+    if not frappe.db.exists("DocType", "Letterhead"):
+        return
     if not company_doc.enable_print_branding:
         return
 
@@ -33,7 +33,6 @@ def sync_letterhead(company_doc, method=None):
         })
         letterhead.insert(ignore_permissions=True)
 
-    # Store reference on the company
     if company_doc.get("__print_letterhead") != letterhead_name:
         frappe.db.set_value("Transportation Company", company_doc.name,
                            "__print_letterhead", letterhead_name, update_modified=False)
