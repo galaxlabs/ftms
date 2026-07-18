@@ -37,10 +37,38 @@ doc_events = {
     "Transportation Company": {
         "after_insert": "ftms.accounts.utils.auto_setup_accounts",
     },
+    "Trip": {
+        "validate": "ftms.api.permissions.validate_user_access",
+    },
     "Trip Invoice": {
-        "validate": "ftms.zatca.trip_adapter.validate_trip_invoice",
+        "validate": ["ftms.api.permissions.validate_user_access", "ftms.zatca.trip_adapter.validate_trip_invoice"],
         "on_submit": "ftms.zatca.trip_adapter.on_submit_trip_invoice",
     },
+    "Trip Booking": {
+        "validate": "ftms.api.permissions.validate_user_access",
+    },
+    "Vehicle": {
+        "validate": "ftms.api.permissions.validate_user_access",
+    },
+    "Route": {
+        "validate": "ftms.api.permissions.validate_user_access",
+    },
+}
+
+has_permission = {
+    "Trip": "ftms.api.permissions.has_permission",
+    "Trip Invoice": "ftms.api.permissions.has_permission",
+    "Trip Booking": "ftms.api.permissions.has_permission",
+    "Vehicle": "ftms.api.permissions.has_permission",
+    "Route": "ftms.api.permissions.has_permission",
+}
+
+get_permission_query_conditions = {
+    "Trip": "ftms.api.permissions.get_permission_query_conditions",
+    "Trip Invoice": "ftms.api.permissions.get_permission_query_conditions",
+    "Trip Booking": "ftms.api.permissions.get_permission_query_conditions",
+    "Vehicle": "ftms.api.permissions.get_permission_query_conditions",
+    "Route": "ftms.api.permissions.get_permission_query_conditions_for_route",
 }
 
 fixtures = [
