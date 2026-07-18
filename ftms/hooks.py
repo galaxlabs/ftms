@@ -37,15 +37,18 @@ doc_events = {
     "Transportation Company": {
         "after_insert": "ftms.accounts.utils.auto_setup_accounts",
     },
+    "User Company Link": {
+        "after_insert": "ftms.subscriptions.utils.create_subscription_on_link",
+    },
     "Trip": {
-        "validate": "ftms.api.permissions.validate_user_access",
+        "validate": ["ftms.api.permissions.validate_user_access", "ftms.subscriptions.utils.enforce_subscription"],
     },
     "Trip Invoice": {
-        "validate": ["ftms.api.permissions.validate_user_access", "ftms.zatca.trip_adapter.validate_trip_invoice"],
+        "validate": ["ftms.api.permissions.validate_user_access", "ftms.subscriptions.utils.enforce_subscription", "ftms.zatca.trip_adapter.validate_trip_invoice"],
         "on_submit": "ftms.zatca.trip_adapter.on_submit_trip_invoice",
     },
     "Trip Booking": {
-        "validate": "ftms.api.permissions.validate_user_access",
+        "validate": ["ftms.api.permissions.validate_user_access", "ftms.subscriptions.utils.enforce_subscription"],
     },
     "Vehicle": {
         "validate": "ftms.api.permissions.validate_user_access",
@@ -53,6 +56,15 @@ doc_events = {
     "Route": {
         "validate": "ftms.api.permissions.validate_user_access",
     },
+}
+
+scheduler_events = {
+    "daily": [
+        "ftms.subscriptions.utils.daily_subscription_sync",
+    ],
+    "hourly": [
+        "ftms.subscriptions.utils.hourly_trial_check",
+    ],
 }
 
 has_permission = {

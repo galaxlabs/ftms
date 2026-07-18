@@ -1,4 +1,5 @@
 import frappe
+from frappe.utils import add_days, getdate
 
 
 @frappe.whitelist()
@@ -73,19 +74,31 @@ def _get_subscription_status(user, company):
     subs = frappe.get_all(
         "User Subscription",
         filters={"user": user, "company": company},
-        fields=["*"],
+        fields=["status", "trial_start", "trial_end", "trial_days_left",
+                "current_period_start", "current_period_end",
+                "active_days_used", "active_days_remaining", "rollover_days",
+                "last_payment_date", "auto_renew"],
         order_by="creation desc",
         limit=1,
     )
     if not subs:
-        return {"status": "Trial", "trial_days_left": 15, "active_days_left": 0}
+        now = getdate()
+        return {"status": "Trial", "trial_days_left": 15, "active_days_left": 0,
+                "trial_start": str(now), "trial_end": str(add_days(now, 15))}
+    s = subs[0]
     return {
-        "status": subs[0].get("status", "Unknown"),
-        "trial_days_left": subs[0].get("trial_days_left", 0),
-        "active_days_left": subs[0].get("active_days_left", 0),
-        "end_date": str(subs[0].get("end_date") or ""),
+        "status": s.get("status", "Unknown"),
+        "trial_start": str(s.get("trial_start") or ""),
+        "trial_end": str(s.get("trial_end") or ""),
+        "trial_days_left": s.get("trial_days_left", 0),
+        "period_start": str(s.get("current_period_start") or ""),
+        "period_end": str(s.get("current_period_end") or ""),
+        "active_days_used": s.get("active_days_used", 0),
+        "active_days_remaining": s.get("active_days_remaining", 0),
+        "rollover_days": s.get("rollover_days", 0),
+        "auto_renew": s.get("auto_renew", 1),
+        "last_payment_date": str(s.get("last_payment_date") or ""),
     }
-
 
 def _get_permissions(link):
     if not link:

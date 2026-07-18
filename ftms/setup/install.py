@@ -10,6 +10,25 @@ def after_migrate():
     ensure_settings()
     sync_customizations()
     create_custom_fields()
+    seed_existing_subscriptions()
+
+def seed_existing_subscriptions():
+    """Create trial subscriptions for existing active User Company Links."""
+    from ftms.subscriptions.utils import create_subscription_on_link
+    links = frappe.get_all("User Company Link",
+        filters={"status": "Active"},
+        fields=["name", "user", "company"],
+    )
+    for link in links:
+        existing = frappe.db.exists("User Subscription", {
+            "user": link.user,
+            "company": link.company,
+        })
+        if not existing:
+            doc = frappe.get_doc("User Company Link", link.name)
+            create_subscription_on_link(doc, None)
+    if links:
+        frappe.db.commit()
 
 def ensure_settings():
     if not frappe.db.exists("Transport Settings", "Transport Settings"):
