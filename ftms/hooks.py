@@ -90,7 +90,6 @@ get_permission_query_conditions = {
 
 fixtures = [
     {"dt": "Print Format", "filters": [["module", "=", "Frappe Transport Management System"]]},
-    {"dt": "Letterhead", "filters": [["module", "=", "Frappe Transport Management System"]]},
 ]
 
 default_print_format = {
