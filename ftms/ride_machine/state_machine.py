@@ -10,9 +10,9 @@ class StateMachine:
     transitions: dict[str, list[str]] = {}
     actions: dict[str, str] = {}
 
-    def __init__(self, doc, status_field="status"):
+    def __init__(self, doc, status_field=None):
         self.doc = doc
-        self.status_field = status_field
+        self.status_field = status_field or self.status_field
 
     @property
     def current(self):
@@ -42,6 +42,7 @@ class StateMachine:
 
 
 class TripStateMachine(StateMachine):
+    status_field = "trip_status"
     transitions = {
         "Draft": ["Scheduled", "Cancelled"],
         "Scheduled": ["Departed", "Cancelled"],
@@ -81,6 +82,7 @@ class TripStateMachine(StateMachine):
 
 
 class BookingStateMachine(StateMachine):
+    status_field = "booking_status"
     transitions = {
         "Draft": ["Confirmed", "Cancelled"],
         "Confirmed": ["Checked In", "Cancelled"],
