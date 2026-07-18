@@ -5,9 +5,12 @@ import frappe
 from ftms.tenant import company_filters
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def list_companies(company=None, limit=100):
-	filters = company_filters(company=company)
+	if frappe.session.user == "Guest":
+		filters = {"status": "Active", "blacklisted": 0}
+	else:
+		filters = company_filters(company=company)
 	return frappe.get_all(
 		"Transportation Company",
 		filters=filters,
