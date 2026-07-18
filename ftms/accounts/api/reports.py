@@ -2,6 +2,8 @@ import frappe
 
 @frappe.whitelist()
 def trial_balance(from_date, to_date, company=None):
+    if not frappe.db.exists("DocType", "GL Entry"):
+        return []
     filters = {"posting_date": ["between", [from_date, to_date]], "is_cancelled": 0}
     if company:
         filters["company"] = company

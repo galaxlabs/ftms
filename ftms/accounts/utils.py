@@ -37,14 +37,20 @@ def setup_chart_of_accounts(company):
         {"account_name": "Retained Earnings", "parent_account": "Equity", "is_group": 0, "account_type": "Equity", "root_type": "Equity"},
     ]
 
-    created = []
+    name_map = {}
     for acc in accounts:
-        if frappe.db.exists("Account", {"account_name": acc["account_name"], "company": company}):
+        pname = acc["account_name"]
+        existing = frappe.db.get_value("Account", {"account_name": pname, "company": company})
+        if existing:
+            name_map[pname] = existing
             continue
+        parent = None
+        if acc["parent_account"]:
+            parent = name_map.get(acc["parent_account"])
         doc = frappe.get_doc({
             "doctype": "Account",
-            "account_name": acc["account_name"],
-            "parent_account": acc["parent_account"],
+            "account_name": pname,
+            "parent_account": parent,
             "is_group": acc["is_group"],
             "account_type": acc.get("account_type"),
             "company": company,
@@ -52,25 +58,27 @@ def setup_chart_of_accounts(company):
         })
         doc.flags.ignore_mandatory = True
         doc.insert(ignore_permissions=True)
+        name_map[pname] = doc.name
         created.append(doc.name)
 
-    frappe.db.set_value("Transportation Company", company, "default_cash_account",
-        frappe.db.get_value("Account", {"account_name": "Cash", "company": company}))
-    frappe.db.set_value("Transportation Company", company, "default_receivable_account",
-        frappe.db.get_value("Account", {"account_name": "Debtors", "company": company}))
-    frappe.db.set_value("Transportation Company", company, "default_payable_account",
-        frappe.db.get_value("Account", {"account_name": "Creditors", "company": company}))
-    frappe.db.set_value("Transportation Company", company, "default_income_account",
-        frappe.db.get_value("Account", {"account_name": "Transport Revenue", "company": company}))
-    frappe.db.set_value("Transportation Company", company, "default_expense_account",
-        frappe.db.get_value("Account", {"account_name": "Other Expenses", "company": company}))
+    def _get(name):
+        return name_map.get(name)
+
+    frappe.db.set_value("Transportation Company", company, "default_cash_account", _get("Cash"))
+    frappe.db.set_value("Transportation Company", company, "default_receivable_account", _get("Debtors"))
+    frappe.db.set_value("Transportation Company", company, "default_payable_account", _get("Creditors"))
+    frappe.db.set_value("Transportation Company", company, "default_income_account", _get("Transport Revenue"))
+    frappe.db.set_value("Transportation Company", company, "default_expense_account", _get("Other Expenses"))
 
     frappe.db.commit()
     return "Created " + str(len(created)) + " accounts for " + company
 
 def auto_setup_accounts(doc, method=None):
-    if method == "after_insert":
-        setup_chart_of_accounts(doc.name)
+    if method != "after_insert":
+        return
+    if not frappe.db.exists("DocType", "GL Entry"):
+        return
+    setup_chart_of_accounts(doc.name)
 
 def calc_line_amounts(doc):
     for field in ("items",):
@@ -99,6 +107,8 @@ def calc_vat(doc):
 @frappe.whitelist()
 def get_unpaid_invoices(party_type, party):
     doctype = "Sales Invoice" if party_type == "Customer" else "Purchase Invoice"
+    if not frappe.db.exists("DocType", doctype):
+        return []
     party_field = "customer" if party_type == "Customer" else "supplier"
     return frappe.db.get_all(doctype,
         filters={"docstatus": 1, "outstanding": [">", 0], party_field: party},
