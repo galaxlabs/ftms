@@ -16,6 +16,8 @@ app_include_css = [
 
 override_doctype_class = {
     "Address": "ftms.overrides.address.CustomAddress",
+    "Trip": "ftms.frappe_transport_management_system.doctype.trip.trip.Trip",
+    "Trip Booking": "ftms.frappe_transport_management_system.doctype.trip_booking.trip_booking.TripBooking",
 }
 
 after_install = "ftms.setup.install.after_install"

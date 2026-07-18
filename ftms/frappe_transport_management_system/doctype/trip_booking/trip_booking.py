@@ -1,16 +1,30 @@
+from __future__ import annotations
+
+import frappe
 from frappe.model.document import Document
+from ftms.ride_machine.state_machine import BookingStateMachine
 
 
 class TripBooking(Document):
-	def validate(self):
-		self.set_booking_title()
-		self.update_passenger_count()
+    def validate(self):
+        pass
 
-	def set_booking_title(self):
-		if not self.booking_title and self.customer_name:
-			from frappe.utils import now_datetime
-			self.booking_title = f"BK-{self.customer_name}-{now_datetime().strftime('%Y%m%d%H%M%S')}"
+    def confirm(self):
+        machine = BookingStateMachine(self, "booking_status")
+        machine.action("confirm")
 
-	def update_passenger_count(self):
-		if self.passengers:
-			self.passenger_count = len(self.passengers)
+    def check_in(self):
+        machine = BookingStateMachine(self, "booking_status")
+        machine.action("check_in")
+
+    def board(self):
+        machine = BookingStateMachine(self, "booking_status")
+        machine.action("board")
+
+    def close(self):
+        machine = BookingStateMachine(self, "booking_status")
+        machine.action("close")
+
+    def cancel(self):
+        machine = BookingStateMachine(self, "booking_status")
+        machine.action("cancel")
