@@ -5,7 +5,7 @@ import frappe
 from ftms.tenant import company_filters, resolve_company
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def list_invoices(company=None, limit=50):
 	filters = company_filters(company=company)
 	return frappe.get_all(

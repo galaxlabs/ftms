@@ -5,7 +5,7 @@ import frappe
 from ftms.tenant import company_filters, resolve_company
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def overview(company=None):
 	company = resolve_company(company=company, allow_missing=True)
 	filters = company_filters(company=company)

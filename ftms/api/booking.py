@@ -78,7 +78,7 @@ def create_booking(**kwargs):
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def list_bookings(company=None, limit=50):
 	filters = company_filters(company=company)
 	return frappe.get_all(
