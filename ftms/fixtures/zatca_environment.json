@@ -1,0 +1,38 @@
+[
+ {
+  "compliance_csid_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/core/compliance",
+  "docstatus": 0,
+  "doctype": "ZATCA Environment",
+  "environment": "Production",
+  "environment_name": "FATOORA Portal",
+  "invoice_clearance_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/core/invoices/clearance/single",
+  "invoice_reporting_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/core/invoices/reporting/single",
+  "modified": "2026-07-18 00:00:00",
+  "name": "FATOORA Portal",
+  "production_csid_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/core/production/csids"
+ },
+ {
+  "compliance_csid_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation/compliance",
+  "docstatus": 0,
+  "doctype": "ZATCA Environment",
+  "environment": "Simulation",
+  "environment_name": "Simulation Portal",
+  "invoice_clearance_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation/invoices/clearance/single",
+  "invoice_reporting_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation/invoices/reporting/single",
+  "modified": "2026-07-18 00:00:00",
+  "name": "Simulation Portal",
+  "production_csid_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation/production/csids"
+ },
+ {
+  "compliance_csid_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/compliance",
+  "docstatus": 0,
+  "doctype": "ZATCA Environment",
+  "environment": "Sandbox",
+  "environment_name": "Sandbox Portal",
+  "invoice_clearance_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/invoices/clearance/single",
+  "invoice_reporting_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/invoices/reporting/single",
+  "modified": "2026-07-18 00:00:00",
+  "name": "Sandbox Portal",
+  "production_csid_api": "https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/production/csids"
+ }
+]

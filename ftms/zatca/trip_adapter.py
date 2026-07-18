@@ -1,77 +1,60 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
-_VAT_TEMPLATE_AVAILABLE = None
 
-def _vat_template_available():
-    global _VAT_TEMPLATE_AVAILABLE
-    if _VAT_TEMPLATE_AVAILABLE is None:
-        try:
-            import frappe
-            frappe.db.sql("SELECT COUNT(*) FROM `tabSales Taxes and Charges Template` LIMIT 1")
-            _VAT_TEMPLATE_AVAILABLE = True
-        except Exception:
-            _VAT_TEMPLATE_AVAILABLE = False
-    return _VAT_TEMPLATE_AVAILABLE
+def validate_trip_invoice(doc, method=None):
+	if not doc.company:
+		return
 
-def validate_trip_invoice(doc, method):
-    if doc.enable_zatca and _vat_template_available():
-        if not doc.vat_template:
-            frappe.throw("VAT Template must be provided when ZATCA E-Invoicing is enabled.")
+	company_doc = frappe.get_cached_doc("Transportation Company", doc.company)
+	if not company_doc.enable_zatca_e_invoicing:
+		return
 
-def on_submit_trip_invoice(doc, method):
-    if doc.enable_zatca:
-        from ftms.zatca.clearence_util import generate_einvoice
-        generate_einvoice(doc, submit_now=True)
+	if company_doc.zatca_phase == "ZATCA Phase 2":
+		if not company_doc.production_csid:
+			frappe.throw(_(
+				"ZATCA Phase 2 requires a Production CSID. Complete onboarding for company {0} first."
+			).format(doc.company))
+		csid = frappe.get_doc("Production CSID", company_doc.production_csid)
+		if csid.status != "Active":
+			frappe.throw(_("Production CSID for {0} is not active").format(doc.company))
 
-def get_customer_type(doc):
-    if doc.customer:
-        customer = frappe.get_doc("Customer", doc.customer)
-        return customer.customer_type
-    return "Individual"
+	_validate_vat_fields(doc, company_doc)
 
-def get_customer_name(doc):
-    return doc.customer or "Walk-in Customer"
 
-def get_taxes_and_charges(doc):
-    return doc.vat_template
+def on_submit_trip_invoice(doc, method=None):
+	if not doc.company:
+		return
 
-def get_posting_date(doc):
-    return doc.invoice_date
+	company_doc = frappe.get_cached_doc("Transportation Company", doc.company)
+	if not company_doc.enable_zatca_e_invoicing:
+		return
 
-def get_posting_time(doc):
-    return doc.get("posting_time") or "12:00:00"
+	from ftms.zatca.clearance import submit_to_zatca
 
-def get_is_return(doc):
-    return False
+	try:
+		result = submit_to_zatca(doc.name)
+		doc.zatca_submit_status = result.get("status")
+	except Exception as e:
+		frappe.log_error(
+			f"ZATCA submission failed for {doc.name}: {e}",
+			"ZATCA Submission Error",
+		)
+		doc.zatca_submit_status = "Failed"
+		doc.zatca_error = str(e)
 
-def get_is_debit_note(doc):
-    return False
 
-def get_taxes(doc):
-    return doc.get("items", [])
-
-def get_company(doc):
-    return doc.company
-
-def get_is_zatca_test(doc):
-    return doc.is_zatca_test
-
-def get_compliance_csid(doc):
-    return doc.compliance_csid
-
-def set_zatca_fields(doc, invoice_data, response_json, payload, status, zatca_status_field):
-    doc.invoice_type = invoice_data["invoice_type"]
-    doc.invoice_hash = payload.get("invoiceHash")
-    doc.invoice_unique_identifier = invoice_data["uuid"]
-    doc.invoice_icv = invoice_data["invoice_counter"]
-    doc.zatca_submit_status = status
-    doc.zatca_submit_time = frappe.utils.now_datetime()
-    doc.seller_name = invoice_data["seller"].get("organizationName")
-    doc.seller_vat = invoice_data["seller"].get("vatNumber")
-    doc.buyer_name = invoice_data["buyer"].get("organizationName")
-    doc.buyer_vat = invoice_data["buyer"].get("vatNumber")
-
-def clear_zatca_fields(doc, status, validation_results):
-    doc.zatca_submit_status = status
-    doc.validation_results = validation_results
+def _validate_vat_fields(doc, company_doc):
+	missing = []
+	if not company_doc.vat_no:
+		missing.append("VAT No")
+	if not company_doc.cr_no:
+		missing.append("CR No")
+	if not company_doc.company_name:
+		missing.append("Company Name")
+	if missing:
+		frappe.throw(_(
+			"ZATCA E-Invoicing requires: {0}. Update company {1} first."
+		).format(", ".join(missing), doc.company))
