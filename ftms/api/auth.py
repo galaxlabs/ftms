@@ -48,6 +48,11 @@ def get_current_user():
         "last_name": user_doc.last_name,
         "full_name": user_doc.full_name,
         "mobile_no": user_doc.mobile_no,
+        "id_document_type": _user_field(user_doc, "ftms_id_document_type"),
+        "id_no": _user_field(user_doc, "ftms_id_no"),
+        "nationality": _user_field(user_doc, "ftms_nationality"),
+        "id_expiry_date": str(_user_field(user_doc, "ftms_id_expiry_date") or ""),
+        "id_document": _user_field(user_doc, "ftms_id_document"),
         "roles": roles,
         "portal_role": link.role if link else None,
         "company": link.company if link else None,
@@ -65,7 +70,7 @@ def get_current_user():
 
 
 @frappe.whitelist()
-def update_profile(first_name=None, last_name=None, mobile_no=None):
+def update_profile(first_name=None, last_name=None, mobile_no=None, id_document_type=None, id_no=None, nationality=None, id_expiry_date=None, id_document=None):
     user = frappe.session.user
     if not user or user == "Guest":
         frappe.throw("Not authenticated", frappe.PermissionError)
@@ -77,6 +82,16 @@ def update_profile(first_name=None, last_name=None, mobile_no=None):
         user_doc.last_name = (last_name or "").strip()
     if mobile_no is not None:
         user_doc.mobile_no = (mobile_no or "").strip()
+    identity_fields = {
+        "ftms_id_document_type": id_document_type,
+        "ftms_id_no": id_no,
+        "ftms_nationality": nationality,
+        "ftms_id_expiry_date": id_expiry_date,
+        "ftms_id_document": id_document,
+    }
+    for fieldname, value in identity_fields.items():
+        if value is not None and user_doc.meta.has_field(fieldname):
+            user_doc.set(fieldname, value.strip() if isinstance(value, str) else value)
     user_doc.save(ignore_permissions=True)
     return get_current_user()
 
@@ -93,6 +108,12 @@ def _find_active_link(user=None):
         limit=1,
     )
     return links[0] if links else None
+
+
+def _user_field(user_doc, fieldname):
+    if user_doc.meta.has_field(fieldname):
+        return user_doc.get(fieldname)
+    return None
 
 
 def _get_subscription_status(user, company):
@@ -132,7 +153,7 @@ def _get_captain_profile(user):
     profiles = frappe.get_all(
         "Captain Profile",
         filters={"user": user},
-        fields=["name", "status", "current_company", "license_no", "mobile_no"],
+        fields=["name", "status", "current_company", "license_no", "license_expiry_date", "driver_card_no", "driver_card_expiry_date", "mobile_no"],
         limit=1,
     )
     return profiles[0] if profiles else None

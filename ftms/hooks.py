@@ -16,8 +16,8 @@ app_include_css = [
 
 override_doctype_class = {
     "Address": "ftms.overrides.address.CustomAddress",
-    "Trip": "ftms.frappe_transport_management_system.doctype.trip.trip.Trip",
-    "Trip Booking": "ftms.frappe_transport_management_system.doctype.trip_booking.trip_booking.TripBooking",
+    "Trip": "ftms.transport_system.doctype.trip.trip.Trip",
+    "Trip Booking": "ftms.transport_system.doctype.trip_booking.trip_booking.TripBooking",
 }
 
 before_migrate = "ftms.setup.install.before_migrate"
@@ -29,11 +29,11 @@ doctype_js = {
 }
 
 override_doctype_dashboards = {
-    "Vehicle": "ftms.frappe_transport_management_system.doctype.vehicle.vehicle_dashboard.get_data",
-    "Route": "ftms.frappe_transport_management_system.doctype.route.route_dashboard.get_data",
-    "Trip": "ftms.frappe_transport_management_system.doctype.trip.trip_dashboard.get_data",
-    "Trip Booking": "ftms.frappe_transport_management_system.doctype.trip_booking.trip_booking_dashboard.get_data",
-    "Trip Invoice": "ftms.frappe_transport_management_system.doctype.trip_invoice.trip_invoice_dashboard.get_data",
+    "Vehicle": "ftms.transport_system.doctype.vehicle.vehicle_dashboard.get_data",
+    "Route": "ftms.transport_system.doctype.route.route_dashboard.get_data",
+    "Trip": "ftms.transport_system.doctype.trip.trip_dashboard.get_data",
+    "Trip Booking": "ftms.transport_system.doctype.trip_booking.trip_booking_dashboard.get_data",
+    "Trip Invoice": "ftms.transport_system.doctype.trip_invoice.trip_invoice_dashboard.get_data",
 }
 
 doc_events = {
@@ -105,7 +105,7 @@ fixtures = [
     {"dt": "Vehicle Make", "filters": [["is_active", "=", 1]]},
     {"dt": "Vehicle Model", "filters": [["is_active", "=", 1]]},
     {"dt": "ZATCA Environment", "filters": [["name", "in", ["FATOORA Portal", "Simulation Portal", "Sandbox Portal"]]]},
-    {"dt": "Print Format", "filters": [["module", "=", "Frappe Transport Management System"]]},
+    {"dt": "Print Format", "filters": [["module", "=", "Transport System"]]},
 ]
 
 default_print_format = {

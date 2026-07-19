@@ -17,7 +17,7 @@ def _get_last_pih(company):
 		"Zatca Transactions",
 		{"company": company, "status": "Submitted"},
 		"invoice_hash",
-		order_by="transaction_date desc",
+		order_by="transaction_time desc",
 	)
 	return last or hashlib.sha256(b"0").hexdigest()
 
@@ -27,7 +27,7 @@ def _generate_icv(company):
 		"Zatca Transactions",
 		{"company": company},
 		"invoice_icv",
-		order_by="transaction_date desc",
+		order_by="transaction_time desc",
 	)
 	return (last or 0) + 1
 

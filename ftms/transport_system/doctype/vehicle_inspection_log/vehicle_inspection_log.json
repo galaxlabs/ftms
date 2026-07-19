@@ -1,0 +1,245 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-02-25 12:32:47.522910",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sec_header",
+  "naming_series",
+  "inspection_no",
+  "column_break_h1",
+  "inspection_date",
+  "driver",
+  "column_break_h2",
+  "vehicle",
+  "vehicle_type",
+  "supervisor",
+  "sec_items",
+  "items",
+  "auto_fill_checklist",
+  "sec_sign",
+  "declaration",
+  "column_break_s1",
+  "driver_name_text",
+  "driver_signature",
+  "column_break_s2",
+  "supervisor_name_text",
+  "supervisor_signature",
+  "company_stamp",
+  "sec_notes",
+  "overall_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "sec_header",
+   "fieldtype": "Section Break",
+   "label": "Daily Vehicle Inspection Log | سجل الفحص اليومي للسيارة"
+  },
+  {
+   "default": "VIL-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series | التسلسل",
+   "options": "VIL-.YYYY.-.#####\nVIL-.MM.-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "inspection_no",
+   "fieldtype": "Data",
+   "label": "Inspection No | رقم الفحص",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_h1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "inspection_date",
+   "fieldtype": "Date",
+   "label": "Date | التاريخ",
+   "reqd": 1
+  },
+  {
+   "fieldname": "driver",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Driver | اسم السائق",
+   "link_filters": "[[\"Employee\",\"is_driver\",\"=\",1]]",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_h2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "driver.vehicle_assigned",
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Vehicle | المركبة",
+   "options": "Vehicle",
+   "reqd": 1
+  },
+  {
+   "fieldname": "vehicle_type",
+   "fieldtype": "Data",
+   "label": "Vehicle Type | نوع المركبة"
+  },
+  {
+   "fieldname": "sec_items",
+   "fieldtype": "Section Break",
+   "label": "Checklist | قائمة الفحص"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items | البنود",
+   "options": "Vehicle Inspection Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sec_sign",
+   "fieldtype": "Section Break",
+   "label": "Signatures | التوقيعات"
+  },
+  {
+   "default": "I confirm the above inspection is correct. | أقر بأن بيانات الفحص أعلاه صحيحة.",
+   "fieldname": "declaration",
+   "fieldtype": "Small Text",
+   "label": "Declaration | إقرار"
+  },
+  {
+   "fieldname": "column_break_s1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "driver.employee_name",
+   "fieldname": "driver_name_text",
+   "fieldtype": "Data",
+   "label": "Driver Name (Text) | اسم السائق (نص)"
+  },
+  {
+   "fetch_from": "driver.signature_image",
+   "fieldname": "driver_signature",
+   "fieldtype": "Signature",
+   "label": "Driver Signature | توقيع السائق",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_s2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "supervisor_name_text",
+   "fieldtype": "Data",
+   "label": "Supervisor (Text) | المشرف (نص)"
+  },
+  {
+   "fetch_from": "driver.supervisor_signature",
+   "fieldname": "supervisor_signature",
+   "fieldtype": "Signature",
+   "label": "Supervisor Signature | توقيع المشرف"
+  },
+  {
+   "fieldname": "sec_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes | ملاحظات"
+  },
+  {
+   "fieldname": "overall_notes",
+   "fieldtype": "Small Text",
+   "label": "Overall Notes | ملاحظات عامة"
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_fill_checklist",
+   "fieldtype": "Check",
+   "label": "Auto Fill Checklist"
+  },
+  {
+   "fieldname": "supervisor",
+   "fieldtype": "Link",
+   "label": "Supervisor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "driver.company_stamp",
+   "fieldname": "company_stamp",
+   "fieldtype": "Attach Image",
+   "label": "Company Stamp",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-26 16:54:44.057210",
+ "modified_by": "Administrator",
+ "module": "Transport System",
+ "name": "Vehicle Inspection Log",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Driver",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Desk User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "vehicle",
+ "track_changes": 1
+}

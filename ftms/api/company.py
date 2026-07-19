@@ -20,7 +20,7 @@ def list_companies(company=None, limit=100):
 	return frappe.get_all(
 		"Company",
 		filters=filters,
-		fields=["name", "company_code", "company_name", "domain", "status", "blacklisted"],
+		fields=["name", "company_code", "company_name", "legal_name", "company_name_ar", "vat_no", "tax_id", "cr_no", "domain", "phone", "email", "status", "blacklisted"],
 		order_by="modified desc",
 		limit_page_length=int(limit),
 	)

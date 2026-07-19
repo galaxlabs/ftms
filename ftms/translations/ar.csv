@@ -1,4 +1,4 @@
-DocType,Transportation Company,شركة النقل
+DocType,Company,شركة النقل
 DocType,Trip,رحلة
 DocType,Route,طريق
 DocType,Vehicle,مركبة
@@ -32,10 +32,10 @@ DocType,Zatca CSR Settings,إعدادات CSR زاتكا
 DocType,Compliance CSID,CSID الامتثال
 DocType,Production CSID,CSID الإنتاج
 DocType,Zatca Transactions,معاملات زاتكا
-Field,Transportation Company,company_name_ar,اسم الشركة (عربي)
-Field,Transportation Company,vat_no,الرقم الضريبي
-Field,Transportation Company,tax_id,المعرف الضريبي
-Field,Transportation Company,cr_no,رقم السجل التجاري
+Field,Company,company_name_ar,اسم الشركة (عربي)
+Field,Company,vat_no,الرقم الضريبي
+Field,Company,tax_id,المعرف الضريبي
+Field,Company,cr_no,رقم السجل التجاري
 Field,Trip,hijri_date,التاريخ الهجري
 Field,Trip,trip_title,عنوان الرحلة
 Field,Trip,trip_status,حالة الرحلة

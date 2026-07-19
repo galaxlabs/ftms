@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:city_name",
+ "creation": "2026-07-18 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "city_name",
+  "city_name_ar",
+  "region",
+  "region_ar",
+  "column_break_location",
+  "latitude",
+  "longitude",
+  "is_active"
+ ],
+ "fields": [
+  {"fieldname": "city_name", "fieldtype": "Data", "in_list_view": 1, "label": "City Name (English)", "reqd": 1, "unique": 1},
+  {"fieldname": "city_name_ar", "fieldtype": "Data", "in_list_view": 1, "label": "City Name (Arabic)", "reqd": 1},
+  {"fieldname": "region", "fieldtype": "Data", "in_list_view": 1, "label": "Region (English)", "reqd": 1},
+  {"fieldname": "region_ar", "fieldtype": "Data", "label": "Region (Arabic)"},
+  {"fieldname": "column_break_location", "fieldtype": "Column Break"},
+  {"fieldname": "latitude", "fieldtype": "Float", "label": "Latitude"},
+  {"fieldname": "longitude", "fieldtype": "Float", "label": "Longitude"},
+  {"default": "1", "fieldname": "is_active", "fieldtype": "Check", "label": "Active"}
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-18 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Transport System",
+ "name": "KSA City",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1}
+ ],
+ "search_fields": "city_name,city_name_ar,region",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "city_name",
+ "track_changes": 1
+}

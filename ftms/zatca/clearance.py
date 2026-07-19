@@ -6,7 +6,7 @@ import json
 import frappe
 from frappe import _
 
-	from ftms.zatca.signing import (
+from ftms.zatca.signing import (
 	_generate_icv,
 	_get_invoice_type as _get_invoice_type_code,
 	_get_last_pih,
@@ -91,12 +91,14 @@ def submit_to_zatca(invoice_name):
 			"reference_docname": invoice.name,
 			"action": f"ZATCA {api_name}",
 			"status": status,
+			"invoice_id": invoice.name,
+			"invoice_uuid": uuid_str,
 			"invoice_hash": digest,
 			"invoice_icv": invoice_counter,
-			"uuid": uuid_str,
-			"request_data": json.dumps({"invoice": invoice.name}),
-			"response_data": json.dumps(resp, ensure_ascii=False),
-			"transaction_date": frappe.utils.now_datetime(),
+			"previous_invoice_hash": pih,
+			"request_body": json.dumps({"invoice": invoice.name}),
+			"response_body": json.dumps(resp, ensure_ascii=False),
+			"transaction_time": frappe.utils.now_datetime(),
 		}
 	)
 	txn.insert(ignore_permissions=True)

@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "creation": "2026-07-18 16:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "period_start",
+  "period_end",
+  "amount",
+  "paid",
+  "payment_date",
+  "invoice"
+ ],
+ "fields": [
+  {
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Period Start",
+   "reqd": 1
+  },
+  {
+   "fieldname": "period_end",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Period End",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "options": "currency",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "paid",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Paid"
+  },
+  {
+   "fieldname": "payment_date",
+   "fieldtype": "Date",
+   "label": "Payment Date"
+  },
+  {
+   "fieldname": "invoice",
+   "fieldtype": "Data",
+   "label": "Invoice"
+  }
+ ],
+ "grid_page_length": 50,
+ "indexes": [],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-18 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Transport System",
+ "name": "Subscription Period",
+ "naming_rule": "Autoincrement",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

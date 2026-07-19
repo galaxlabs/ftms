@@ -1,0 +1,314 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:employee_name",
+ "creation": "2026-07-02 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee_name",
+  "status",
+  "column_break_0",
+  "is_driver",
+  "enabled",
+  "basic_section",
+  "employee_name_ar",
+  "email",
+  "mobile_no",
+  "phone",
+  "column_break_1",
+  "date_of_birth",
+  "date_of_joining",
+  "gender",
+  "blood_group",
+  "nationality",
+  "employment_section",
+  "company",
+  "designation",
+  "department",
+  "vehicle_assigned",
+  "supervisor_name",
+  "column_break_2",
+  "national_id",
+  "national_id_expiry",
+  "driving_license_no",
+  "driving_license_expiry",
+  "passport_no",
+  "roles_section",
+  "can_login",
+  "is_employee",
+  "is_sales_person",
+  "column_break_3",
+  "role_profile",
+  "module_profile",
+  "documents_section",
+  "signature_image",
+  "supervisor_signature",
+  "company_stamp",
+  "profile_photo",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Active\nInactive\nSuspended"
+  },
+  {
+   "fieldname": "column_break_0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_driver",
+   "fieldtype": "Check",
+   "label": "Is Driver"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "basic_section",
+   "fieldtype": "Section Break",
+   "label": "Basic Details"
+  },
+  {
+   "fieldname": "employee_name_ar",
+   "fieldtype": "Data",
+   "label": "Employee Name (Arabic)"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "mobile_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mobile No"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "date_of_birth",
+   "fieldtype": "Date",
+   "label": "Date of Birth"
+  },
+  {
+   "fieldname": "date_of_joining",
+   "fieldtype": "Date",
+   "label": "Date of Joining"
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "label": "Gender",
+   "options": "Male\nFemale"
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Select",
+   "label": "Blood Group",
+   "options": "B+\nB-\nA+\nA-\nAB+\nAB-\nO+\nO-"
+  },
+  {
+   "fieldname": "nationality",
+   "fieldtype": "Link",
+   "label": "Nationality",
+   "options": "Country"
+  },
+  {
+   "fieldname": "employment_section",
+   "fieldtype": "Section Break",
+   "label": "Employment"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Designation",
+   "options": "Designation"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "vehicle_assigned",
+   "fieldtype": "Link",
+   "label": "Vehicle Assigned",
+   "options": "Vehicle"
+  },
+  {
+   "fieldname": "supervisor_name",
+   "fieldtype": "Data",
+   "label": "Supervisor Name"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "national_id",
+   "fieldtype": "Data",
+   "label": "National ID / Iqama"
+  },
+  {
+   "fieldname": "national_id_expiry",
+   "fieldtype": "Date",
+   "label": "National ID Expiry"
+  },
+  {
+   "fieldname": "driving_license_no",
+   "fieldtype": "Data",
+   "label": "Driving License No"
+  },
+  {
+   "fieldname": "driving_license_expiry",
+   "fieldtype": "Date",
+   "label": "Driving License Expiry"
+  },
+  {
+   "fieldname": "passport_no",
+   "fieldtype": "Data",
+   "label": "Passport No"
+  },
+  {
+   "fieldname": "roles_section",
+   "fieldtype": "Section Break",
+   "label": "Roles & Access"
+  },
+  {
+   "default": "0",
+   "fieldname": "can_login",
+   "fieldtype": "Check",
+   "label": "Can Login"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_employee",
+   "fieldtype": "Check",
+   "label": "Is Employee"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_sales_person",
+   "fieldtype": "Check",
+   "label": "Is Sales Person"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "role_profile",
+   "fieldtype": "Link",
+   "label": "Role Profile",
+   "options": "Role Profile"
+  },
+  {
+   "fieldname": "module_profile",
+   "fieldtype": "Link",
+   "label": "Module Profile",
+   "options": "Module Profile"
+  },
+  {
+   "fieldname": "documents_section",
+   "fieldtype": "Section Break",
+   "label": "Documents & Media"
+  },
+  {
+   "fieldname": "signature_image",
+   "fieldtype": "Attach Image",
+   "label": "Signature"
+  },
+  {
+   "fieldname": "supervisor_signature",
+   "fieldtype": "Attach Image",
+   "label": "Supervisor Signature"
+  },
+  {
+   "fieldname": "company_stamp",
+   "fieldtype": "Attach Image",
+   "label": "Company Stamp"
+  },
+  {
+   "fieldname": "profile_photo",
+   "fieldtype": "Attach Image",
+   "label": "Profile Photo"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "icon": "fa fa-user",
+ "index_web_pages_for_search": 1,
+ "module": "Transport System",
+ "name": "Employee",
+ "naming_rule": "By fieldname",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "share": 1,
+   "write": 1,
+   "role": "System Manager"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "share": 1,
+   "write": 1,
+   "role": "Transport Manager"
+  },
+  {
+   "read": 1,
+   "role": "Driver"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

@@ -96,9 +96,9 @@ def log_transaction(company, doctype, docname, action, status, request=None, res
 			"reference_docname": docname,
 			"action": action,
 			"status": status,
-			"request_data": json.dumps(request, ensure_ascii=False) if request else None,
-			"response_data": json.dumps(response, ensure_ascii=False) if response else None,
-			"transaction_date": frappe.utils.now_datetime(),
+			"request_body": json.dumps(request, ensure_ascii=False) if request else None,
+			"response_body": json.dumps(response, ensure_ascii=False) if response else None,
+			"transaction_time": frappe.utils.now_datetime(),
 		}
 	)
 	log.insert(ignore_permissions=True)

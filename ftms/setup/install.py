@@ -29,13 +29,13 @@ def rename_transportation_company_doctype():
         return
     if frappe.db.exists("DocType", "Company"):
         company_module = frappe.db.get_value("DocType", "Company", "module")
-        if company_module != "FTMS":
+        if company_module not in {"Transport System", "FTMS"}:
             frappe.throw("Cannot rename Transportation Company to Company because another Company DocType already exists.")
         return
     if frappe.db.table_exists("Company"):
         frappe.throw("Cannot rename Transportation Company to Company because tabCompany already exists.")
 
-    frappe.db.sql("UPDATE `tabDocType` SET name='Company', module='FTMS' WHERE name='Transportation Company'")
+    frappe.db.sql("UPDATE `tabDocType` SET name='Company', module='Transport System' WHERE name='Transportation Company'")
     frappe.db.sql("UPDATE `tabDocField` SET parent='Company' WHERE parent='Transportation Company'")
     frappe.db.sql("UPDATE `tabDocPerm` SET parent='Company' WHERE parent='Transportation Company'")
     frappe.db.sql("UPDATE `tabDocField` SET options='Company' WHERE options='Transportation Company'")
@@ -91,6 +91,12 @@ def create_custom_fields():
         {"dt": "Address", "fieldname": "street_name", "fieldtype": "Data", "label": "Street Name", "insert_after": "building_no"},
         {"dt": "Address", "fieldname": "district", "fieldtype": "Data", "label": "District", "insert_after": "street_name"},
         {"dt": "Address", "fieldname": "additional_no", "fieldtype": "Data", "label": "Additional Number", "insert_after": "district"},
+        {"dt": "User", "fieldname": "ftms_identity_section", "fieldtype": "Section Break", "label": "FTMS Identity", "insert_after": "mobile_no"},
+        {"dt": "User", "fieldname": "ftms_id_document_type", "fieldtype": "Select", "label": "ID Document Type", "options": "National ID\nIqama\nPassport\nGCC ID\nOther", "insert_after": "ftms_identity_section"},
+        {"dt": "User", "fieldname": "ftms_id_no", "fieldtype": "Data", "label": "ID No", "insert_after": "ftms_id_document_type"},
+        {"dt": "User", "fieldname": "ftms_nationality", "fieldtype": "Data", "label": "Nationality", "insert_after": "ftms_id_no"},
+        {"dt": "User", "fieldname": "ftms_id_expiry_date", "fieldtype": "Date", "label": "ID Expiry Date", "insert_after": "ftms_nationality"},
+        {"dt": "User", "fieldname": "ftms_id_document", "fieldtype": "Attach", "label": "ID Document", "insert_after": "ftms_id_expiry_date"},
     ]
     for cf in custom_fields:
         dt = cf.pop("dt")
