@@ -67,7 +67,7 @@
   "grid_page_length": 50,
   "modified": "2026-07-17 00:00:00",
   "modified_by": "Administrator",
-  "module": "FTMS",
+  "module": "Frappe Transport Management System",
   "name": "Zatca CSR Settings",
   "naming_rule": "By fieldname",
   "permissions": [

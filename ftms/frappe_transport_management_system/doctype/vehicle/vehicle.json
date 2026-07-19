@@ -74,7 +74,7 @@
  "links": [],
  "modified": "2026-07-02 00:00:00",
  "modified_by": "Administrator",
- "module": "FTMS",
+ "module": "Frappe Transport Management System",
  "name": "Vehicle",
  "naming_rule": "By fieldname",
  "owner": "Administrator",

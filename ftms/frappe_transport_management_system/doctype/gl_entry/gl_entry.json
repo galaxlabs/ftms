@@ -41,7 +41,7 @@
  "links": [],
  "modified": "2026-07-18 00:00:00",
  "modified_by": "Administrator",
- "module": "FTMS",
+ "module": "Frappe Transport Management System",
  "name": "GL Entry",
  "owner": "Administrator",
  "permissions": [

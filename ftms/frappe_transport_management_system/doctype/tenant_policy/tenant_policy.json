@@ -45,7 +45,7 @@
   "issingle": 1,
   "modified": "2026-07-17 00:00:00",
   "modified_by": "Administrator",
-  "module": "FTMS",
+  "module": "Frappe Transport Management System",
   "name": "Tenant Policy",
   "owner": "Administrator",
   "permissions": [

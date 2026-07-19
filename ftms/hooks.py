@@ -105,7 +105,7 @@ fixtures = [
     {"dt": "Vehicle Make", "filters": [["is_active", "=", 1]]},
     {"dt": "Vehicle Model", "filters": [["is_active", "=", 1]]},
     {"dt": "ZATCA Environment", "filters": [["name", "in", ["FATOORA Portal", "Simulation Portal", "Sandbox Portal"]]]},
-    {"dt": "Print Format", "filters": [["module", "=", "FTMS"]]},
+    {"dt": "Print Format", "filters": [["module", "=", "Frappe Transport Management System"]]},
 ]
 
 default_print_format = {

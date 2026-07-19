@@ -52,7 +52,7 @@
  "links": [],
  "modified": "2026-07-19 00:00:00",
  "modified_by": "Administrator",
- "module": "FTMS",
+ "module": "Frappe Transport Management System",
  "name": "Captain Profile",
  "naming_rule": "Expression (old style)",
  "permissions": [

@@ -275,7 +275,7 @@
  ],
  "icon": "fa fa-user",
  "index_web_pages_for_search": 1,
- "module": "FTMS",
+ "module": "Frappe Transport Management System",
  "name": "Employee",
  "naming_rule": "By fieldname",
  "permissions": [
