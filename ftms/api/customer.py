@@ -46,7 +46,7 @@ def create_customer(customer_name, mobile_no=None, email=None, customer_name_ar=
 		"email": email,
 		"status": "Active",
 	})
-	doc.insert()
+	doc.insert(ignore_permissions=True)
 	return {
 		"name": doc.name,
 		"customer_name": doc.customer_name,

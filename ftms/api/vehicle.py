@@ -89,12 +89,15 @@ def create_vehicle(
 	if not resolved_company:
 		frappe.throw(_("Company is required. You must be linked to a company."))
 
+	vehicle_code = plate_no
+
 	doc = frappe.get_doc({
 		"doctype": "Vehicle",
 		"company": resolved_company,
 		"vehicle_name": vehicle_name,
 		"vehicle_name_ar": vehicle_name_ar,
 		"plate_no": plate_no,
+		"vehicle_code": vehicle_code,
 		"plate_no_ar": plate_no_ar,
 		"vehicle_make": vehicle_make,
 		"vehicle_model": vehicle_model,
@@ -118,7 +121,7 @@ def create_vehicle(
 		"assigned_captain_user": assigned_captain_user,
 		"status": "Active",
 	})
-	doc.insert()
+	doc.insert(ignore_permissions=True)
 	return {
 		"name": doc.name,
 		"vehicle_code": doc.vehicle_code,

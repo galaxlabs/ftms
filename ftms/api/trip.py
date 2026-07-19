@@ -48,7 +48,7 @@ def create_trip(trip_title, route, trip_date=None, vehicle=None, assigned_captai
 		"assigned_captain_user": assigned_captain_user,
 		"trip_status": "Scheduled",
 	})
-	doc.insert()
+	doc.insert(ignore_permissions=True)
 	return {
 		"name": doc.name,
 		"trip_title": doc.trip_title,

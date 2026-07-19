@@ -45,7 +45,7 @@ def create_route(source, destination, company=None, route_title=None, route_code
 			"status": status or "Active",
 		}
 	)
-	doc.insert()
+	doc.insert(ignore_permissions=True)
 	return {
 		"name": doc.name,
 		"company": doc.company,

@@ -49,7 +49,7 @@ def create_invoice(customer, trip=None, invoice_date=None, fare_amount=None, vat
 		"grand_total": grand_total,
 		"status": "Draft",
 	})
-	doc.insert()
+	doc.insert(ignore_permissions=True)
 	return {
 		"name": doc.name,
 		"customer": doc.customer,

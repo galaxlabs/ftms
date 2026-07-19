@@ -45,7 +45,7 @@ def create_contract(contract_title, route, shift_type=None, is_active=1):
 		"shift_type": shift_type or "Morning",
 		"is_active": int(is_active),
 	})
-	doc.insert()
+	doc.insert(ignore_permissions=True)
 	return {
 		"name": doc.name,
 		"contract_title": doc.contract_title,
