@@ -36,6 +36,7 @@ def get_current_user():
         company_data = {f: company.get(f) for f in _COMPANY_FIELDS}
 
     subscription = _get_subscription_status(user, link.company if link else None)
+    captain_profile = _get_captain_profile(user)
 
     return {
         "is_authenticated": True,
@@ -51,6 +52,13 @@ def get_current_user():
         "portal_role": link.role if link else None,
         "company": link.company if link else None,
         "company_data": company_data,
+        "captain_profile": captain_profile,
+        "onboarding": {
+            "has_company_link": bool(link),
+            "has_captain_profile": bool(captain_profile),
+            "can_register_company": not link and not captain_profile,
+            "can_become_captain": not link and not captain_profile,
+        },
         "subscription": subscription,
         "permissions": _get_permissions(link),
     }
@@ -118,6 +126,16 @@ def _get_subscription_status(user, company):
         "auto_renew": s.get("auto_renew", 1),
         "last_payment_date": str(s.get("last_payment_date") or ""),
     }
+
+
+def _get_captain_profile(user):
+    profiles = frappe.get_all(
+        "Captain Profile",
+        filters={"user": user},
+        fields=["name", "status", "current_company", "license_no", "mobile_no"],
+        limit=1,
+    )
+    return profiles[0] if profiles else None
 
 def _get_permissions(link):
     if not link:

@@ -5,9 +5,6 @@ from frappe.utils import nowdate, today
 def setup_chart_of_accounts(company):
     if not company:
         return
-    if frappe.db.exists("Account", {"company": company, "is_group": 0}):
-        return "Accounts already exist for " + company
-
     accounts = [
         {"account_name": "Assets", "parent_account": None, "is_group": 1, "root_type": "Asset"},
         {"account_name": "Current Assets", "parent_account": "Assets", "is_group": 1, "root_type": "Asset"},
@@ -22,6 +19,7 @@ def setup_chart_of_accounts(company):
         {"account_name": "Creditors", "parent_account": "Current Liabilities", "is_group": 0, "account_type": "Payable", "root_type": "Liability"},
         {"account_name": "VAT Payable", "parent_account": "Current Liabilities", "is_group": 0, "account_type": "Tax", "root_type": "Liability"},
         {"account_name": "Accrued Expenses", "parent_account": "Current Liabilities", "is_group": 0, "root_type": "Liability"},
+        {"account_name": "VAT Input", "parent_account": "Current Assets", "is_group": 0, "account_type": "Tax", "root_type": "Asset"},
         {"account_name": "Income", "parent_account": None, "is_group": 1, "root_type": "Income"},
         {"account_name": "Transport Revenue", "parent_account": "Income", "is_group": 0, "account_type": "Income Account", "root_type": "Income"},
         {"account_name": "Service Income", "parent_account": "Income", "is_group": 0, "account_type": "Income Account", "root_type": "Income"},
@@ -70,6 +68,8 @@ def setup_chart_of_accounts(company):
     frappe.db.set_value("Transportation Company", company, "default_payable_account", _get("Creditors"))
     frappe.db.set_value("Transportation Company", company, "default_income_account", _get("Transport Revenue"))
     frappe.db.set_value("Transportation Company", company, "default_expense_account", _get("Other Expenses"))
+    frappe.db.set_value("Transportation Company", company, "vat_output_account", _get("VAT Payable"))
+    frappe.db.set_value("Transportation Company", company, "vat_input_account", _get("VAT Input"))
 
     frappe.db.commit()
     return "Created " + str(len(created)) + " accounts for " + company

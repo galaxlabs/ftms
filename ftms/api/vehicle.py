@@ -11,7 +11,7 @@ def list_vehicles(company=None, limit=50):
 	return frappe.get_all(
 		"Vehicle",
 		filters=filters,
-		fields=["name", "company", "vehicle_code", "vehicle_name", "plate_no", "vehicle_type", "status"],
+		fields=["name", "company", "vehicle_code", "vehicle_name", "plate_no", "vehicle_type", "passenger_capacity", "assigned_captain_user", "status"],
 		order_by="modified desc",
 		limit_page_length=int(limit),
 	)

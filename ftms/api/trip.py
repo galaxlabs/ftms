@@ -11,7 +11,7 @@ def list_trips(company=None, limit=50):
 	return frappe.get_all(
 		"Trip",
 		filters=filters,
-		fields=["name", "company", "trip_title", "trip_code", "trip_date", "trip_status", "route", "vehicle"],
+		fields=["name", "company", "trip_title", "trip_code", "trip_date", "trip_status", "route", "vehicle", "assigned_captain_user", "seat_capacity", "available_seats"],
 		order_by="trip_date desc, modified desc",
 		limit_page_length=int(limit),
 	)

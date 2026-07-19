@@ -26,7 +26,88 @@ def get_permission_query_conditions(user):
     link = get_active_link(user)
     if not link:
         return "1=0"
-    return f"(`tab{{doctype}}`.`company` = {frappe.db.escape(link.company)})"
+    return f"(`tabTrip`.`company` = {frappe.db.escape(link.company)})"
+
+
+def get_permission_query_conditions_for_company_doc(user, doctype):
+    if user in SYSTEM_USERS:
+        return ""
+    link = get_active_link(user)
+    if not link:
+        return "1=0"
+    return f"(`tab{doctype}`.`company` = {frappe.db.escape(link.company)})"
+
+
+def get_permission_query_conditions_for_trip(user):
+    if user in SYSTEM_USERS:
+        return ""
+    link = get_active_link(user)
+    if not link:
+        return "1=0"
+    company = frappe.db.escape(link.company)
+    if link.role == "Captain":
+        return f"(`tabTrip`.`company` = {company} AND `tabTrip`.`assigned_captain_user` = {frappe.db.escape(user)})"
+    return f"(`tabTrip`.`company` = {company})"
+
+
+def get_permission_query_conditions_for_vehicle(user):
+    if user in SYSTEM_USERS:
+        return ""
+    link = get_active_link(user)
+    if not link:
+        return "1=0"
+    company = frappe.db.escape(link.company)
+    if link.role == "Captain":
+        return f"(`tabVehicle`.`company` = {company} AND `tabVehicle`.`assigned_captain_user` = {frappe.db.escape(user)})"
+    return f"(`tabVehicle`.`company` = {company})"
+
+
+def get_permission_query_conditions_for_trip_expense(user):
+    if user in SYSTEM_USERS:
+        return ""
+    link = get_active_link(user)
+    if not link:
+        return "1=0"
+    company = frappe.db.escape(link.company)
+    if link.role == "Captain":
+        return f"(`tabTrip Expense`.`company` = {company} AND `tabTrip Expense`.`captain_user` = {frappe.db.escape(user)})"
+    return f"(`tabTrip Expense`.`company` = {company})"
+
+
+def get_permission_query_conditions_for_vehicle_assignment(user):
+    if user in SYSTEM_USERS:
+        return ""
+    link = get_active_link(user)
+    if not link:
+        return "1=0"
+    company = frappe.db.escape(link.company)
+    if link.role == "Captain":
+        return f"(`tabVehicle Assignment`.`company` = {company} AND `tabVehicle Assignment`.`captain_user` = {frappe.db.escape(user)})"
+    return f"(`tabVehicle Assignment`.`company` = {company})"
+
+
+def get_permission_query_conditions_for_trip_invoice(user):
+    if user in SYSTEM_USERS:
+        return ""
+    link = get_active_link(user)
+    if not link:
+        return "1=0"
+    company = frappe.db.escape(link.company)
+    if link.role == "Captain":
+        return f"(`tabTrip Invoice`.`company` = {company} AND EXISTS (SELECT 1 FROM `tabTrip` WHERE `tabTrip`.`name` = `tabTrip Invoice`.`trip` AND `tabTrip`.`assigned_captain_user` = {frappe.db.escape(user)}))"
+    return f"(`tabTrip Invoice`.`company` = {company})"
+
+
+def get_permission_query_conditions_for_trip_booking(user):
+    if user in SYSTEM_USERS:
+        return ""
+    link = get_active_link(user)
+    if not link:
+        return "1=0"
+    company = frappe.db.escape(link.company)
+    if link.role == "Captain":
+        return f"(`tabTrip Booking`.`company` = {company} AND EXISTS (SELECT 1 FROM `tabTrip` WHERE `tabTrip`.`name` = `tabTrip Booking`.`trip` AND `tabTrip`.`assigned_captain_user` = {frappe.db.escape(user)}))"
+    return f"(`tabTrip Booking`.`company` = {company})"
 
 
 def get_permission_query_conditions_for_route(user):
@@ -36,7 +117,9 @@ def get_permission_query_conditions_for_route(user):
     link = get_active_link(user)
     if not link:
         return "1=0"
-    return "1=1"
+    if link.role == "Captain":
+        return f"EXISTS (SELECT 1 FROM `tabTrip` WHERE `tabTrip`.`route` = `tabRoute`.`name` AND `tabTrip`.`company` = {frappe.db.escape(link.company)} AND `tabTrip`.`assigned_captain_user` = {frappe.db.escape(user)})"
+    return f"(`tabRoute`.`company` = {frappe.db.escape(link.company)})"
 
 
 def has_permission(doc, ptype, user):
@@ -53,6 +136,18 @@ def has_permission(doc, ptype, user):
     if link.role == "Captain":
         if ptype in ("delete", "submit", "cancel", "amend"):
             return False
+        if doc.doctype == "Trip" and doc.get("assigned_captain_user") != user:
+            return False
+        if doc.doctype == "Vehicle" and doc.get("assigned_captain_user") != user:
+            return False
+        if doc.doctype == "Trip Expense" and doc.get("captain_user") != user:
+            return False
+        if doc.doctype == "Vehicle Assignment" and doc.get("captain_user") != user:
+            return False
+        if doc.doctype in ("Trip Invoice", "Trip Booking") and doc.get("trip"):
+            assigned = frappe.db.get_value("Trip", doc.trip, "assigned_captain_user")
+            if assigned != user:
+                return False
         if ptype in ("write",) and doc.get("owner") and doc.owner != user:
             return False
     return True

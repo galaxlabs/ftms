@@ -60,6 +60,12 @@ doc_events = {
     "Route": {
         "validate": "ftms.api.permissions.validate_user_access",
     },
+    "Trip Expense": {
+        "validate": "ftms.api.permissions.validate_user_access",
+    },
+    "Vehicle Assignment": {
+        "validate": "ftms.api.permissions.validate_user_access",
+    },
 }
 
 scheduler_events = {
@@ -78,14 +84,18 @@ has_permission = {
     "Trip Booking": "ftms.api.permissions.has_permission",
     "Vehicle": "ftms.api.permissions.has_permission",
     "Route": "ftms.api.permissions.has_permission",
+    "Trip Expense": "ftms.api.permissions.has_permission",
+    "Vehicle Assignment": "ftms.api.permissions.has_permission",
 }
 
 get_permission_query_conditions = {
-    "Trip": "ftms.api.permissions.get_permission_query_conditions",
-    "Trip Invoice": "ftms.api.permissions.get_permission_query_conditions",
-    "Trip Booking": "ftms.api.permissions.get_permission_query_conditions",
-    "Vehicle": "ftms.api.permissions.get_permission_query_conditions",
+    "Trip": "ftms.api.permissions.get_permission_query_conditions_for_trip",
+    "Trip Invoice": "ftms.api.permissions.get_permission_query_conditions_for_trip_invoice",
+    "Trip Booking": "ftms.api.permissions.get_permission_query_conditions_for_trip_booking",
+    "Vehicle": "ftms.api.permissions.get_permission_query_conditions_for_vehicle",
     "Route": "ftms.api.permissions.get_permission_query_conditions_for_route",
+    "Trip Expense": "ftms.api.permissions.get_permission_query_conditions_for_trip_expense",
+    "Vehicle Assignment": "ftms.api.permissions.get_permission_query_conditions_for_vehicle_assignment",
 }
 
 fixtures = [
