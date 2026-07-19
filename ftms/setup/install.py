@@ -32,7 +32,7 @@ def rename_transportation_company_doctype():
         if company_module != "FTMS":
             frappe.throw("Cannot rename Transportation Company to Company because another Company DocType already exists.")
         return
-    frappe.rename_doc("DocType", "Transportation Company", "Company", force=True, ignore_permissions=True)
+    frappe.rename_doc("DocType", "Transportation Company", "Company", force=True)
     frappe.db.commit()
 
 def sync_print_branding():
