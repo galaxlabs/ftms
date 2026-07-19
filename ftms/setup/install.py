@@ -32,7 +32,20 @@ def rename_transportation_company_doctype():
         if company_module != "FTMS":
             frappe.throw("Cannot rename Transportation Company to Company because another Company DocType already exists.")
         return
-    frappe.rename_doc("DocType", "Transportation Company", "Company", force=True)
+    if frappe.db.table_exists("Company"):
+        frappe.throw("Cannot rename Transportation Company to Company because tabCompany already exists.")
+
+    frappe.db.sql("UPDATE `tabDocType` SET name='Company', module='FTMS' WHERE name='Transportation Company'")
+    frappe.db.sql("UPDATE `tabDocField` SET parent='Company' WHERE parent='Transportation Company'")
+    frappe.db.sql("UPDATE `tabDocPerm` SET parent='Company' WHERE parent='Transportation Company'")
+    frappe.db.sql("UPDATE `tabDocField` SET options='Company' WHERE options='Transportation Company'")
+    frappe.db.sql("UPDATE `tabCustom Field` SET dt='Company' WHERE dt='Transportation Company'")
+    frappe.db.sql("UPDATE `tabCustom Field` SET options='Company' WHERE options='Transportation Company'")
+    frappe.db.sql("UPDATE `tabProperty Setter` SET doc_type='Company' WHERE doc_type='Transportation Company'")
+    frappe.db.sql("UPDATE `tabProperty Setter` SET value='Company' WHERE value='Transportation Company'")
+    frappe.db.sql("UPDATE `tabDocShare` SET share_doctype='Company' WHERE share_doctype='Transportation Company'")
+    frappe.db.sql("RENAME TABLE `tabTransportation Company` TO `tabCompany`")
+    frappe.clear_cache(doctype="Company")
     frappe.db.commit()
 
 def sync_print_branding():
