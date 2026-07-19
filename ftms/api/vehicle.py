@@ -80,6 +80,7 @@ def create_vehicle(
 	registration_expiry_date=None, insurance_expiry_date=None,
 	operation_card_document=None, registration_document=None, insurance_document=None,
 	assigned_captain_user=None,
+	max_luggage_qty=0, max_luggage_weight=None, max_weight_per_passenger=None,
 ):
 	user = frappe.session.user
 	if user == "Guest":
@@ -119,6 +120,9 @@ def create_vehicle(
 		"registration_document": registration_document,
 		"insurance_document": insurance_document,
 		"assigned_captain_user": assigned_captain_user,
+		"max_luggage_qty": max_luggage_qty or 0,
+		"max_luggage_weight": max_luggage_weight,
+		"max_weight_per_passenger": max_weight_per_passenger,
 		"status": "Active",
 	})
 	doc.insert(ignore_permissions=True)
@@ -130,4 +134,7 @@ def create_vehicle(
 		"plate_no": doc.plate_no,
 		"company": doc.company,
 		"status": doc.status,
+		"max_luggage_qty": doc.max_luggage_qty,
+		"max_luggage_weight": doc.max_luggage_weight,
+		"max_weight_per_passenger": doc.max_weight_per_passenger,
 	}
