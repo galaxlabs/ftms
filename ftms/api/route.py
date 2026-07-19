@@ -59,6 +59,16 @@ def create_route(source, destination, company=None, route_title=None, route_code
 	}
 
 
+@frappe.whitelist(allow_guest=True)
+def list_ksa_cities(limit=100):
+	return frappe.get_all(
+		"KSA City",
+		fields=["name", "city_name", "city_name_ar", "region", "region_ar", "latitude", "longitude", "is_active"],
+		order_by="city_name asc",
+		limit_page_length=int(limit),
+	)
+
+
 @frappe.whitelist()
 def get_route(name, company=None):
 	doc = frappe.get_doc("Route", name)

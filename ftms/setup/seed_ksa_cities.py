@@ -85,6 +85,22 @@ KSA_CITIES = [
     {"city_name": "Baljurashi", "city_name_ar": "بلجرشي", "region": "Al Bahah Region", "region_ar": "منطقة الباحة"},
     {"city_name": "Al Mandaq", "city_name_ar": "المندق", "region": "Al Bahah Region", "region_ar": "منطقة الباحة"},
 
+    # Airports
+    {"city_name": "Riyadh Airport (King Khalid)", "city_name_ar": "مطار الملك خالد", "region": "Riyadh Region", "region_ar": "منطقة الرياض", "latitude": 24.9578, "longitude": 46.6989},
+    {"city_name": "Jeddah Airport (King Abdulaziz)", "city_name_ar": "مطار الملك عبدالعزيز", "region": "Makkah Region", "region_ar": "منطقة مكة المكرمة", "latitude": 21.6796, "longitude": 39.1565},
+    {"city_name": "Jeddah Haj Terminal", "city_name_ar": "صالة الحجاج بمطار جدة", "region": "Makkah Region", "region_ar": "منطقة مكة المكرمة", "latitude": 21.6700, "longitude": 39.1500},
+    {"city_name": "Madinah Airport (Prince Mohammad)", "city_name_ar": "مطار الأمير محمد بن عبدالعزيز", "region": "Madinah Region", "region_ar": "منطقة المدينة المنورة", "latitude": 24.5536, "longitude": 39.7050},
+    {"city_name": "Dammam Airport (King Fahd)", "city_name_ar": "مطار الملك فهد", "region": "Eastern Region", "region_ar": "المنطقة الشرقية", "latitude": 26.4702, "longitude": 49.8004},
+    {"city_name": "Abha Airport", "city_name_ar": "مطار أبها", "region": "Asir Region", "region_ar": "منطقة عسير", "latitude": 18.2404, "longitude": 42.6555},
+    {"city_name": "Taif Airport", "city_name_ar": "مطار الطائف", "region": "Makkah Region", "region_ar": "منطقة مكة المكرمة", "latitude": 21.4833, "longitude": 40.5444},
+    {"city_name": "Tabuk Airport", "city_name_ar": "مطار تبوك", "region": "Tabuk Region", "region_ar": "منطقة تبوك", "latitude": 28.3653, "longitude": 36.6189},
+    {"city_name": "Ha'il Airport", "city_name_ar": "مطار حائل", "region": "Ha'il Region", "region_ar": "منطقة حائل", "latitude": 27.4379, "longitude": 41.6863},
+    {"city_name": "Al Ahsa Airport (Hofuf)", "city_name_ar": "مطار الأحساء", "region": "Eastern Region", "region_ar": "المنطقة الشرقية", "latitude": 25.2856, "longitude": 49.4852},
+    {"city_name": "Yanbu Airport", "city_name_ar": "مطار ينبع", "region": "Madinah Region", "region_ar": "منطقة المدينة المنورة", "latitude": 24.1442, "longitude": 38.0638},
+    {"city_name": "Najran Airport", "city_name_ar": "مطار نجران", "region": "Najran Region", "region_ar": "منطقة نجران", "latitude": 17.6114, "longitude": 44.4197},
+    {"city_name": "Jazan Airport", "city_name_ar": "مطار جازان", "region": "Jazan Region", "region_ar": "منطقة جازان", "latitude": 16.9000, "longitude": 42.5858},
+    {"city_name": "Al Baha Airport", "city_name_ar": "مطار الباحة", "region": "Al Bahah Region", "region_ar": "منطقة الباحة", "latitude": 20.2961, "longitude": 41.6343},
+
     # Ha'il
     {"city_name": "Ha'il", "city_name_ar": "حائل", "region": "Ha'il Region", "region_ar": "منطقة حائل", "latitude": 27.5167, "longitude": 41.6833},
     {"city_name": "Ba'qa", "city_name_ar": "بقعاء", "region": "Ha'il Region", "region_ar": "منطقة حائل"},

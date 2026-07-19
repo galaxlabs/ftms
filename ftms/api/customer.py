@@ -12,7 +12,7 @@ def list_customers(company=None, limit=50):
 	return frappe.get_all(
 		"Customer",
 		filters=filters,
-		fields=["name", "company", "customer_name", "customer_name_ar", "mobile_no", "email", "status"],
+		fields=["name", "company", "customer_type", "customer_name", "customer_name_ar", "mobile_no", "email", "status"],
 		order_by="modified desc",
 		limit_page_length=int(limit),
 	)
@@ -28,7 +28,7 @@ def get_customer(name, company=None):
 
 
 @frappe.whitelist()
-def create_customer(customer_name, mobile_no=None, email=None, customer_name_ar=None):
+def create_customer(customer_name, mobile_no=None, email=None, customer_name_ar=None, customer_type="Individual"):
 	user = frappe.session.user
 	if user == "Guest":
 		frappe.throw(_("Login is required"), frappe.PermissionError)
@@ -42,6 +42,7 @@ def create_customer(customer_name, mobile_no=None, email=None, customer_name_ar=
 		"company": resolved_company,
 		"customer_name": customer_name,
 		"customer_name_ar": customer_name_ar,
+		"customer_type": customer_type,
 		"mobile_no": mobile_no,
 		"email": email,
 		"status": "Active",
