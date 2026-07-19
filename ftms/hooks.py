@@ -1,7 +1,7 @@
 from . import __version__ as app_version
 
 app_name = "ftms"
-app_title = "Frappe Transport Management System"
+app_title = "FTMS"
 app_publisher = "Galaxy Labs"
 app_description = "Unified transport, trip, fleet, and route management for Frappe"
 app_email = "galaxylab2020@gmail.com"
@@ -20,6 +20,7 @@ override_doctype_class = {
     "Trip Booking": "ftms.frappe_transport_management_system.doctype.trip_booking.trip_booking.TripBooking",
 }
 
+before_migrate = "ftms.setup.install.before_migrate"
 after_install = "ftms.setup.install.after_install"
 after_migrate = "ftms.setup.install.after_migrate"
 
@@ -36,7 +37,7 @@ override_doctype_dashboards = {
 }
 
 doc_events = {
-    "Transportation Company": {
+    "Company": {
         "after_insert": ["ftms.accounts.utils.auto_setup_accounts", "ftms.printing.letterhead.sync_letterhead"],
         "on_update": "ftms.printing.letterhead.sync_letterhead",
     },
@@ -104,7 +105,7 @@ fixtures = [
     {"dt": "Vehicle Make", "filters": [["is_active", "=", 1]]},
     {"dt": "Vehicle Model", "filters": [["is_active", "=", 1]]},
     {"dt": "ZATCA Environment", "filters": [["name", "in", ["FATOORA Portal", "Simulation Portal", "Sandbox Portal"]]]},
-    {"dt": "Print Format", "filters": [["module", "=", "Frappe Transport Management System"]]},
+    {"dt": "Print Format", "filters": [["module", "=", "FTMS"]]},
 ]
 
 default_print_format = {

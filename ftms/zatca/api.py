@@ -10,7 +10,7 @@ def generate_csr(doc_name):
 
 @frappe.whitelist()
 def get_zatca_status(company):
-    company_doc = frappe.get_doc("Transportation Company", company)
+    company_doc = frappe.get_doc("Company", company)
     status = {
         "zatca_enabled": company_doc.enable_zatca_e_invoicing,
         "zatca_phase": company_doc.zatca_phase,
@@ -28,7 +28,7 @@ def get_certificate_and_key(binary_security_token, created_on):
 
 @frappe.whitelist()
 def onboard_zatca(company):
-    company_doc = frappe.get_doc("Transportation Company", company)
+    company_doc = frappe.get_doc("Company", company)
     if not company_doc.enable_zatca_e_invoicing:
         frappe.throw("Enable ZATCA E-Invoicing first")
     if company_doc.zatca_phase != "ZATCA Phase 2":

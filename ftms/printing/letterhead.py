@@ -34,7 +34,7 @@ def sync_letterhead(company_doc, method=None):
         letterhead.insert(ignore_permissions=True)
 
     if company_doc.get("__print_letterhead") != letterhead_name:
-        frappe.db.set_value("Transportation Company", company_doc.name,
+        frappe.db.set_value("Company", company_doc.name,
                            "__print_letterhead", letterhead_name, update_modified=False)
 
     return letterhead_name
@@ -60,11 +60,11 @@ def _build_header_html(company):
 
 def sync_all_letterheads():
     """Sync all companies that have print branding enabled."""
-    companies = frappe.get_all("Transportation Company",
+    companies = frappe.get_all("Company",
         filters={"enable_print_branding": 1},
         fields=["name"],
     )
     for c in companies:
-        doc = frappe.get_doc("Transportation Company", c.name)
+        doc = frappe.get_doc("Company", c.name)
         sync_letterhead(doc)
     frappe.db.commit()

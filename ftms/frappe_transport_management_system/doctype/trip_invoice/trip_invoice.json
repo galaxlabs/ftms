@@ -60,7 +60,7 @@
   "items"
  ],
  "fields": [
-  {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Transportation Company"},
+  {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company"},
   {"fieldname": "trip", "fieldtype": "Link", "in_list_view": 1, "label": "Trip", "options": "Trip", "reqd": 1},
   {"default": "Trip", "fieldname": "invoice_scope", "fieldtype": "Select", "label": "Invoice Scope", "options": "Trip\nPassenger"},
   {"fieldname": "passenger_row", "fieldtype": "Data", "label": "Passenger Row", "read_only": 1},
@@ -121,7 +121,7 @@
  ],
  "modified": "2026-07-17 00:00:00",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Trip Invoice",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",

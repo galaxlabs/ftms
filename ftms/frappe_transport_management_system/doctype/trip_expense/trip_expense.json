@@ -30,7 +30,7 @@
   "notes"
  ],
  "fields": [
-  {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Transportation Company", "reqd": 1},
+  {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Company", "reqd": 1},
   {"fieldname": "trip", "fieldtype": "Link", "in_list_view": 1, "label": "Trip", "options": "Trip"},
   {"fieldname": "captain_user", "fieldtype": "Link", "in_list_view": 1, "label": "Captain User", "options": "User", "reqd": 1},
   {"fieldname": "vehicle", "fieldtype": "Link", "label": "Vehicle", "options": "Vehicle"},
@@ -58,7 +58,7 @@
  "links": [],
  "modified": "2026-07-19 00:00:00",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Trip Expense",
  "naming_rule": "Expression (old style)",
  "permissions": [

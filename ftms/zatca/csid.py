@@ -51,7 +51,7 @@ def onboard_compliance_csid(csr_settings_name, otp):
 	)
 	compliance.insert(ignore_permissions=True)
 
-	company_doc = frappe.get_doc("Transportation Company", company)
+	company_doc = frappe.get_doc("Company", company)
 	company_doc.compliance_csid = compliance.name
 	company_doc.save(ignore_permissions=True)
 
@@ -107,7 +107,7 @@ def onboard_production_csid(compliance_csid_name, otp):
 	)
 	production.insert(ignore_permissions=True)
 
-	company_doc = frappe.get_doc("Transportation Company", company)
+	company_doc = frappe.get_doc("Company", company)
 	company_doc.compliance_csid = compliance_csid_name
 	company_doc.production_csid = production.name
 	company_doc.save(ignore_permissions=True)
@@ -135,7 +135,7 @@ def revoke_csid(production_csid_name):
 
 @frappe.whitelist()
 def get_csid_status(company):
-	doc = frappe.get_doc("Transportation Company", company)
+	doc = frappe.get_doc("Company", company)
 	result = {
 		"enable_zatca": doc.enable_zatca_e_invoicing,
 		"phase": doc.zatca_phase,

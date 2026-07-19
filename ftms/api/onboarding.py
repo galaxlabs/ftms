@@ -87,14 +87,14 @@ def signup(company_name, email, username=None, first_name=None, last_name=None, 
     if not email or "@" not in email:
         frappe.throw(_("A valid email is required"))
 
-    company = frappe.db.get_value("Transportation Company", {"company_name": company_name}, "name")
+    company = frappe.db.get_value("Company", {"company_name": company_name}, "name")
     if not company:
         company_domain = _default_domain(domain)
         if not company_domain:
             frappe.throw(_("No Transportation Domain is configured. Create one before public signup."))
         company_doc = frappe.get_doc({
-            "doctype": "Transportation Company",
-            "company_code": _unique_code("Transportation Company", "company_code", company_name),
+            "doctype": "Company",
+            "company_code": _unique_code("Company", "company_code", company_name),
             "company_name": company_name,
             "domain": company_domain,
             "email": email,
@@ -184,8 +184,8 @@ def register_transportation_company(company_name, domain=None, legal_name=None, 
     if not company_domain:
         frappe.throw(_("No Transportation Domain is configured. Create one before company onboarding."))
     company_doc = frappe.get_doc({
-        "doctype": "Transportation Company",
-        "company_code": _unique_code("Transportation Company", "company_code", company_name),
+        "doctype": "Company",
+        "company_code": _unique_code("Company", "company_code", company_name),
         "company_name": company_name,
         "legal_name": legal_name,
         "domain": company_domain,

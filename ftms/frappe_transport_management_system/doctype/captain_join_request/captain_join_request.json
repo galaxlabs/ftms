@@ -8,7 +8,7 @@
  "field_order": ["captain_profile", "company", "requested_by", "requested_on", "status", "approved_by", "approved_on", "notes"],
  "fields": [
   {"fieldname": "captain_profile", "fieldtype": "Link", "in_list_view": 1, "label": "Captain Profile", "options": "Captain Profile", "reqd": 1},
-  {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Transportation Company", "reqd": 1},
+  {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Company", "reqd": 1},
   {"fieldname": "requested_by", "fieldtype": "Link", "label": "Requested By", "options": "User"},
   {"default": "Now", "fieldname": "requested_on", "fieldtype": "Datetime", "label": "Requested On"},
   {"default": "Pending", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Pending\nApproved\nRejected\nCancelled"},
@@ -21,7 +21,7 @@
  "links": [],
  "modified": "2026-07-19 00:00:00",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Captain Join Request",
  "naming_rule": "Expression (old style)",
  "permissions": [{"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1}],

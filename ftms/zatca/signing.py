@@ -56,7 +56,7 @@ def _tlv_qr_data(seller_name, vat_no, timestamp, total, vat_total):
 @frappe.whitelist()
 def generate_tlv_qr(invoice_name):
 	invoice = frappe.get_doc("Trip Invoice", invoice_name)
-	company_doc = frappe.get_doc("Transportation Company", invoice.company)
+	company_doc = frappe.get_doc("Company", invoice.company)
 	seller_name = company_doc.company_name or company_doc.legal_name or ""
 	vat_no = company_doc.vat_no or ""
 	timestamp = invoice.invoice_date.strftime("%Y-%m-%dT00:00:00Z")

@@ -63,13 +63,13 @@ def setup_chart_of_accounts(company):
     def _get(name):
         return name_map.get(name)
 
-    frappe.db.set_value("Transportation Company", company, "default_cash_account", _get("Cash"))
-    frappe.db.set_value("Transportation Company", company, "default_receivable_account", _get("Debtors"))
-    frappe.db.set_value("Transportation Company", company, "default_payable_account", _get("Creditors"))
-    frappe.db.set_value("Transportation Company", company, "default_income_account", _get("Transport Revenue"))
-    frappe.db.set_value("Transportation Company", company, "default_expense_account", _get("Other Expenses"))
-    frappe.db.set_value("Transportation Company", company, "vat_output_account", _get("VAT Payable"))
-    frappe.db.set_value("Transportation Company", company, "vat_input_account", _get("VAT Input"))
+    frappe.db.set_value("Company", company, "default_cash_account", _get("Cash"))
+    frappe.db.set_value("Company", company, "default_receivable_account", _get("Debtors"))
+    frappe.db.set_value("Company", company, "default_payable_account", _get("Creditors"))
+    frappe.db.set_value("Company", company, "default_income_account", _get("Transport Revenue"))
+    frappe.db.set_value("Company", company, "default_expense_account", _get("Other Expenses"))
+    frappe.db.set_value("Company", company, "vat_output_account", _get("VAT Payable"))
+    frappe.db.set_value("Company", company, "vat_input_account", _get("VAT Input"))
 
     frappe.db.commit()
     return "Created " + str(len(created)) + " accounts for " + company

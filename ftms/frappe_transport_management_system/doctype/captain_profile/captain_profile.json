@@ -39,7 +39,7 @@
   {"fieldname": "city", "fieldtype": "Link", "label": "City", "options": "KSA City"},
   {"fieldname": "address", "fieldtype": "Small Text", "label": "Address"},
   {"fieldname": "section_company", "fieldtype": "Section Break", "label": "Company"},
-  {"fieldname": "current_company", "fieldtype": "Link", "label": "Current Company", "options": "Transportation Company", "read_only": 1},
+  {"fieldname": "current_company", "fieldtype": "Link", "label": "Current Company", "options": "Company", "read_only": 1},
   {"fieldname": "approved_by", "fieldtype": "Link", "label": "Approved By", "options": "User", "read_only": 1},
   {"fieldname": "approved_on", "fieldtype": "Datetime", "label": "Approved On", "read_only": 1},
   {"fieldname": "section_documents", "fieldtype": "Section Break", "label": "Documents"},
@@ -52,7 +52,7 @@
  "links": [],
  "modified": "2026-07-19 00:00:00",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Captain Profile",
  "naming_rule": "Expression (old style)",
  "permissions": [

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import frappe
+from frappe import _
 
-from ftms.tenant import company_filters
+from ftms.tenant import get_user_company
 
 
 @frappe.whitelist(allow_guest=True)
@@ -10,9 +11,14 @@ def list_companies(company=None, limit=100):
 	if frappe.session.user == "Guest":
 		filters = {"status": "Active", "blacklisted": 0}
 	else:
-		filters = company_filters(company=company)
+		active_company = get_user_company()
+		if not active_company:
+			return []
+		if company and company != active_company:
+			frappe.throw(_("Not permitted for this company"), frappe.PermissionError)
+		filters = {"name": active_company}
 	return frappe.get_all(
-		"Transportation Company",
+		"Company",
 		filters=filters,
 		fields=["name", "company_code", "company_name", "domain", "status", "blacklisted"],
 		order_by="modified desc",

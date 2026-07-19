@@ -2,17 +2,38 @@ from __future__ import annotations
 
 import frappe
 
+def before_migrate():
+    prohibit_erpnext()
+    rename_transportation_company_doctype()
+
 def after_install():
+    prohibit_erpnext()
     ensure_settings()
     create_custom_fields()
 
 def after_migrate():
+    prohibit_erpnext()
     ensure_settings()
     sync_customizations()
     create_custom_fields()
     seed_existing_subscriptions()
     sync_print_branding()
     seed_ksa_cities()
+
+def prohibit_erpnext():
+    if "erpnext" in frappe.get_installed_apps():
+        frappe.throw("FTMS is standalone and cannot be installed on a site with ERPNext.")
+
+def rename_transportation_company_doctype():
+    if not frappe.db.exists("DocType", "Transportation Company"):
+        return
+    if frappe.db.exists("DocType", "Company"):
+        company_module = frappe.db.get_value("DocType", "Company", "module")
+        if company_module != "FTMS":
+            frappe.throw("Cannot rename Transportation Company to Company because another Company DocType already exists.")
+        return
+    frappe.rename_doc("DocType", "Transportation Company", "Company", force=True, ignore_permissions=True)
+    frappe.db.commit()
 
 def sync_print_branding():
     from ftms.printing.letterhead import sync_all_letterheads

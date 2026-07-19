@@ -8,7 +8,7 @@ def validate_trip_invoice(doc, method=None):
 	if not doc.company:
 		return
 
-	company_doc = frappe.get_cached_doc("Transportation Company", doc.company)
+	company_doc = frappe.get_cached_doc("Company", doc.company)
 	if not company_doc.enable_zatca_e_invoicing:
 		return
 
@@ -28,7 +28,7 @@ def on_submit_trip_invoice(doc, method=None):
 	if not doc.company:
 		return
 
-	company_doc = frappe.get_cached_doc("Transportation Company", doc.company)
+	company_doc = frappe.get_cached_doc("Company", doc.company)
 	if not company_doc.enable_zatca_e_invoicing:
 		return
 

@@ -21,7 +21,7 @@ def seed_demo_transport_cycle(company, route=None):
 	if not company:
 		frappe.throw("company is required")
 
-	company_doc = frappe.get_doc("Transportation Company", company)
+	company_doc = frappe.get_doc("Company", company)
 
 	if not route:
 		route = frappe.db.exists("Route", {"company": company, "route_title": "Demo Route"})

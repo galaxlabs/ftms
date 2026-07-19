@@ -24,7 +24,7 @@
   {"fieldname": "account_type", "fieldtype": "Select", "label": "Account Type", "in_list_view": 1, "options": "\nCash\nBank\nReceivable\nPayable\nTax\nIncome Account\nExpense Account\nFixed Asset\nStock\nEquity"},
   {"fieldname": "root_type", "fieldtype": "Select", "label": "Root Type", "in_list_view": 1, "options": "\nAsset\nLiability\nIncome\nExpense\nEquity"},
   {"fieldname": "section_company", "fieldtype": "Section Break", "label": "Company"},
-  {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Transportation Company", "reqd": 1},
+  {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company", "reqd": 1},
   {"fieldname": "tax_rate", "fieldtype": "Percent", "label": "Tax Rate"}
  ],
  "grid_page_length": 50,
@@ -32,7 +32,7 @@
  "links": [],
  "modified": "2026-07-18 00:00:00",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Account",
  "naming_rule": "Random",
  "owner": "Administrator",

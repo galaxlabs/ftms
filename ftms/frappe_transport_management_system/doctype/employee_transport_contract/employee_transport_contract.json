@@ -42,7 +42,7 @@
  ],
  "modified": "2026-07-02 00:00:00",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Employee Transport Contract",
  "naming_rule": "By fieldname",
  "owner": "Administrator",

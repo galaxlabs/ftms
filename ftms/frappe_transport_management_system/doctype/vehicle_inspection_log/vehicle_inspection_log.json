@@ -181,7 +181,7 @@
  "links": [],
  "modified": "2026-02-26 16:54:44.057210",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Vehicle Inspection Log",
  "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",

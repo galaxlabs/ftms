@@ -24,7 +24,7 @@ def get_zatca_headers(company):
 
 
 def _get_zatca_settings(company):
-	doc = frappe.get_doc("Transportation Company", company)
+	doc = frappe.get_doc("Company", company)
 	env = None
 	if doc.zatca_environment:
 		env = frappe.get_doc("ZATCA Environment", doc.zatca_environment)
@@ -52,7 +52,7 @@ def _get_zatca_settings(company):
 
 
 def get_environment_urls(company):
-	doc = frappe.get_doc("Transportation Company", company)
+	doc = frappe.get_doc("Company", company)
 	if not doc.zatca_environment:
 		frappe.throw(_("ZATCA Environment not set on company {0}").format(company))
 	env = frappe.get_doc("ZATCA Environment", doc.zatca_environment)

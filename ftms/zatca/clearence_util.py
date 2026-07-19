@@ -26,7 +26,7 @@ from ftms.zatca.utils import (
 )
 
 def generate_einvoice(doc, submit_now=True, skip_success_message=False):
-    company = frappe.get_doc("Transportation Company", doc.company)
+    company = frappe.get_doc("Company", doc.company)
     is_test = doc.get("is_zatca_test") or doc.get("custom_is_zatca_test")
     zatca_enabled = company.get("enable_zatca_e_invoicing")
     if not zatca_enabled and not is_test:

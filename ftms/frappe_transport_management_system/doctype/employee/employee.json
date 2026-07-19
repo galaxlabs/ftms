@@ -149,7 +149,7 @@
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
-   "options": "Transportation Company"
+   "options": "Company"
   },
   {
    "fieldname": "designation",
@@ -275,7 +275,7 @@
  ],
  "icon": "fa fa-user",
  "index_web_pages_for_search": 1,
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Employee",
  "naming_rule": "By fieldname",
  "permissions": [

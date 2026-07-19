@@ -10,7 +10,7 @@
     {"fieldname": "link_code", "fieldtype": "Data", "in_list_view": 1, "label": "Link Code", "reqd": 1, "unique": 1},
     {"fieldname": "user", "fieldtype": "Link", "in_list_view": 1, "label": "User", "options": "User"},
     {"fieldname": "firebase_uid", "fieldtype": "Data", "label": "Firebase UID"},
-    {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Transportation Company", "reqd": 1},
+    {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Company", "reqd": 1},
     {"fieldname": "role", "fieldtype": "Select", "label": "Role", "options": "Company Admin\nDispatcher\nCaptain\nPassenger\nAccountant\nViewer", "reqd": 1},
     {"default": "0", "fieldname": "is_owner", "fieldtype": "Check", "in_list_view": 1, "label": "Is Owner"},
     {"default": "Signup", "fieldname": "joined_via", "fieldtype": "Select", "label": "Joined Via", "options": "Signup\nInvite\nAdmin\nJoin Request"},
@@ -23,7 +23,7 @@
   "links": [],
   "modified": "2026-07-02 00:00:00",
   "modified_by": "Administrator",
-  "module": "Frappe Transport Management System",
+  "module": "FTMS",
   "name": "User Company Link",
   "permissions": [
     {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},

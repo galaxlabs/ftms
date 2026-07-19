@@ -4,7 +4,7 @@ import frappe
 from frappe.model.document import Document
 
 
-class TransportationCompany(Document):
+class Company(Document):
     def validate(self):
         if self.onboarding_status in ("ZATCA Ready", "Active"):
             required = {

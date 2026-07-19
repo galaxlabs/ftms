@@ -158,7 +158,7 @@ def get_linked_company():
     user = frappe.session.user
     link = get_active_link(user)
     if link:
-        company_name = frappe.db.get_value("Transportation Company", link.company, "company_name")
+        company_name = frappe.db.get_value("Company", link.company, "company_name")
         return {"company": link.company, "company_name": company_name, "role": link.role}
     return {"company": None, "role": None}
 

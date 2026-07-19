@@ -62,7 +62,7 @@
   "trip_staff"
  ],
  "fields": [
-   {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Transportation Company", "reqd": 1},
+   {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company", "reqd": 1},
    {"fieldname": "trip_title", "fieldtype": "Data", "in_list_view": 1, "label": "Trip Title", "reqd": 1},
   {"fieldname": "trip_code", "fieldtype": "Data", "label": "Trip Code", "unique": 1, "read_only": 1},
   {"default": "Today", "fieldname": "trip_date", "fieldtype": "Date", "in_list_view": 1, "label": "Trip Date", "reqd": 1},
@@ -123,7 +123,7 @@
  "links": [],
  "modified": "2026-07-02 00:00:00",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Trip",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",

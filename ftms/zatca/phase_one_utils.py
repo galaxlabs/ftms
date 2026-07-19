@@ -6,7 +6,7 @@ import frappe
 def generate_phase_one_qr(sales_invoice):
     seller_name = sales_invoice.company
     vat_number = ""
-    company_doc = frappe.get_doc("Transportation Company", sales_invoice.company)
+    company_doc = frappe.get_doc("Company", sales_invoice.company)
     if company_doc:
         vat_number = company_doc.vat_no or ""
     timestamp = sales_invoice.posting_date.strftime("%Y-%m-%dT%H:%M:%SZ") if sales_invoice.posting_date else ""

@@ -39,7 +39,7 @@
     "notes"
   ],
   "fields": [
-    {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Transportation Company", "reqd": 1},
+    {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Company", "reqd": 1},
     {"fieldname": "route_title", "fieldtype": "Data", "in_list_view": 1, "label": "Route Title", "reqd": 1, "unique": 1},
     {"fieldname": "route_name", "fieldtype": "Data", "in_list_view": 1, "label": "Route Name"},
     {"fieldname": "route_code", "fieldtype": "Data", "in_list_view": 1, "label": "Route Code"},
@@ -75,7 +75,7 @@
   "links": [],
   "modified": "2026-07-02 00:00:00",
   "modified_by": "Administrator",
-  "module": "Frappe Transport Management System",
+  "module": "FTMS",
   "name": "Route",
   "naming_rule": "By fieldname",
   "owner": "Administrator",

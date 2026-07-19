@@ -28,7 +28,7 @@ def submit_to_zatca(invoice_name):
 	if not invoice.docstatus == 1:
 		frappe.throw(_("Invoice {0} must be submitted first").format(invoice_name))
 
-	company_doc = frappe.get_doc("Transportation Company", company)
+	company_doc = frappe.get_doc("Company", company)
 	if not company_doc.enable_zatca_e_invoicing:
 		frappe.throw(_("ZATCA E-Invoicing is not enabled for company {0}").format(company))
 

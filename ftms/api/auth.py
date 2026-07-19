@@ -32,7 +32,7 @@ def get_current_user():
     link = _find_active_link(user)
     company_data = None
     if link:
-        company = frappe.get_doc("Transportation Company", link.company)
+        company = frappe.get_doc("Company", link.company)
         company_data = {f: company.get(f) for f in _COMPANY_FIELDS}
 
     subscription = _get_subscription_status(user, link.company if link else None)

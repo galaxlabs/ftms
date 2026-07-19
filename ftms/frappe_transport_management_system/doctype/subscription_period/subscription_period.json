@@ -59,7 +59,7 @@
  "links": [],
  "modified": "2026-07-18 16:00:00.000000",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Subscription Period",
  "naming_rule": "Autoincrement",
  "owner": "Administrator",

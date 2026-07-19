@@ -46,7 +46,7 @@
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
-   "options": "Transportation Company",
+   "options": "Company",
    "reqd": 1,
    "search_index": 1
   },
@@ -137,7 +137,7 @@
  "links": [],
  "modified": "2026-07-18 17:00:00.000000",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "Commission Payout",
  "naming_rule": "By Naming Series",
  "owner": "Administrator",

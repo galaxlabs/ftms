@@ -26,7 +26,7 @@
   {"fieldname": "credit", "fieldtype": "Currency", "in_list_view": 1, "label": "Credit (SAR)", "options": "company:currency"},
   {"fieldname": "column_break_dates", "fieldtype": "Column Break"},
   {"fieldname": "posting_date", "fieldtype": "Date", "in_list_view": 1, "label": "Posting Date", "reqd": 1, "search_index": 1},
-  {"fieldname": "company", "fieldtype": "Link", "in_standard_filter": 1, "label": "Company", "options": "Transportation Company", "reqd": 1, "search_index": 1},
+  {"fieldname": "company", "fieldtype": "Link", "in_standard_filter": 1, "label": "Company", "options": "Company", "reqd": 1, "search_index": 1},
   {"fieldname": "section_voucher", "fieldtype": "Section Break", "label": "Voucher"},
   {"fieldname": "voucher_type", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Voucher Type", "options": "\nJournal Entry\nSales Invoice\nPurchase Invoice\nPayment Entry", "reqd": 1},
   {"fieldname": "voucher_no", "fieldtype": "Dynamic Link", "in_list_view": 1, "label": "Voucher No", "options": "voucher_type", "reqd": 1, "search_index": 1},
@@ -41,7 +41,7 @@
  "links": [],
  "modified": "2026-07-18 00:00:00",
  "modified_by": "Administrator",
- "module": "Frappe Transport Management System",
+ "module": "FTMS",
  "name": "GL Entry",
  "owner": "Administrator",
  "permissions": [
