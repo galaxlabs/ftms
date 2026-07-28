@@ -1,5 +1,6 @@
 import frappe
 from frappe.utils import add_days, getdate
+from frappe.utils.oauth import get_oauth2_authorize_url
 
 
 @frappe.whitelist()
@@ -67,6 +68,14 @@ def get_current_user():
         "subscription": subscription,
         "permissions": _get_permissions(link),
     }
+
+
+@frappe.whitelist(allow_guest=True)
+def get_google_login_url(redirect_to=None):
+    """Return the Google OAuth authorization URL (redirect user's browser to this)."""
+    if not redirect_to:
+        redirect_to = frappe.utils.get_url() + "/app"
+    return get_oauth2_authorize_url("google", redirect_to)
 
 
 @frappe.whitelist()
