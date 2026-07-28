@@ -5,7 +5,7 @@
   "creation": "2026-07-02 00:00:00",
   "doctype": "DocType",
   "engine": "InnoDB",
-  "field_order": ["company", "customer_type", "customer_name", "customer_name_ar", "mobile_no", "email", "status"],
+  "field_order": ["company", "customer_type", "customer_name", "customer_name_ar", "mobile_no", "email", "vat_number", "registration_scheme", "registration_number", "status"],
   "fields": [
     {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Company", "reqd": 1},
     {"default": "Individual", "fieldname": "customer_type", "fieldtype": "Select", "in_list_view": 1, "label": "Customer Type", "options": "Company\nIndividual\nTravel Agency"},
@@ -13,6 +13,9 @@
     {"fieldname": "customer_name_ar", "fieldtype": "Data", "label": "Customer Name Arabic"},
     {"fieldname": "mobile_no", "fieldtype": "Data", "label": "Mobile No"},
     {"fieldname": "email", "fieldtype": "Data", "label": "Email"},
+    {"fieldname": "vat_number", "fieldtype": "Data", "label": "VAT Number"},
+    {"fieldname": "registration_scheme", "fieldtype": "Select", "label": "Registration Scheme", "options": "\nCompany (CR)\nIndividual (NAT)\nGCC (GCC)\nOther (OTH)"},
+    {"fieldname": "registration_number", "fieldtype": "Data", "label": "Registration Number"},
     {"default": "Active", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Active\nInactive\nBlocked"}
   ],
   "grid_page_length": 50,

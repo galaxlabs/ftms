@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:OFR-{####}",
+ "creation": "2026-07-19 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "booking",
+  "captain_user",
+  "vehicle",
+  "column_break_fare",
+  "offered_fare",
+  "fare_type",
+  "captain_notes",
+  "column_break_status",
+  "status",
+  "created_at",
+  "responded_at"
+ ],
+ "fields": [
+  {"fieldname": "booking", "fieldtype": "Link", "in_list_view": 1, "label": "Booking", "options": "Trip Booking", "reqd": 1},
+  {"fieldname": "captain_user", "fieldtype": "Link", "in_list_view": 1, "label": "Captain User", "options": "User", "reqd": 1},
+  {"fieldname": "vehicle", "fieldtype": "Link", "in_list_view": 1, "label": "Vehicle", "options": "Vehicle", "reqd": 1},
+  {"fieldname": "column_break_fare", "fieldtype": "Column Break"},
+  {"fieldname": "offered_fare", "fieldtype": "Currency", "in_list_view": 1, "label": "Offered Fare", "reqd": 1},
+  {"default": "Total Trip", "fieldname": "fare_type", "fieldtype": "Select", "in_list_view": 1, "label": "Fare Type", "options": "Total Trip\nPer Passenger\nPer KM"},
+  {"fieldname": "captain_notes", "fieldtype": "Small Text", "label": "Captain Notes"},
+  {"fieldname": "column_break_status", "fieldtype": "Column Break"},
+  {"default": "Pending", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Pending\nAccepted\nRejected\nWithdrawn"},
+  {"fieldname": "created_at", "fieldtype": "Datetime", "label": "Created At"},
+  {"fieldname": "responded_at", "fieldtype": "Datetime", "label": "Responded At"}
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-19 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Transport System",
+ "name": "Booking Offer",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"read": 1, "role": "Desk User"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "booking, captain_user, offered_fare",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -8,7 +8,7 @@ def validate_sales_invoice(doc, method):
     taxes_field = doc.get("taxes_and_charges") or doc.get("vat_template")
     if not taxes_field:
         frappe.throw("Tax Template must be provided.")
-    if doc.get("is_return") and (not doc.get("return_against") and not doc.get("custom_cn_ref")):
+    if doc.get("is_return") and (not doc.get("return_against") and not (doc.get("cn_ref") or doc.get("custom_cn_ref"))):
         frappe.throw("Go to credit note details and fetch return invoices")
 
 def get_buyer_information(customer_name):
@@ -21,9 +21,9 @@ def get_buyer_information(customer_name):
             address = frappe.get_doc("Address", customer.customer_primary_address)
         return {
             "organizationName": customer.customer_name,
-            "vatNumber": getattr(customer, "custom_vat_number", None),
-            "registrationScheme": _get_registration_scheme_code(getattr(customer, "custom_registration_scheme", None)),
-            "registrationNumber": getattr(customer, "custom_registration_number", None),
+            "vatNumber": getattr(customer, "vat_number", None) or getattr(customer, "custom_vat_number", None),
+            "registrationScheme": _get_registration_scheme_code(getattr(customer, "registration_scheme", None) or getattr(customer, "custom_registration_scheme", None)),
+            "registrationNumber": getattr(customer, "registration_number", None) or getattr(customer, "custom_registration_number", None),
             "streetName": address.address_line1 if address else "",
             "buildingNumber": address.address_line2 if address else "",
             "citySubdivisionName": address.city if address else "",

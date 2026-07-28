@@ -1,3 +1,4 @@
+import frappe
 from frappe.utils import flt
 from frappe.model.document import Document
 
@@ -5,8 +6,14 @@ from frappe.model.document import Document
 class TripInvoice(Document):
 	def validate(self):
 		self.set_customer_fallback()
+		self.set_passenger_count_from_trip()
 		self.calculate_item_totals()
 		self.calculate_totals()
+
+	def set_passenger_count_from_trip(self):
+		if self.trip and not self.allocated_passenger_count:
+			count = frappe.db.get_value("Trip", self.trip, "passenger_count")
+			self.allocated_passenger_count = count or 0
 
 	def set_customer_fallback(self):
 		if not self.customer:

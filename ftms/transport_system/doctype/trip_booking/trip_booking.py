@@ -7,7 +7,8 @@ from ftms.ride_machine.state_machine import BookingStateMachine
 
 class TripBooking(Document):
     def validate(self):
-        pass
+        if self.passengers:
+            self.passenger_count = len(self.passengers)
 
     def confirm(self):
         machine = BookingStateMachine(self, "booking_status")

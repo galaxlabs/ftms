@@ -13,100 +13,110 @@ from frappe import _
 
 
 def _get_last_pih(company):
-	last = frappe.db.get_value(
-		"Zatca Transactions",
-		{"company": company, "status": "Submitted"},
-		"invoice_hash",
-		order_by="transaction_time desc",
-	)
-	return last or hashlib.sha256(b"0").hexdigest()
+    last = frappe.db.get_value(
+        "Zatca Transactions",
+        {"company": company, "status": "Submitted"},
+        "invoice_hash",
+        order_by="transaction_time desc",
+    )
+    return last or hashlib.sha256(b"0").hexdigest()
 
 
 def _generate_icv(company):
-	last = frappe.db.get_value(
-		"Zatca Transactions",
-		{"company": company},
-		"invoice_icv",
-		order_by="transaction_time desc",
-	)
-	return (last or 0) + 1
+    last = frappe.db.get_value(
+        "Zatca Transactions",
+        {"company": company},
+        "invoice_icv",
+        order_by="transaction_time desc",
+    )
+    return (last or 0) + 1
 
 
 def _tlv_encode(tag, value):
-	value_bytes = value.encode("utf-8") if isinstance(value, str) else value
-	tag_bytes = bytes([tag])
-	length_bytes = len(value_bytes)
-	if length_bytes < 128:
-		length_bytes = bytes([length_bytes])
-	else:
-		length_bytes = bytes([0x81, length_bytes])
-	return tag_bytes + length_bytes + value_bytes
+    value_bytes = value.encode("utf-8") if isinstance(value, str) else value
+    tag_bytes = bytes([tag])
+    length_bytes = len(value_bytes)
+    if length_bytes < 128:
+        length_bytes = bytes([length_bytes])
+    else:
+        length_bytes = bytes([0x81, length_bytes])
+    return tag_bytes + length_bytes + value_bytes
 
 
 def _tlv_qr_data(seller_name, vat_no, timestamp, total, vat_total):
-	data = b""
-	data += _tlv_encode(1, seller_name)
-	data += _tlv_encode(2, vat_no)
-	data += _tlv_encode(3, timestamp)
-	data += _tlv_encode(4, f"{total:.2f}")
-	data += _tlv_encode(5, f"{vat_total:.2f}")
-	return data
+    data = b""
+    data += _tlv_encode(1, seller_name)
+    data += _tlv_encode(2, vat_no)
+    data += _tlv_encode(3, timestamp)
+    data += _tlv_encode(4, f"{total:.2f}")
+    data += _tlv_encode(5, f"{vat_total:.2f}")
+    return data
 
 
 @frappe.whitelist()
-def generate_tlv_qr(invoice_name):
-	invoice = frappe.get_doc("Trip Invoice", invoice_name)
-	company_doc = frappe.get_doc("Company", invoice.company)
-	seller_name = company_doc.company_name or company_doc.legal_name or ""
-	vat_no = company_doc.vat_no or ""
-	timestamp = invoice.invoice_date.strftime("%Y-%m-%dT00:00:00Z")
-	total = invoice.grand_total or 0
-	vat_total = invoice.vat_amount or 0
-	tlv = _tlv_qr_data(seller_name, vat_no, timestamp, total, vat_total)
-	return base64.b64encode(tlv).decode()
+def generate_tlv_qr(invoice_name, doctype="Trip Invoice"):
+    from ftms.zatca.adapter import get_adapter
+
+    adapter = get_adapter(doctype)
+    invoice = adapter.get_invoice(invoice_name)
+    company_doc = frappe.get_doc("Company", adapter.get_company(invoice))
+    seller_name = company_doc.company_name or company_doc.legal_name or ""
+    vat_no = company_doc.vat_no or ""
+    invoice_date = adapter.get_invoice_date(invoice)
+    timestamp = invoice_date.strftime("%Y-%m-%dT00:00:00Z") if invoice_date else datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00Z")
+    total = adapter.get_grand_total(invoice)
+    vat_total = adapter.get_vat_amount(invoice)
+    tlv = _tlv_qr_data(seller_name, vat_no, timestamp, total, vat_total)
+    return base64.b64encode(tlv).decode()
 
 
-def _get_invoice_type(invoice):
-	inv_type = getattr(invoice, "invoice_type", None)
-	if inv_type == "Credit Note":
-		return ("381", "Credit Note")
-	elif inv_type == "Debit Note":
-		return ("383", "Debit Note")
-	return ("388", "Invoice")
+def _get_invoice_type(invoice_type_str):
+    if invoice_type_str == "credit_note":
+        return ("381", "Credit Note")
+    elif invoice_type_str == "debit_note":
+        return ("383", "Debit Note")
+    return ("388", "Invoice")
 
 
-def _billing_reference(invoice):
-	ref = getattr(invoice, "return_against", None)
-	if ref:
-		return ref
-	return None
+def generate_invoice_xml(invoice, company_doc, csid_doc, invoice_counter, pih, adapter=None):
+    if adapter:
+        items = adapter.get_items(invoice)
+        item = items[0] if items else {}
+        vat_rate = adapter.get_vat_rate(invoice)
+        net = adapter.get_net_total(invoice)
+        vat_amt = adapter.get_vat_amount(invoice)
+        gross = adapter.get_grand_total(invoice)
+        invoice_type_str = adapter.get_invoice_type(invoice)
+        invoice_date = adapter.get_invoice_date(invoice)
+        customer_name = escape(adapter.get_customer_name(invoice) or "Walk-in Customer")
+    else:
+        item = (invoice.items or [{}])[0]
+        vat_rate = item.get("vat_rate", invoice.vat_rate or 15)
+        net = float(item.get("amount", invoice.net_total or 0))
+        vat_amt = float(item.get("vat_amount", invoice.vat_amount or 0))
+        gross = float(item.get("total_amount", invoice.grand_total or 0))
+        invoice_type_str = "invoice"
+        invoice_date = invoice.invoice_date
+        customer_name = escape(invoice.customer or "Walk-in Customer")
 
+    item_name = item.get("item_name") or item.get("description") or "Transport Service"
+    qty = int(item.get("qty", 1))
+    unit_price = round(net / qty, 6) if qty > 0 else 0
 
-def generate_invoice_xml(invoice, company_doc, csid_doc, invoice_counter, pih):
-	item = (invoice.items or [{}])[0]
-	item_name = item.get("item_name") or item.get("description") or "Transport Service"
-	vat_rate = item.get("vat_rate", invoice.vat_rate or 15)
-	net = float(item.get("amount", invoice.net_total or 0))
-	vat_amt = float(item.get("vat_amount", invoice.vat_amount or 0))
-	gross = float(item.get("total_amount", invoice.grand_total or 0))
-	qty = int(item.get("qty", 1))
-	unit_price = round(net / qty, 6) if qty > 0 else 0
+    invoice_type_code, invoice_type_name = _get_invoice_type(invoice_type_str)
+    uuid_str = str(uuid.uuid4())
+    issue_date = invoice_date.strftime("%Y-%m-%d") if invoice_date else datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    issue_time = datetime.now(timezone.utc).strftime("%H:%M:%SZ")
 
-	invoice_type_code, invoice_type_name = _get_invoice_type(invoice)
-	uuid_str = str(uuid.uuid4())
-	issue_date = invoice.invoice_date.strftime("%Y-%m-%d")
-	issue_time = datetime.now(timezone.utc).strftime("%H:%M:%SZ")
+    seller = {
+        "name": escape(company_doc.company_name or ""),
+        "vat": escape(company_doc.vat_no or ""),
+        "cr": escape(company_doc.cr_no or ""),
+        "address": escape(company_doc.address or ""),
+    }
+    currency = company_doc.default_currency or "SAR"
 
-	seller = {
-		"name": escape(company_doc.company_name or ""),
-		"vat": escape(company_doc.vat_no or ""),
-		"cr": escape(company_doc.cr_no or ""),
-		"address": escape(company_doc.address or ""),
-	}
-	customer_name = escape(invoice.customer or "Walk-in Customer")
-	currency = company_doc.default_currency or "SAR"
-
-	xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
          xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
          xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
@@ -227,56 +237,51 @@ def generate_invoice_xml(invoice, company_doc, csid_doc, invoice_counter, pih):
   </cac:InvoiceLine>
 </Invoice>"""
 
-	return xml, uuid_str
+    return xml, uuid_str
 
 
 def sign_invoice_xml(xml_string, private_key_pem):
-	from lxml import etree
+    from lxml import etree
 
-	root = etree.fromstring(xml_string.encode("utf-8"))
-	ns = {
-		"ext": "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
-	}
+    root = etree.fromstring(xml_string.encode("utf-8"))
+    c14n_bytes = etree.tostring(root, method="c14n", exclusive=True, with_comments=False)
+    digest = hashlib.sha256(c14n_bytes).digest()
+    digest_b64 = base64.b64encode(digest).decode()
 
-	c14n_bytes = etree.tostring(root, method="c14n", exclusive=True, with_comments=False)
-	digest = hashlib.sha256(c14n_bytes).digest()
-	digest_b64 = base64.b64encode(digest).decode()
+    try:
+        from OpenSSL import crypto
 
-	try:
-		from OpenSSL import crypto
+        pkey = crypto.load_privatekey(crypto.FILETYPE_PEM, private_key_pem)
+        signature = crypto.sign(pkey, c14n_bytes, "sha256")
+        sig_b64 = base64.b64encode(signature).decode()
+    except ImportError:
+        import subprocess
 
-		pkey = crypto.load_privatekey(crypto.FILETYPE_PEM, private_key_pem)
-		signature = crypto.sign(pkey, c14n_bytes, "sha256")
-		sig_b64 = base64.b64encode(signature).decode()
-	except ImportError:
-		import subprocess
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".pem", delete=False) as kf:
+            kf.write(private_key_pem)
+            key_path = kf.name
+        with tempfile.NamedTemporaryFile(mode="wb", suffix=".bin", delete=False) as df:
+            df.write(c14n_bytes)
+            data_path = df.name
+        sig_path = data_path + ".sig"
+        try:
+            subprocess.run(
+                ["openssl", "dgst", "-sha256", "-sign", key_path, "-out", sig_path, data_path],
+                check=True, capture_output=True, text=True, timeout=30,
+            )
+            with open(sig_path, "rb") as f:
+                signature = f.read()
+            sig_b64 = base64.b64encode(signature).decode()
+        finally:
+            for p in [key_path, data_path, sig_path]:
+                try:
+                    Path(p).unlink(missing_ok=True)
+                except Exception:
+                    pass
 
-		with tempfile.NamedTemporaryFile(mode="w", suffix=".pem", delete=False) as kf:
-			kf.write(private_key_pem)
-			key_path = kf.name
-		with tempfile.NamedTemporaryFile(mode="wb", suffix=".bin", delete=False) as df:
-			df.write(c14n_bytes)
-			data_path = df.name
-		sig_path = data_path + ".sig"
-		try:
-			subprocess.run(
-				["openssl", "dgst", "-sha256", "-sign", key_path, "-out", sig_path, data_path],
-				check=True, capture_output=True, text=True, timeout=30,
-			)
-			with open(sig_path, "rb") as f:
-				signature = f.read()
-			sig_b64 = base64.b64encode(signature).decode()
-		finally:
-			for p in [key_path, data_path, sig_path]:
-				try:
-					Path(p).unlink(missing_ok=True)
-				except Exception:
-					pass
-
-	# Build signed XML
-	signed_xml = xml_string.replace(
-		"</ext:UBLExtensions>",
-		f"""<sac:SignatureInformation>
+    signed_xml = xml_string.replace(
+        "</ext:UBLExtensions>",
+        f"""<sac:SignatureInformation>
             <cbc:ID>urn:fdc:gov:sa:2024</cbc:ID>
             <sbc:ReferencedSignatureID>urn:fdc:gov:sa:2024</sbc:ReferencedSignatureID>
             <sig:DigitalSignature>
@@ -301,6 +306,6 @@ def sign_invoice_xml(xml_string, private_key_pem):
         </ext:ExtensionContent>
       </ext:UBLExtension>
     </ext:UBLExtensions>""",
-	)
+    )
 
-	return signed_xml, digest_b64
+    return signed_xml, digest_b64

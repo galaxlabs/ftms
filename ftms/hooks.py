@@ -108,6 +108,18 @@ fixtures = [
     {"dt": "Print Format", "filters": [["module", "=", "Transport System"]]},
 ]
 
+zatca_invoice_adapters = {
+    "Trip Invoice": "ftms.zatca.trip_adapter.get_adapter",
+}
+
 default_print_format = {
     "Trip Invoice": "Trip Invoice KSA",
 }
+
+website_route_rules = [
+    {"from_route": "/trip/<uuid>", "to_route": "/trip"},
+]
+
+guest_methods = [
+    "ftms.api.booking.join_booking_group",
+]
