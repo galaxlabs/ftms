@@ -7,6 +7,11 @@ from ftms.tenant import company_filters, get_user_company, resolve_company
 
 
 @frappe.whitelist()
+def list_customer_types():
+	return frappe.get_all("Customer Type", fields=["name", "type_name"], order_by="type_name asc")
+
+
+@frappe.whitelist()
 def list_customers(company=None, limit=50):
 	filters = company_filters(company=company)
 	return frappe.get_all(

@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from ftms.tenant import get_user_company
+from ftms.tenant import get_user_company, resolve_company
 
 
 @frappe.whitelist(allow_guest=True)
@@ -24,3 +24,12 @@ def list_companies(company=None, limit=100):
 		order_by="modified desc",
 		limit_page_length=int(limit),
 	)
+
+
+@frappe.whitelist()
+def get_company(name, company=None):
+	resolved_company = resolve_company(company=company, allow_missing=True)
+	if resolved_company and name != resolved_company:
+		frappe.throw("Not permitted for this company")
+	doc = frappe.get_doc("Company", name)
+	return doc.as_dict()

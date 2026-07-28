@@ -154,6 +154,23 @@ def has_permission(doc, ptype, user):
 
 
 @frappe.whitelist()
+def check_permission(doctype, name=None, ptype="read"):
+	user = frappe.session.user
+	if user == "Guest":
+		return {"allowed": False}
+	if doctype:
+		meta = frappe.get_meta(doctype)
+		if meta and meta.get("permissions"):
+			for p in meta.permissions:
+				if p.role == "All" or frappe.has_permission(doctype, ptype=ptype, doc=name):
+					return {"allowed": True}
+	doc = name and frappe.get_doc(doctype, name) if name else None
+	if doc and has_permission(doc, ptype, user):
+		return {"allowed": True}
+	return {"allowed": frappe.has_permission(doctype, ptype=ptype) if doctype else False}
+
+
+@frappe.whitelist()
 def get_linked_company():
     user = frappe.session.user
     link = get_active_link(user)

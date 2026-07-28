@@ -1,5 +1,59 @@
 import frappe
 
+from ftms.tenant import company_filters, get_user_company, resolve_company
+
+
+@frappe.whitelist(allow_guest=True)
+def list_trips(company=None, limit=50):
+	filters = company_filters(company=company)
+	return frappe.get_all(
+		"Trip",
+		filters=filters,
+		fields=["name", "company", "trip_title", "trip_code", "trip_date", "trip_status", "route", "vehicle", "assigned_captain_user", "seat_capacity", "available_seats"],
+		order_by="trip_date desc, modified desc",
+		limit_page_length=int(limit),
+	)
+
+
+@frappe.whitelist()
+def get_trip(name, company=None):
+	doc = frappe.get_doc("Trip", name)
+	resolved_company = resolve_company(company=company, allow_missing=True)
+	if resolved_company and doc.company != resolved_company:
+		frappe.throw("Not permitted for this company")
+	return doc.as_dict()
+
+
+@frappe.whitelist()
+def create_trip(route, trip_date, vehicle=None, trip_title=None, trip_code=None, company=None, status="Scheduled"):
+	user = frappe.session.user
+	if user == "Guest":
+		frappe.throw("Login is required", frappe.PermissionError)
+
+	resolved_company = resolve_company(company=company)
+	if not resolved_company:
+		frappe.throw("Company is required")
+
+	doc = frappe.get_doc({
+		"doctype": "Trip",
+		"company": resolved_company,
+		"trip_title": trip_title or f"Trip-{trip_date}",
+		"trip_code": trip_code,
+		"trip_date": trip_date,
+		"route": route,
+		"vehicle": vehicle,
+		"trip_status": status,
+	})
+	doc.insert(ignore_permissions=True)
+	return {"name": doc.name, "company": doc.company, "trip_status": doc.trip_status}
+
+
+@frappe.whitelist()
+def update_trip_status(name, status):
+	doc = frappe.get_doc("Trip", name)
+	doc.db_set("trip_status", status)
+	return {"name": doc.name, "trip_status": status}
+
 
 @frappe.whitelist()
 def generate_qr(trip_name):
