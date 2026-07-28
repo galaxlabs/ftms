@@ -1,45 +1,49 @@
 import frappe
 import requests as http_requests
+from ftms.country.id_format import load_countries, find_country, get_id_format
 
-def get_country_data():
+
+@frappe.whitelist(allow_guest=True)
+def get_country_info(alpha_2):
+    country = find_country(alpha_2=alpha_2)
+    if not country:
+        return {}
+    fmt = get_id_format(alpha_2)
     return {
-        "SA": {
-            "country_name": "Saudi Arabia",
-            "alpha_2": "SA",
-            "alpha_3": "SAU",
-            "official_name": "المملكة العربية السعودية",
-            "language": "Arabic",
-            "currency": "SAR",
-            "currency_name": "Saudi riyal",
-            "currency_symbol": "﷼",
-            "timezones": ["Asia/Riyadh"],
-            "phone_code": "+966",
-            "capital": "Riyadh",
-            "region": "Asia",
-            "subregion": "Western Asia",
-            "tld": ".sa"
-        }
+        "country_name": country.get("country_name"),
+        "alpha_2": country.get("alpha_2"),
+        "alpha_3": country.get("alpha_3"),
+        "official_name": country.get("official_name"),
+        "native": country.get("native"),
+        "language": country.get("language"),
+        "currency": country.get("currency"),
+        "currency_name": country.get("currency_name"),
+        "currency_symbol": country.get("currency_symbol"),
+        "timezones": country.get("timezones", []),
+        "phone_code": country.get("phone_code"),
+        "capital": country.get("capital"),
+        "region": country.get("region"),
+        "subregion": country.get("subregion"),
+        "tld": country.get("tld"),
+        "id_format": fmt.get("documents", {}).get("National ID"),
     }
 
-@frappe.whitelist()
-def get_country_info(alpha_2):
-    data = get_country_data()
-    return data.get(alpha_2.upper(), {})
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_country_info_by_name(country_name):
-    for code, info in get_country_data().items():
-        if info["country_name"].lower() == country_name.lower():
-            return info
-    return {}
+    country = find_country(country_name=country_name)
+    if not country:
+        return {}
+    return get_country_info(alpha_2=country.get("alpha_2"))
 
-@frappe.whitelist()
+
+@frappe.whitelist(allow_guest=True)
 def get_language_by_country_name(country_name):
-    if country_name == "Saudi Arabia":
-        return "Arabic"
-    return "English"
+    country = find_country(country_name=country_name)
+    return country.get("language", "English")
 
-@frappe.whitelist()
+
+@frappe.whitelist(allow_guest=True)
 def geocode_city(city, state=None, country=None):
     query_parts = [city]
     if state:

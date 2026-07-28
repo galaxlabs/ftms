@@ -122,4 +122,13 @@ website_route_rules = [
 
 guest_methods = [
     "ftms.api.booking.join_booking_group",
+    "ftms.country.id_format.get_country_list",
+    "ftms.country.id_format.get_document_types",
+    "ftms.country.id_format.get_document_format",
+    "ftms.country.id_format.validate_document_number",
+    "ftms.country.id_format.get_country_info",
+    "ftms.country.registry.get_country_info",
+    "ftms.country.registry.get_country_info_by_name",
+    "ftms.country.registry.get_language_by_country_name",
+    "ftms.country.registry.geocode_city",
 ]
