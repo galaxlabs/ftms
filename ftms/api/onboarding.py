@@ -272,27 +272,205 @@ def request_join_company(company):
 def get_status():
     user = frappe.session.user
     if user == "Guest":
-        return {"onboarded": False, "user_type": None}
+        return {"onboarded": False, "user_type": None, "available_roles": []}
 
     profile = frappe.db.get_value("User", user, ["user_type", "onboarded"], as_dict=True)
     if not profile:
-        return {"onboarded": False, "user_type": None}
+        return {"onboarded": False, "user_type": None, "available_roles": ["Passenger", "Partner", "Captain"]}
+
+    onboarded = bool(profile.get("onboarded"))
+    user_type = profile.get("user_type")
+
+    existing_partner = frappe.db.exists("Partner Profile", {"user": user})
+    existing_captain = frappe.db.exists("Captain Profile", {"user": user})
+    existing_company_link = frappe.db.exists("User Company Link", {"user": user, "status": "Active"})
+
+    partner_profile = None
+    if existing_partner:
+        partner_profile = frappe.db.get_value("Partner Profile", {"user": user}, [
+            "name", "partner_type", "service_contract_type", "company", "status",
+            "company_name", "vat_no",
+        ], as_dict=True)
+
+    captain_profile = None
+    if existing_captain:
+        captain_profile = frappe.db.get_value("Captain Profile", {"user": user}, [
+            "name", "full_name", "status", "current_company",
+        ], as_dict=True)
+
+    available_roles = []
+    if not existing_partner and not existing_captain and not existing_company_link:
+        available_roles = ["Passenger", "Partner", "Captain"]
+    elif user_type == "Passenger":
+        available_roles = ["Passenger"]
+    elif user_type == "Partner":
+        available_roles = ["Partner"]
+    elif user_type == "Captain":
+        available_roles = ["Captain"]
 
     return {
-        "onboarded": bool(profile.get("onboarded")),
-        "user_type": profile.get("user_type"),
+        "onboarded": onboarded,
+        "user_type": user_type,
+        "available_roles": available_roles,
+        "partner_profile": partner_profile,
+        "captain_profile": captain_profile,
     }
 
 
 @frappe.whitelist()
 def set_user_type(user_type):
-    valid_types = ["Captain", "Passenger", "Company Admin", "Dispatcher", "Accountant"]
+    valid_types = ["Captain", "Passenger", "Company Admin", "Partner", "Dispatcher", "Accountant"]
     if user_type not in valid_types:
         frappe.throw(_("Invalid user type. Must be one of: {0}").format(", ".join(valid_types)))
 
     user = frappe.session.user
     frappe.db.set_value("User", user, "user_type", user_type)
     return {"status": "ok", "user_type": user_type}
+
+
+@frappe.whitelist()
+def set_role(role):
+    """Set the user's intended role before onboarding begins."""
+    valid_roles = ["Passenger", "Partner", "Captain"]
+    if role not in valid_roles:
+        frappe.throw(_("Invalid role. Must be one of: {0}").format(", ".join(valid_roles)))
+    user = frappe.session.user
+    frappe.db.set_value("User", user, "user_type", role)
+    frappe.db.set_value("User", user, "onboarded", 0)
+    return {"status": "ok", "role": role}
+
+
+@frappe.whitelist()
+def create_passenger_profile(full_name=None, mobile_no=None, nationality=None, id_document_type=None, id_number=None, id_expiry_date=None):
+    """Create a passenger profile and mark onboarding complete."""
+    user = frappe.session.user
+    if not user or user == "Guest":
+        frappe.throw(_("Login is required"), frappe.PermissionError)
+
+    from frappe.utils import now_datetime
+    frappe.db.set_value("User", user, {
+        "user_type": "Passenger",
+        "onboarded": 1,
+        "mobile_no": mobile_no,
+    })
+    if full_name:
+        frappe.db.set_value("User", user, "full_name", full_name)
+
+    return {"status": "ok", "user": user, "role": "Passenger"}
+
+
+@frappe.whitelist()
+def create_partner_profile(
+    partner_type=None, service_contract_type=None,
+    company_name=None, legal_name=None, company_name_ar=None,
+    vat_no=None, cr_no=None, tax_id=None, license_no=None,
+    phone=None, email=None, address=None, city=None, country=None,
+    full_name=None, mobile_no=None,
+    partner_data=None,
+):
+    """Create a partner profile with company registration."""
+    user = frappe.session.user
+    if not user or user == "Guest":
+        frappe.throw(_("Login is required"), frappe.PermissionError)
+
+    valid_types = ["Travel Agent", "Taxi Service", "Fleet Owner", "Rent A Car Service", "Service Contract"]
+    if partner_type not in valid_types:
+        frappe.throw(_("Invalid partner type"))
+
+    if frappe.db.exists("Partner Profile", {"user": user}):
+        frappe.throw(_("Partner profile already exists for this user"))
+    if frappe.db.exists("User Company Link", {"user": user, "status": "Active"}):
+        frappe.throw(_("User is already linked to a company"))
+
+    domain = _default_domain()
+    if not domain:
+        frappe.throw(_("No Transportation Domain configured"))
+
+    company_doc = frappe.get_doc({
+        "doctype": "Company",
+        "company_code": _unique_code("Company", "company_code", company_name or "Partner"),
+        "company_name": company_name or f"{user}'s Company",
+        "legal_name": legal_name,
+        "company_name_ar": company_name_ar,
+        "vat_no": vat_no,
+        "tax_id": tax_id,
+        "cr_no": cr_no,
+        "phone": phone,
+        "email": email or user,
+        "address": address,
+        "owner_user": user,
+        "domain": domain,
+        "onboarding_status": "Profile Complete",
+        "status": "Active",
+    })
+    company_doc.insert(ignore_permissions=True)
+
+    link_doc = frappe.get_doc({
+        "doctype": "User Company Link",
+        "link_code": _unique_code("User Company Link", "link_code", f"{company_doc.name}-{user}"),
+        "user": user,
+        "company": company_doc.name,
+        "role": "Partner",
+        "is_owner": 1,
+        "joined_via": "Signup",
+        "status": "Active",
+        "approved_by": user,
+        "approved_on": now_datetime(),
+    })
+    link_doc.insert(ignore_permissions=True)
+
+    profile = frappe.get_doc({
+        "doctype": "Partner Profile",
+        "user": user,
+        "full_name": full_name or frappe.db.get_value("User", user, "full_name") or user,
+        "mobile_no": mobile_no,
+        "partner_type": partner_type,
+        "service_contract_type": service_contract_type if partner_type == "Service Contract" else None,
+        "company": company_doc.name,
+        "status": "Active",
+        "company_name": company_name,
+        "legal_name": legal_name,
+        "company_name_ar": company_name_ar,
+        "vat_no": vat_no,
+        "cr_no": cr_no,
+        "tax_id": tax_id,
+        "license_no": license_no,
+        "phone": phone,
+        "email": email or user,
+        "address": address,
+        "city": city,
+        "country": country,
+        "partner_data": partner_data,
+    })
+    profile.insert(ignore_permissions=True)
+
+    frappe.db.set_value("User", user, {"user_type": "Partner", "onboarded": 1})
+    frappe.db.commit()
+
+    return {
+        "status": "ok",
+        "profile": profile.name,
+        "company": company_doc.name,
+        "partner_type": partner_type,
+    }
+
+
+@frappe.whitelist()
+def lookup_company_by_tax_id(tax_id=None, vat_no=None):
+    """Auto-fetch company details by tax ID or VAT number."""
+    if not tax_id and not vat_no:
+        return None
+    filters = {}
+    if tax_id:
+        filters["tax_id"] = tax_id
+    if vat_no:
+        filters["vat_no"] = vat_no
+    company = frappe.db.get_value("Company", filters, [
+        "name", "company_name", "legal_name", "company_name_ar",
+        "vat_no", "tax_id", "cr_no", "phone", "email", "address",
+        "domain", "owner_user",
+    ], as_dict=True)
+    return company
 
 
 @frappe.whitelist()

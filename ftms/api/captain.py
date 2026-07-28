@@ -178,3 +178,86 @@ def get_my_profile():
 		return None
 	doc = frappe.get_doc("Captain Profile", profile)
 	return doc.as_dict()
+
+
+@frappe.whitelist()
+def register_vehicle(
+	vehicle_make=None, vehicle_model=None,
+	plate_no=None, chassis_no=None,
+	model_year=None, color=None,
+	seat_capacity=None, fuel_type=None,
+	operation_card_no=None, operation_card_expiry_date=None,
+	registration_expiry_date=None, insurance_expiry_date=None,
+	operation_card_document=None, registration_document=None,
+	insurance_document=None,
+):
+	"""Register a vehicle under the captain's own name (no company required)."""
+	user = frappe.session.user
+	if user == "Guest":
+		frappe.throw(_("Login is required"), frappe.PermissionError)
+
+	profile = frappe.db.get_value("Captain Profile", {"user": user}, "name")
+	if not profile:
+		frappe.throw(_("Create a captain profile before registering vehicles"))
+
+	if chassis_no and frappe.db.exists("Vehicle", {"chassis_no": chassis_no}):
+		frappe.throw(_("A vehicle with this chassis number already exists"))
+
+	vehicle_code = _make_vehicle_code(chassis_no or plate_no or user, vehicle_make, vehicle_model)
+	vehicle_name = f"{vehicle_make or 'VHC'} - {plate_no or vehicle_code}"
+
+	doc = frappe.get_doc({
+		"doctype": "Vehicle",
+		"vehicle_code": vehicle_code,
+		"vehicle_name": vehicle_name,
+		"vehicle_make": vehicle_make,
+		"vehicle_model": vehicle_model,
+		"plate_no": plate_no,
+		"chassis_no": chassis_no,
+		"model_year": model_year,
+		"color": color,
+		"seat_capacity": seat_capacity,
+		"fuel_type": fuel_type or "Petrol",
+		"ownership_type": "Owned",
+		"operation_card_no": operation_card_no,
+		"operation_card_expiry_date": operation_card_expiry_date,
+		"registration_expiry_date": registration_expiry_date,
+		"insurance_expiry_date": insurance_expiry_date,
+		"operation_card_document": operation_card_document,
+		"registration_document": registration_document,
+		"insurance_document": insurance_document,
+		"assigned_captain_user": user,
+		"status": "Active",
+	})
+	doc.insert(ignore_permissions=True)
+	frappe.db.commit()
+	return {"status": "ok", "vehicle": doc.name, "vehicle_code": vehicle_code}
+
+
+@frappe.whitelist()
+def lookup_company_by_tax_id(tax_id=None, vat_no=None):
+	"""Auto-fetch company details by tax ID or VAT number."""
+	if not tax_id and not vat_no:
+		return None
+	filters = {}
+	if tax_id:
+		filters["tax_id"] = tax_id
+	if vat_no:
+		filters["vat_no"] = vat_no
+	company = frappe.db.get_value("Company", filters, [
+		"name", "company_name", "legal_name", "company_name_ar",
+		"vat_no", "tax_id", "cr_no", "phone", "email", "address",
+	], as_dict=True)
+	if company:
+		company["found"] = True
+	return company
+
+
+def _make_vehicle_code(chassis_or_plate, make, model):
+	import re
+	parts = [re.sub(r"[^A-Z0-9]+", "-", (chassis_or_plate or "").upper())[:12]]
+	if make:
+		parts.append(re.sub(r"[^A-Z0-9]+", "-", make.upper())[:8])
+	if model:
+		parts.append(re.sub(r"[^A-Z0-9]+", "-", model.upper())[:8])
+	return "-".join(parts)[:30]
