@@ -91,6 +91,11 @@ def get_context(context):
 			company_name_ar = frappe.db.get_value("Company", trip_data.company, "company_name_ar") or ""
 		except Exception:
 			pass
+		if not company_name_ar:
+			try:
+				company_name_ar = frappe.db.get_value("Company", trip_data.company, "custom_company_name_arabic") or ""
+			except Exception:
+				pass
 		try:
 			company_logo = frappe.db.get_value("Company", trip_data.company, "company_logo") or ""
 		except Exception:

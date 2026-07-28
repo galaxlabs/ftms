@@ -48,8 +48,9 @@ def get_letterhead(company_code):
 def _build_header_html(company):
     """Build a branded header HTML block."""
     lines = [f"<h3 style='margin:0;'>{company.company_name}</h3>"]
-    if company.company_name_ar:
-        lines.append(f"<div style='direction:rtl;'>{company.company_name_ar}</div>")
+    name_ar = company.get("company_name_ar") or company.get("custom_company_name_arabic") or ""
+    if name_ar:
+        lines.append(f"<div style='direction:rtl;'>{name_ar}</div>")
     lines.append(f"<div>VAT: {company.vat_no or ''} | CR: {company.cr_no or ''}</div>")
     if company.address:
         lines.append(f"<div style='font-size:9pt;'>{company.address}</div>")
