@@ -48,37 +48,63 @@ def search_places(query, limit=5):
 
 def _local_ksa_places(query, limit=10):
     query = (query or "").strip()
-    if not query or not frappe.db.exists("DocType", "KSA Place"):
+    if not query:
         return []
     like = f"%{query}%"
-    rows = frappe.get_all(
-        "KSA Place",
-        filters={"enabled": 1},
-        or_filters=[
-            ["name_en", "like", like],
-            ["name_ar", "like", like],
-            ["search_aliases_en", "like", like],
-            ["search_aliases_ar", "like", like],
-        ],
-        fields=["name", "name_en", "name_ar", "place_type", "region", "city", "latitude", "longitude", "google_place_id"],
-        order_by="featured desc, name_en asc",
-        limit_page_length=int(limit or 10),
-    )
-    return [
-        {
-            "source": "local",
-            "place_id": row.google_place_id or row.name,
-            "name_en": row.name_en,
-            "name_ar": row.name_ar,
-            "display_name": row.name_en,
-            "place_type": row.place_type,
-            "region": row.region,
-            "city": row.city,
-            "latitude": row.latitude,
-            "longitude": row.longitude,
-        }
-        for row in rows
-    ]
+    results = []
+    if frappe.db.exists("DocType", "KSA Place"):
+        rows = frappe.get_all(
+            "KSA Place",
+            filters={"enabled": 1},
+            or_filters=[
+                ["name_en", "like", like],
+                ["name_ar", "like", like],
+                ["search_aliases_en", "like", like],
+                ["search_aliases_ar", "like", like],
+            ],
+            fields=["name", "name_en", "name_ar", "place_type", "region", "city", "latitude", "longitude", "google_place_id"],
+            order_by="featured desc, name_en asc",
+            limit_page_length=int(limit or 10),
+        )
+        results.extend([
+            {
+                "source": "local",
+                "place_id": row.google_place_id or row.name,
+                "name_en": row.name_en,
+                "name_ar": row.name_ar,
+                "display_name": row.name_en,
+                "place_type": row.place_type,
+                "region": row.region,
+                "city": row.city,
+                "latitude": row.latitude,
+                "longitude": row.longitude,
+            }
+            for row in rows
+        ])
+    if frappe.db.exists("DocType", "KSA City"):
+        cities = frappe.get_all(
+            "KSA City",
+            filters={"is_active": 1},
+            or_filters=[["city_name", "like", like], ["city_name_ar", "like", like]],
+            fields=["name", "city_name", "city_name_ar", "region", "latitude", "longitude"],
+            order_by="city_name asc",
+            limit_page_length=int(limit or 10),
+        )
+        results.extend([
+            {
+                "source": "local_city",
+                "place_id": row.name,
+                "name_en": row.city_name,
+                "name_ar": row.city_name_ar,
+                "display_name": row.city_name,
+                "place_type": "City",
+                "region": row.region,
+                "latitude": row.latitude,
+                "longitude": row.longitude,
+            }
+            for row in cities
+        ])
+    return results[: int(limit or 10)]
 
 
 def _google_ksa_places(query, limit=10):
