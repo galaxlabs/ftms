@@ -1,0 +1,26 @@
+{
+  "doctype": "DocType",
+  "name": "KSA Place",
+  "module": "Transport System",
+  "autoname": "field:place_code",
+  "engine": "InnoDB",
+  "field_order": ["place_code", "name_en", "name_ar", "place_type", "region", "column_break_place", "city", "latitude", "longitude", "google_place_id", "enabled", "featured", "section_search", "search_aliases_en", "search_aliases_ar"],
+  "fields": [
+    {"fieldname": "place_code", "fieldtype": "Data", "label": "Place Code", "reqd": 1, "unique": 1, "read_only": 1},
+    {"fieldname": "name_en", "fieldtype": "Data", "label": "Name English", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "name_ar", "fieldtype": "Data", "label": "Name Arabic", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "place_type", "fieldtype": "Select", "label": "Place Type", "options": "City\nAirport\nLandmark\nHotel\nUniversity\nHospital\nSchool\nBusiness District\nTourism\nOther", "reqd": 1},
+    {"fieldname": "region", "fieldtype": "Data", "label": "Region"},
+    {"fieldname": "column_break_place", "fieldtype": "Column Break"},
+    {"fieldname": "city", "fieldtype": "Link", "label": "City", "options": "KSA City"},
+    {"fieldname": "latitude", "fieldtype": "Float", "label": "Latitude"},
+    {"fieldname": "longitude", "fieldtype": "Float", "label": "Longitude"},
+    {"fieldname": "google_place_id", "fieldtype": "Data", "label": "Google Place ID", "unique": 1},
+    {"fieldname": "enabled", "fieldtype": "Check", "label": "Enabled", "default": "1", "in_list_view": 1},
+    {"fieldname": "featured", "fieldtype": "Check", "label": "Featured", "default": "0"},
+    {"fieldname": "section_search", "fieldtype": "Section Break", "label": "Search"},
+    {"fieldname": "search_aliases_en", "fieldtype": "Small Text", "label": "English Search Aliases"},
+    {"fieldname": "search_aliases_ar", "fieldtype": "Small Text", "label": "Arabic Search Aliases"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Desk User", "read": 1}]
+}

@@ -125,6 +125,8 @@ guest_methods = [
     "ftms.api.config.get_document_format",
     "ftms.api.config.validate_document",
     "ftms.api.payment.payment_webhook",
+    "ftms.api.maps.list_ksa_places",
+    "ftms.api.maps.search_ksa_places",
     "ftms.country.id_format.get_country_list",
     "ftms.country.id_format.get_document_types",
     "ftms.country.id_format.get_document_format",

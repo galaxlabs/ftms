@@ -60,10 +60,13 @@ def get_integration_settings(include_private=False):
         "dead_letter_enabled": bool(_value(doc, "dead_letter_enabled", 1)),
         "payment_provider": _value(doc, "payment_provider", ""),
         "payment_public_key": _value(doc, "payment_public_key", ""),
+        "maps_provider": _value(doc, "maps_provider", "Google"),
+        "maps_country_restriction": _value(doc, "maps_country_restriction", "SA"),
     }
     if include_private and doc:
         result["firebase_api_key"] = doc.get_password("firebase_api_key") if doc.get("firebase_api_key") else ""
         result["payment_webhook_secret"] = doc.get_password("payment_webhook_secret") if doc.get("payment_webhook_secret") else ""
+        result["maps_api_key"] = doc.get_password("maps_api_key") if doc.get("maps_api_key") else ""
     return result
 
 

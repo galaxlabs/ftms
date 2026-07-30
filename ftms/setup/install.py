@@ -20,6 +20,8 @@ def after_migrate():
     seed_existing_subscriptions()
     sync_print_branding()
     seed_ksa_cities()
+    from ftms.setup.seed_ksa_places import seed as seed_ksa_places
+    seed_ksa_places()
     seed_configuration()
     refresh_public_trip_links()
 
