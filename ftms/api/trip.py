@@ -1,9 +1,10 @@
 import frappe
 
-from ftms.tenant import company_filters, get_user_company, resolve_company
+from ftms.tenant import company_filters, get_user_company, has_company_access, resolve_company
+from ftms.config.service import get_public_frontend_url
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def list_trips(company=None, limit=50):
 	filters = company_filters(company=company)
 	return frappe.get_all(
@@ -20,7 +21,9 @@ def get_trip(name, company=None):
 	doc = frappe.get_doc("Trip", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
 	if resolved_company and doc.company != resolved_company:
-		frappe.throw("Not permitted for this company")
+		frappe.throw("Not permitted for this company", frappe.PermissionError)
+	if not resolved_company and frappe.session.user != "Administrator":
+		frappe.throw("Company access is required", frappe.PermissionError)
 	return doc.as_dict()
 
 
@@ -33,6 +36,14 @@ def create_trip(route, trip_date, vehicle=None, trip_title=None, trip_code=None,
 	resolved_company = resolve_company(company=company)
 	if not resolved_company:
 		frappe.throw("Company is required")
+	if status not in ("Draft", "Scheduled"):
+		frappe.throw("New trips must start as Draft or Scheduled")
+	if not frappe.db.exists("Route", {"name": route, "company": resolved_company}):
+		frappe.throw("Route does not belong to the selected company", frappe.PermissionError)
+	if vehicle:
+		vehicle_company = frappe.db.get_value("Vehicle", vehicle, "company")
+		if vehicle_company != resolved_company:
+			frappe.throw("Vehicle does not belong to the selected company", frappe.PermissionError)
 
 	doc = frappe.get_doc({
 		"doctype": "Trip",
@@ -51,8 +62,16 @@ def create_trip(route, trip_date, vehicle=None, trip_title=None, trip_code=None,
 @frappe.whitelist()
 def update_trip_status(name, status):
 	doc = frappe.get_doc("Trip", name)
-	doc.db_set("trip_status", status)
-	return {"name": doc.name, "trip_status": status}
+	if frappe.session.user != "Administrator" and not has_company_access(doc.company):
+		frappe.throw("Not permitted for this trip", frappe.PermissionError)
+	from ftms.ride_machine.state_machine import TripStateMachine
+	machine = TripStateMachine(doc)
+	action = next((name for name, target in machine.actions.items() if target == status), None)
+	if not action:
+		frappe.throw("Invalid trip transition")
+	machine.action(action)
+	doc.save(ignore_permissions=False)
+	return {"name": doc.name, "trip_status": doc.trip_status}
 
 
 @frappe.whitelist()
@@ -65,7 +84,7 @@ def generate_qr(trip_name):
 		trip.reload()
 
 	import pyqrcode
-	public_url = f"{frappe.utils.get_url().rstrip('/')}/trip/{trip.public_uuid.lstrip('/')}"
+	public_url = f"{get_public_frontend_url()}/trip/{trip.public_uuid.lstrip('/')}"
 	qr = pyqrcode.create(public_url)
 	data_uri = "data:image/png;base64," + qr.png_as_base64_str(scale=6)
 	trip.db_set("qr_code", data_uri)
@@ -81,7 +100,7 @@ def get_public_url(trip_name):
 		import uuid as _uuid
 		uuid = str(_uuid.uuid4())
 		frappe.db.set_value("Trip", trip_name, "public_uuid", uuid)
-	return {"url": f"{frappe.utils.get_url().rstrip('/')}/trip/{uuid.lstrip('/')}"}
+	return {"url": f"{get_public_frontend_url()}/trip/{uuid.lstrip('/')}"}
 
 
 @frappe.whitelist(allow_guest=True)

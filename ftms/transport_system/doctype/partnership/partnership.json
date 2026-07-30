@@ -1,0 +1,29 @@
+{
+  "doctype": "DocType",
+  "name": "Partnership",
+  "module": "Transport System",
+  "autoname": "format:PART-{YYYY}-{#####}",
+  "engine": "InnoDB",
+  "field_order": ["customer_company", "provider_company", "partnership_type", "status", "column_break_partnership", "start_date", "end_date", "rate_card", "commission_rate", "section_scope", "service_types", "operating_cities", "capacity_notes", "section_approval", "requested_by", "approved_by", "approved_on", "contract_document"],
+  "fields": [
+    {"fieldname": "customer_company", "fieldtype": "Link", "label": "Customer Company", "options": "Company", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "provider_company", "fieldtype": "Link", "label": "Provider Company", "options": "Company", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "partnership_type", "fieldtype": "Select", "label": "Partnership Type", "options": "Transport Services\nSchool Transport\nStaff Transport\nTravel Agent\nVehicle Rental\nSubcontractor", "reqd": 1},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Proposed\nUnder Review\nApproved\nActive\nSuspended\nTerminated", "default": "Proposed", "in_list_view": 1},
+    {"fieldname": "column_break_partnership", "fieldtype": "Column Break"},
+    {"fieldname": "start_date", "fieldtype": "Date", "label": "Start Date"},
+    {"fieldname": "end_date", "fieldtype": "Date", "label": "End Date"},
+    {"fieldname": "rate_card", "fieldtype": "Link", "label": "Rate Card", "options": "Pricing Rule"},
+    {"fieldname": "commission_rate", "fieldtype": "Percent", "label": "Commission Rate"},
+    {"fieldname": "section_scope", "fieldtype": "Section Break", "label": "Service Scope"},
+    {"fieldname": "service_types", "fieldtype": "Small Text", "label": "Service Types"},
+    {"fieldname": "operating_cities", "fieldtype": "Small Text", "label": "Operating Cities"},
+    {"fieldname": "capacity_notes", "fieldtype": "Small Text", "label": "Capacity Notes"},
+    {"fieldname": "section_approval", "fieldtype": "Section Break", "label": "Approval"},
+    {"fieldname": "requested_by", "fieldtype": "Link", "label": "Requested By", "options": "User"},
+    {"fieldname": "approved_by", "fieldtype": "Link", "label": "Approved By", "options": "User", "read_only": 1},
+    {"fieldname": "approved_on", "fieldtype": "Datetime", "label": "Approved On", "read_only": 1},
+    {"fieldname": "contract_document", "fieldtype": "Attach", "label": "Contract Document"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Desk User", "read": 1, "create": 1, "write": 1}]
+}

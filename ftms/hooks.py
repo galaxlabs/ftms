@@ -121,7 +121,10 @@ website_route_rules = [
 ]
 
 guest_methods = [
-    "ftms.api.booking.join_booking_group",
+    "ftms.api.config.get_client_config",
+    "ftms.api.config.get_document_format",
+    "ftms.api.config.validate_document",
+    "ftms.api.payment.payment_webhook",
     "ftms.country.id_format.get_country_list",
     "ftms.country.id_format.get_document_types",
     "ftms.country.id_format.get_document_format",

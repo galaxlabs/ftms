@@ -4,11 +4,12 @@ import uuid
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import getdate, get_url
+from frappe.utils import getdate
 from hijri_converter import Gregorian
 import pyqrcode
 
 from ftms.ride_machine.state_machine import TripStateMachine
+from ftms.config.service import get_public_frontend_url
 
 
 class Trip(Document):
@@ -22,7 +23,7 @@ class Trip(Document):
 
 	def after_insert(self):
 		if self.public_uuid:
-			public_url = f"{get_url().rstrip('/')}/trip/{self.public_uuid}"
+			public_url = f"{get_public_frontend_url()}/trip/{self.public_uuid}"
 			if not self.public_url:
 				self.db_set("public_url", public_url)
 			if not self.qr_code:

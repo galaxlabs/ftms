@@ -5,19 +5,8 @@ from frappe.utils.oauth import get_oauth2_authorize_url
 
 @frappe.whitelist()
 def get_user_api_key():
-    """Return the current user's API key and secret for frontend auth."""
-    user = frappe.session.user
-    if not user or user == "Guest":
-        frappe.throw("Not authenticated", frappe.PermissionError)
-
-    user_doc = frappe.get_doc("User", user)
-    api_key = user_doc.api_key
-    api_secret = user_doc.get_password("api_secret") if user_doc.api_secret else None
-
-    if not api_key or not api_secret:
-        frappe.throw("No API key configured for this user. Contact your administrator.")
-
-    return {"api_key": api_key, "api_secret": api_secret}
+    """Deprecated: browser clients must use the session cookie, not API secrets."""
+    frappe.throw("User API secrets cannot be returned to clients", frappe.PermissionError)
 
 
 @frappe.whitelist(allow_guest=True)

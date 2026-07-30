@@ -1,0 +1,29 @@
+{
+  "doctype": "DocType",
+  "name": "Agreement Template",
+  "module": "Transport System",
+  "autoname": "field:template_name",
+  "engine": "InnoDB",
+  "field_order": ["template_name", "service_type", "country", "language", "column_break_scope", "enabled", "version", "active_from", "active_to", "section_terms", "terms_body", "cancellation_policy", "waiting_policy", "payment_terms", "column_break_terms", "liability_policy", "required_signatures", "dispute_policy"],
+  "fields": [
+    {"fieldname": "template_name", "fieldtype": "Data", "label": "Template Name", "reqd": 1, "unique": 1, "in_list_view": 1},
+    {"fieldname": "service_type", "fieldtype": "Link", "label": "Service Type", "options": "Service Type"},
+    {"fieldname": "country", "fieldtype": "Link", "label": "Country", "options": "Country"},
+    {"fieldname": "language", "fieldtype": "Select", "label": "Language", "options": "English\nArabic\nBilingual", "default": "Bilingual"},
+    {"fieldname": "column_break_scope", "fieldtype": "Column Break"},
+    {"fieldname": "enabled", "fieldtype": "Check", "label": "Enabled", "default": "1", "in_list_view": 1},
+    {"fieldname": "version", "fieldtype": "Int", "label": "Version", "default": "1"},
+    {"fieldname": "active_from", "fieldtype": "Date", "label": "Active From"},
+    {"fieldname": "active_to", "fieldtype": "Date", "label": "Active To"},
+    {"fieldname": "section_terms", "fieldtype": "Section Break", "label": "Terms"},
+    {"fieldname": "terms_body", "fieldtype": "Text Editor", "label": "Terms Body", "reqd": 1},
+    {"fieldname": "cancellation_policy", "fieldtype": "Small Text", "label": "Cancellation Policy"},
+    {"fieldname": "waiting_policy", "fieldtype": "Small Text", "label": "Waiting/No-show Policy"},
+    {"fieldname": "payment_terms", "fieldtype": "Small Text", "label": "Payment Terms"},
+    {"fieldname": "column_break_terms", "fieldtype": "Column Break"},
+    {"fieldname": "liability_policy", "fieldtype": "Small Text", "label": "Liability Policy"},
+    {"fieldname": "required_signatures", "fieldtype": "Select", "label": "Required Signatures", "options": "Customer\nProvider\nCustomer and Provider", "default": "Customer and Provider"},
+    {"fieldname": "dispute_policy", "fieldtype": "Small Text", "label": "Dispute Policy"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

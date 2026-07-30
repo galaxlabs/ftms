@@ -11,6 +11,9 @@
     "company_name",
     "legal_name",
     "company_name_ar",
+    "organization_type",
+    "customer_enabled",
+    "provider_enabled",
     "column_break_ids",
     "vat_no",
     "tax_id",
@@ -56,6 +59,9 @@
     {"fieldname": "company_name", "fieldtype": "Data", "in_list_view": 1, "label": "Company Name", "reqd": 1, "unique": 1},
     {"fieldname": "legal_name", "fieldtype": "Data", "label": "Legal Name"},
     {"fieldname": "company_name_ar", "fieldtype": "Data", "label": "\u0627\u0633\u0645 \u0627\u0644\u0634\u0631\u0643\u0629 (Company Name Arabic)"},
+    {"fieldname": "organization_type", "fieldtype": "Select", "label": "Organization Type", "options": "Transport Provider\nTravel Agent\nSchool\nStaff Company\nCorporate Customer\nFleet Owner\nRent Company\nHybrid"},
+    {"fieldname": "customer_enabled", "fieldtype": "Check", "label": "Customer Enabled", "default": "0"},
+    {"fieldname": "provider_enabled", "fieldtype": "Check", "label": "Provider Enabled", "default": "1"},
     {"fieldname": "column_break_ids", "fieldtype": "Column Break"},
     {"default": "3", "fieldname": "vat_no", "fieldtype": "Data", "label": "VAT No"},
     {"fieldname": "tax_id", "fieldtype": "Data", "label": "Tax ID"},
@@ -104,7 +110,7 @@
   "name": "Company",
   "permissions": [
     {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
-    {"create": 1, "read": 1, "role": "Desk User", "write": 1}
+    {"read": 1, "role": "Desk User", "print": 1}
   ],
   "row_format": "Dynamic",
   "search_fields": "company_code,company_name,legal_name,vat_no,tax_id,cr_no",

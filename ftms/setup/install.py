@@ -10,6 +10,7 @@ def after_install():
     prohibit_erpnext()
     ensure_settings()
     create_custom_fields()
+    seed_configuration()
 
 def after_migrate():
     prohibit_erpnext()
@@ -19,6 +20,8 @@ def after_migrate():
     seed_existing_subscriptions()
     sync_print_branding()
     seed_ksa_cities()
+    seed_configuration()
+    refresh_public_trip_links()
 
 def prohibit_erpnext():
     if "erpnext" in frappe.get_installed_apps():
@@ -75,6 +78,82 @@ def ensure_settings():
         frappe.get_doc({"doctype": "Transport Settings"}).insert(ignore_permissions=True)
     if not frappe.db.exists("Tenant Policy", "Tenant Policy"):
         frappe.get_doc({"doctype": "Tenant Policy", "domain": ""}).insert(ignore_permissions=True)
+    for doctype in ("Platform Settings", "Integration Settings"):
+        if frappe.db.exists("DocType", doctype) and not frappe.db.exists(doctype, doctype):
+            frappe.get_doc({"doctype": doctype}).insert(ignore_permissions=True)
+
+
+def seed_configuration():
+    """Seed safe defaults once; future changes belong in Frappe configuration records."""
+    if not frappe.db.exists("DocType", "Document Type") or not frappe.db.exists("DocType", "Country Document Format"):
+        return
+
+    from ftms.country.id_format import ID_FORMATS, load_countries
+
+    document_types = {
+        "National ID": ("Identity", 1, 0),
+        "Iqama": ("Residency", 1, 1),
+        "Passport": ("Passport", 1, 1),
+        "GCC ID": ("Identity", 1, 0),
+        "Residency": ("Residency", 1, 1),
+        "Visa": ("Visa", 1, 1),
+        "Driver License": ("License", 1, 1),
+    }
+    for name, (category, requires_country, requires_expiry) in document_types.items():
+        if not frappe.db.exists("Document Type", name):
+            frappe.get_doc({
+                "doctype": "Document Type",
+                "document_type_name": name,
+                "label": name,
+                "category": category,
+                "enabled": 1,
+                "requires_country": requires_country,
+                "requires_expiry": requires_expiry,
+                "attachment_allowed": 1,
+            }).insert(ignore_permissions=True)
+
+    countries = load_countries()
+    for alpha_2, country_config in ID_FORMATS.items():
+        if alpha_2 == "DEFAULT":
+            continue
+        country = countries.get(alpha_2, {})
+        country_name = country.get("country_name") or country_config.get("country")
+        if not country_name or not frappe.db.exists("Country", country_name):
+            continue
+        for document_type, fmt in (country_config.get("documents") or {}).items():
+            if not frappe.db.exists("Document Type", document_type):
+                continue
+            if frappe.db.exists("Country Document Format", {"country": country_name, "document_type": document_type}):
+                continue
+            frappe.get_doc({
+                "doctype": "Country Document Format",
+                "country": country_name,
+                "document_type": document_type,
+                "pattern": fmt.get("pattern"),
+                "placeholder": fmt.get("placeholder"),
+                "description": fmt.get("description"),
+                "minimum_length": fmt.get("length"),
+                "maximum_length": fmt.get("length"),
+                "enabled": 1,
+                "attachment_allowed": 1,
+                "requires_expiry": document_type in {"Passport", "Iqama", "Residency", "Visa", "Driver License"},
+            }).insert(ignore_permissions=True)
+    frappe.db.commit()
+
+
+def refresh_public_trip_links():
+    """Keep stored QR/public URLs aligned with the configured frontend domain."""
+    if not frappe.db.exists("DocType", "Trip"):
+        return
+    from ftms.config.service import get_public_frontend_url
+    import pyqrcode
+
+    base_url = get_public_frontend_url()
+    for row in frappe.get_all("Trip", filters={"public_uuid": ("is", "set")}, fields=["name", "public_uuid"]):
+        public_url = f"{base_url}/trip/{row.public_uuid.lstrip('/')}"
+        qr = "data:image/png;base64," + pyqrcode.create(public_url).png_as_base64_str(scale=6)
+        frappe.db.set_value("Trip", row.name, {"public_url": public_url, "qr_code": qr}, update_modified=False)
+    frappe.db.commit()
 
 def sync_customizations():
     from frappe.modules.utils import sync_customizations

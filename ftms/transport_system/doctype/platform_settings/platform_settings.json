@@ -1,0 +1,30 @@
+{
+  "doctype": "DocType",
+  "name": "Platform Settings",
+  "module": "Transport System",
+  "issingle": 1,
+  "engine": "InnoDB",
+  "field_order": ["platform_section", "platform_name", "frontend_base_url", "default_country", "default_currency", "column_break_platform", "default_timezone", "default_language", "platform_commission_rate", "section_defaults", "default_offer_expiry_minutes", "default_group_invite_expiry_hours", "default_agreement_template", "default_kashf_template", "column_break_defaults", "maintenance_mode", "enable_marketplace", "enable_public_links", "enable_firebase_sync"],
+  "fields": [
+    {"fieldname": "platform_section", "fieldtype": "Section Break", "label": "Platform"},
+    {"fieldname": "platform_name", "fieldtype": "Data", "label": "Platform Name", "default": "Ride Platform"},
+    {"fieldname": "frontend_base_url", "fieldtype": "Data", "label": "Frontend Base URL", "default": "https://ftms-frontend-nine.vercel.app"},
+    {"fieldname": "default_country", "fieldtype": "Link", "label": "Default Country", "options": "Country"},
+    {"fieldname": "default_currency", "fieldtype": "Link", "label": "Default Currency", "options": "Currency", "default": "SAR"},
+    {"fieldname": "column_break_platform", "fieldtype": "Column Break"},
+    {"fieldname": "default_timezone", "fieldtype": "Data", "label": "Default Timezone", "default": "Asia/Riyadh"},
+    {"fieldname": "default_language", "fieldtype": "Data", "label": "Default Language", "default": "en"},
+    {"fieldname": "platform_commission_rate", "fieldtype": "Percent", "label": "Platform Commission Rate", "default": "5"},
+    {"fieldname": "section_defaults", "fieldtype": "Section Break", "label": "Default Rules"},
+    {"fieldname": "default_offer_expiry_minutes", "fieldtype": "Int", "label": "Offer Expiry (Minutes)", "default": "30"},
+    {"fieldname": "default_group_invite_expiry_hours", "fieldtype": "Int", "label": "Group Invite Expiry (Hours)", "default": "24"},
+    {"fieldname": "default_agreement_template", "fieldtype": "Link", "label": "Default Agreement Template", "options": "Agreement Template"},
+    {"fieldname": "column_break_defaults", "fieldtype": "Column Break"},
+    {"fieldname": "default_kashf_template", "fieldtype": "Link", "label": "Default Kashf Template", "options": "Kashf Template"},
+    {"fieldname": "maintenance_mode", "fieldtype": "Check", "label": "Maintenance Mode", "default": "0"},
+    {"fieldname": "enable_marketplace", "fieldtype": "Check", "label": "Enable Marketplace", "default": "1"},
+    {"fieldname": "enable_public_links", "fieldtype": "Check", "label": "Enable Public Links", "default": "1"},
+    {"fieldname": "enable_firebase_sync", "fieldtype": "Check", "label": "Enable Firebase Sync", "default": "0"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1}]
+}

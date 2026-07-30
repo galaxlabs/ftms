@@ -88,6 +88,8 @@ def signup(company_name, email, username=None, first_name=None, last_name=None, 
         frappe.throw(_("A valid email is required"))
 
     company = frappe.db.get_value("Company", {"company_name": company_name}, "name")
+    if company:
+        frappe.throw(_("This company already exists. Request an invitation or join approval instead of creating a new owner."))
     if not company:
         company_domain = _default_domain(domain)
         if not company_domain:
@@ -220,7 +222,15 @@ def register_transportation_company(company_name, domain=None, legal_name=None, 
 
 
 @frappe.whitelist()
-def create_captain_profile(full_name=None, mobile_no=None, national_id=None, license_no=None, license_expiry_date=None, city=None, address=None):
+def create_captain_profile(
+    full_name=None, mobile_no=None, national_id=None, license_no=None,
+    license_expiry_date=None, city=None, address=None,
+    id_document_type=None, nationality=None, iqama_no=None,
+    iqama_expiry_date=None, driver_card_no=None, driver_card_expiry_date=None,
+    provider_name=None, provider_legal_name=None, provider_tax_id=None,
+    provider_cr_no=None, provider_logo=None, provider_stamp=None,
+    vehicle_card_document=None, vehicle_ownership_document=None,
+):
     user = frappe.session.user
     if not user or user == "Guest":
         frappe.throw(_("Login is required"), frappe.PermissionError)
@@ -233,11 +243,25 @@ def create_captain_profile(full_name=None, mobile_no=None, national_id=None, lic
         "user": user,
         "full_name": full_name or frappe.db.get_value("User", user, "full_name") or user,
         "mobile_no": mobile_no,
+        "id_document_type": id_document_type,
+        "nationality": nationality,
+        "iqama_no": iqama_no,
+        "iqama_expiry_date": iqama_expiry_date,
         "national_id": national_id,
         "license_no": license_no,
         "license_expiry_date": license_expiry_date,
+        "driver_card_no": driver_card_no,
+        "driver_card_expiry_date": driver_card_expiry_date,
         "city": city,
         "address": address,
+        "provider_name": provider_name,
+        "provider_legal_name": provider_legal_name,
+        "provider_tax_id": provider_tax_id,
+        "provider_cr_no": provider_cr_no,
+        "provider_logo": provider_logo,
+        "provider_stamp": provider_stamp,
+        "vehicle_card_document": vehicle_card_document,
+        "vehicle_ownership_document": vehicle_ownership_document,
         "status": "Pending",
     })
     profile.insert(ignore_permissions=True)
@@ -347,11 +371,23 @@ def create_passenger_profile(full_name=None, mobile_no=None, nationality=None, i
     if not user or user == "Guest":
         frappe.throw(_("Login is required"), frappe.PermissionError)
 
-    from frappe.utils import now_datetime
+    from ftms.country.id_format import find_country, validate_document
+
+    if id_document_type and id_number and nationality:
+        country = find_country(country_name=nationality)
+        if country.get("alpha_2"):
+            result = validate_document(country["alpha_2"], id_document_type, id_number)
+            if not result.get("valid"):
+                frappe.throw(result.get("error") or "Invalid identity document format")
+
     frappe.db.set_value("User", user, {
         "user_type": "Passenger",
         "onboarded": 1,
         "mobile_no": mobile_no,
+        "ftms_id_document_type": id_document_type,
+        "ftms_id_no": id_number,
+        "ftms_nationality": nationality,
+        "ftms_id_expiry_date": id_expiry_date,
     })
     if full_name:
         frappe.db.set_value("User", user, "full_name", full_name)

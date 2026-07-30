@@ -1,0 +1,24 @@
+{
+  "doctype": "DocType",
+  "name": "Wallet Transaction",
+  "module": "Transport System",
+  "autoname": "format:WAL-TXN-{YYYY}-{#####}",
+  "engine": "InnoDB",
+  "field_order": ["wallet", "user", "transaction_type", "status", "column_break_transaction", "currency", "amount", "balance_after", "payment_transaction", "external_reference", "section_audit", "description", "created_on"],
+  "fields": [
+    {"fieldname": "wallet", "fieldtype": "Link", "label": "Wallet", "options": "Wallet", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "user", "fieldtype": "Link", "label": "User", "options": "User", "reqd": 1},
+    {"fieldname": "transaction_type", "fieldtype": "Select", "label": "Transaction Type", "options": "Credit\nDebit\nReserve\nRelease\nRefund", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending\nCompleted\nFailed\nReversed", "default": "Completed", "in_list_view": 1},
+    {"fieldname": "column_break_transaction", "fieldtype": "Column Break"},
+    {"fieldname": "currency", "fieldtype": "Link", "label": "Currency", "options": "Currency", "default": "SAR"},
+    {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "reqd": 1},
+    {"fieldname": "balance_after", "fieldtype": "Currency", "label": "Balance After", "read_only": 1},
+    {"fieldname": "payment_transaction", "fieldtype": "Link", "label": "Payment Transaction", "options": "Payment Transaction"},
+    {"fieldname": "external_reference", "fieldtype": "Data", "label": "External Reference", "unique": 1},
+    {"fieldname": "section_audit", "fieldtype": "Section Break", "label": "Audit"},
+    {"fieldname": "description", "fieldtype": "Small Text", "label": "Description"},
+    {"fieldname": "created_on", "fieldtype": "Datetime", "label": "Created On", "read_only": 1}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Desk User", "read": 1}]
+}

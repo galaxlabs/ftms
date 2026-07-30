@@ -1,0 +1,19 @@
+{
+  "doctype": "DocType",
+  "name": "Wallet",
+  "module": "Transport System",
+  "autoname": "format:WAL-{#####}",
+  "engine": "InnoDB",
+  "field_order": ["user", "company", "status", "column_break_wallet", "currency", "balance", "reserved_balance", "last_transaction_on"],
+  "fields": [
+    {"fieldname": "user", "fieldtype": "Link", "label": "User", "options": "User", "reqd": 1, "unique": 1, "in_list_view": 1},
+    {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nBlocked\nClosed", "default": "Active", "in_list_view": 1},
+    {"fieldname": "column_break_wallet", "fieldtype": "Column Break"},
+    {"fieldname": "currency", "fieldtype": "Link", "label": "Currency", "options": "Currency", "default": "SAR"},
+    {"fieldname": "balance", "fieldtype": "Currency", "label": "Balance", "default": "0", "in_list_view": 1},
+    {"fieldname": "reserved_balance", "fieldtype": "Currency", "label": "Reserved Balance", "default": "0"},
+    {"fieldname": "last_transaction_on", "fieldtype": "Datetime", "label": "Last Transaction On", "read_only": 1}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Desk User", "read": 1}]
+}

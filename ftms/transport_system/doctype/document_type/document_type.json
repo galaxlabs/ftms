@@ -1,0 +1,24 @@
+{
+  "doctype": "DocType",
+  "name": "Document Type",
+  "module": "Transport System",
+  "autoname": "field:document_type_name",
+  "engine": "InnoDB",
+  "field_order": ["document_type_name", "label", "category", "column_break_identity", "enabled", "requires_country", "requires_expiry", "column_break_requirements", "attachment_allowed", "requires_verification", "visible_to_passenger", "visible_to_driver", "visible_to_company"],
+  "fields": [
+    {"fieldname": "document_type_name", "fieldtype": "Data", "label": "Document Type Name", "reqd": 1, "unique": 1, "in_list_view": 1},
+    {"fieldname": "label", "fieldtype": "Data", "label": "Display Label"},
+    {"fieldname": "category", "fieldtype": "Select", "label": "Category", "options": "Identity\nPassport\nResidency\nVisa\nLicense\nVehicle\nCompany", "reqd": 1},
+    {"fieldname": "column_break_identity", "fieldtype": "Column Break"},
+    {"fieldname": "enabled", "fieldtype": "Check", "label": "Enabled", "default": "1", "in_list_view": 1},
+    {"fieldname": "requires_country", "fieldtype": "Check", "label": "Requires Country", "default": "0"},
+    {"fieldname": "requires_expiry", "fieldtype": "Check", "label": "Requires Expiry", "default": "0"},
+    {"fieldname": "column_break_requirements", "fieldtype": "Column Break"},
+    {"fieldname": "attachment_allowed", "fieldtype": "Check", "label": "Attachment Allowed", "default": "1"},
+    {"fieldname": "requires_verification", "fieldtype": "Check", "label": "Requires Verification", "default": "0"},
+    {"fieldname": "visible_to_passenger", "fieldtype": "Check", "label": "Visible to Passenger", "default": "1"},
+    {"fieldname": "visible_to_driver", "fieldtype": "Check", "label": "Visible to Driver", "default": "0"},
+    {"fieldname": "visible_to_company", "fieldtype": "Check", "label": "Visible to Company", "default": "1"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

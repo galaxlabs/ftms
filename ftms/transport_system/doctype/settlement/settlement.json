@@ -1,0 +1,26 @@
+{
+  "doctype": "DocType",
+  "name": "Settlement",
+  "module": "Transport System",
+  "autoname": "format:SET-{YYYY}-{#####}",
+  "engine": "InnoDB",
+  "field_order": ["company", "provider_company", "agreement", "trip", "status", "column_break_settlement", "currency", "gross_amount", "platform_commission", "partner_commission", "net_amount", "section_payment", "payment_reference", "paid_on", "failure_reason"],
+  "fields": [
+    {"fieldname": "company", "fieldtype": "Link", "label": "Customer Company", "options": "Company", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "provider_company", "fieldtype": "Link", "label": "Provider Company", "options": "Company", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "agreement", "fieldtype": "Link", "label": "Agreement", "options": "Agreement"},
+    {"fieldname": "trip", "fieldtype": "Link", "label": "Trip", "options": "Trip"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nApproved\nProcessing\nPaid\nFailed\nCancelled", "default": "Draft", "in_list_view": 1},
+    {"fieldname": "column_break_settlement", "fieldtype": "Column Break"},
+    {"fieldname": "currency", "fieldtype": "Link", "label": "Currency", "options": "Currency", "default": "SAR"},
+    {"fieldname": "gross_amount", "fieldtype": "Currency", "label": "Gross Amount"},
+    {"fieldname": "platform_commission", "fieldtype": "Currency", "label": "Platform Commission"},
+    {"fieldname": "partner_commission", "fieldtype": "Currency", "label": "Partner Commission"},
+    {"fieldname": "net_amount", "fieldtype": "Currency", "label": "Net Amount"},
+    {"fieldname": "section_payment", "fieldtype": "Section Break", "label": "Payment"},
+    {"fieldname": "payment_reference", "fieldtype": "Data", "label": "Payment Reference"},
+    {"fieldname": "paid_on", "fieldtype": "Datetime", "label": "Paid On"},
+    {"fieldname": "failure_reason", "fieldtype": "Small Text", "label": "Failure Reason"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Desk User", "read": 1}]
+}

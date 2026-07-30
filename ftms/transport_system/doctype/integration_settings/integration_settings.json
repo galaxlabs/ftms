@@ -1,0 +1,31 @@
+{
+  "doctype": "DocType",
+  "name": "Integration Settings",
+  "module": "Transport System",
+  "issingle": 1,
+  "engine": "InnoDB",
+  "field_order": ["firebase_section", "firebase_project_id", "firebase_auth_domain", "firebase_web_app_id", "firebase_api_key", "column_break_firebase", "firebase_storage_bucket", "firebase_messaging_sender_id", "firebase_measurement_id", "section_sync", "frappe_api_base_url", "sync_enabled", "sync_interval_seconds", "sync_retry_count", "column_break_sync", "dead_letter_enabled", "section_payment", "payment_provider", "payment_public_key", "payment_webhook_secret"],
+  "fields": [
+    {"fieldname": "firebase_section", "fieldtype": "Section Break", "label": "Firebase Client Configuration"},
+    {"fieldname": "firebase_project_id", "fieldtype": "Data", "label": "Firebase Project ID"},
+    {"fieldname": "firebase_auth_domain", "fieldtype": "Data", "label": "Firebase Auth Domain"},
+    {"fieldname": "firebase_web_app_id", "fieldtype": "Data", "label": "Firebase Web App ID"},
+    {"fieldname": "firebase_api_key", "fieldtype": "Password", "label": "Firebase API Key"},
+    {"fieldname": "column_break_firebase", "fieldtype": "Column Break"},
+    {"fieldname": "firebase_storage_bucket", "fieldtype": "Data", "label": "Firebase Storage Bucket"},
+    {"fieldname": "firebase_messaging_sender_id", "fieldtype": "Data", "label": "Firebase Messaging Sender ID"},
+    {"fieldname": "firebase_measurement_id", "fieldtype": "Data", "label": "Firebase Measurement ID"},
+    {"fieldname": "section_sync", "fieldtype": "Section Break", "label": "Synchronization"},
+    {"fieldname": "frappe_api_base_url", "fieldtype": "Data", "label": "Frappe API Base URL"},
+    {"fieldname": "sync_enabled", "fieldtype": "Check", "label": "Sync Enabled", "default": "0"},
+    {"fieldname": "sync_interval_seconds", "fieldtype": "Int", "label": "Sync Interval (Seconds)", "default": "60"},
+    {"fieldname": "column_break_sync", "fieldtype": "Column Break"},
+    {"fieldname": "sync_retry_count", "fieldtype": "Int", "label": "Sync Retry Count", "default": "5"},
+    {"fieldname": "dead_letter_enabled", "fieldtype": "Check", "label": "Dead Letter Queue Enabled", "default": "1"},
+    {"fieldname": "section_payment", "fieldtype": "Section Break", "label": "Payment Integration"},
+    {"fieldname": "payment_provider", "fieldtype": "Data", "label": "Payment Provider"},
+    {"fieldname": "payment_public_key", "fieldtype": "Data", "label": "Payment Public Key"},
+    {"fieldname": "payment_webhook_secret", "fieldtype": "Password", "label": "Payment Webhook Secret"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1}]
+}

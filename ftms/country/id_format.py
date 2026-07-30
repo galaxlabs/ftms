@@ -820,6 +820,18 @@ def get_id_format(alpha_2, doc_type=None):
     documents = country_format.get("documents", {})
 
     if doc_type:
+        try:
+            country_record = find_country(alpha_2=alpha_2)
+            from ftms.config.service import get_document_format
+            configured = get_document_format(country_record.get("country_name"), doc_type)
+            if configured:
+                return {
+                    **configured,
+                    "country": country_record.get("country_name") or country_format.get("country"),
+                    "alpha_2": alpha_2,
+                }
+        except Exception:
+            pass
         fmt = documents.get(doc_type, documents.get("Passport"))
         if fmt:
             return {**fmt, "country": country_format["country"], "alpha_2": alpha_2}
@@ -836,6 +848,15 @@ def get_id_format(alpha_2, doc_type=None):
 def validate_document(alpha_2, doc_type, value):
     if not value:
         return {"valid": False, "error": "No value provided", "format": None}
+
+    try:
+        country_record = find_country(alpha_2=alpha_2)
+        from ftms.config.service import validate_configured_document
+        configured = validate_configured_document(country_record.get("country_name"), doc_type, value)
+        if configured.get("format"):
+            return configured
+    except Exception:
+        pass
 
     fmt = get_id_format(alpha_2, doc_type)
     pattern = fmt.get("pattern")

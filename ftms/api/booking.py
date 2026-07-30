@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime, today
 
-from ftms.tenant import company_filters, get_user_company, resolve_company
+from ftms.tenant import company_filters, get_user_company, has_company_access, resolve_company
 
 
 def _coerce_passengers(value):
@@ -30,6 +30,16 @@ def _lookup_pricing_rule(vehicle_type, company):
 		limit=1,
 	)
 	return rules[0].name if rules else None
+
+
+def _require_booking_access(booking, user, *, owner_allowed=True):
+	if user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
+	if owner_allowed and booking.main_rider_user and booking.main_rider_user == user:
+		return
+	if booking.company and has_company_access(booking.company, user=user):
+		return
+	frappe.throw(_("You are not permitted to access this booking"), frappe.PermissionError)
 
 
 def _generate_group_code():
@@ -163,7 +173,7 @@ def create_booking(**kwargs):
 	}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def list_bookings(company=None, limit=50):
 	filters = company_filters(company=company)
 	return frappe.get_all(
@@ -181,7 +191,7 @@ def list_bookings(company=None, limit=50):
 	)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def list_available_bookings(company=None, vehicle_type=None, limit=50):
 	"""Captains call this to see bookings awaiting offers."""
 	filters = {"negotiation_status": "Awaiting Offers", "booking_status": ("!=", "Cancelled")}
@@ -211,7 +221,8 @@ def get_booking(name, company=None):
 	doc = frappe.get_doc("Trip Booking", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
 	if resolved_company and getattr(doc, "company", None) != resolved_company:
-		frappe.throw("Not permitted for this company")
+		frappe.throw("Not permitted for this company", frappe.PermissionError)
+	_require_booking_access(doc, frappe.session.user)
 	data = doc.as_dict()
 	data["offers"] = frappe.get_all(
 		"Booking Offer",
@@ -230,8 +241,22 @@ def make_offer(booking, vehicle, offered_fare, fare_type="Total Trip", captain_n
 		frappe.throw(_("Login required"), frappe.PermissionError)
 
 	booking_doc = frappe.get_doc("Trip Booking", booking)
+	profile = frappe.db.get_value("Captain Profile", {"user": user}, ["name", "status"], as_dict=True)
+	if not profile or profile.status != "Active":
+		frappe.throw(_("Only a registered captain can submit an offer"), frappe.PermissionError)
 	if booking_doc.negotiation_status != "Awaiting Offers":
 		frappe.throw(_("Booking is not accepting offers"))
+	if booking_doc.company and not has_company_access(booking_doc.company, user=user):
+		frappe.throw(_("You cannot offer on a booking outside your company"), frappe.PermissionError)
+	vehicle_doc = frappe.get_doc("Vehicle", vehicle)
+	if not vehicle_doc.is_active or vehicle_doc.status != "Active":
+		frappe.throw(_("Vehicle is not active"))
+	if vehicle_doc.assigned_captain_user and vehicle_doc.assigned_captain_user != user:
+		frappe.throw(_("Vehicle is assigned to another captain"), frappe.PermissionError)
+	if vehicle_doc.company and booking_doc.company and vehicle_doc.company != booking_doc.company:
+		frappe.throw(_("Vehicle belongs to another company"), frappe.PermissionError)
+	if frappe.db.exists("Booking Offer", {"booking": booking, "captain_user": user, "status": "Pending"}):
+		frappe.throw(_("You already have a pending offer for this booking"))
 
 	doc = frappe.get_doc({
 		"doctype": "Booking Offer",
@@ -251,6 +276,9 @@ def make_offer(booking, vehicle, offered_fare, fare_type="Total Trip", captain_n
 @frappe.whitelist()
 def list_offers(booking):
 	"""Rider sees all offers on their booking."""
+	user = frappe.session.user
+	booking_doc = frappe.get_doc("Trip Booking", booking)
+	_require_booking_access(booking_doc, user)
 	return frappe.get_all(
 		"Booking Offer",
 		filters={"booking": booking},
@@ -271,8 +299,9 @@ def accept_offer(offer_name):
 		frappe.throw(_("Offer is no longer available"))
 
 	booking = frappe.get_doc("Trip Booking", offer.booking)
-	if booking.main_rider_user and booking.main_rider_user != user:
-		frappe.throw(_("Only the main rider can accept offers"))
+	_require_booking_access(booking, user)
+	if not booking.main_rider_user and not has_company_access(booking.company, user=user):
+		frappe.throw(_("Only the booking owner or company operator can accept offers"), frappe.PermissionError)
 	if booking.negotiation_status != "Awaiting Offers":
 		frappe.throw(_("Booking is no longer accepting offers"))
 
@@ -295,8 +324,7 @@ def cancel_booking(booking_name):
 		frappe.throw(_("Login required"), frappe.PermissionError)
 
 	booking = frappe.get_doc("Trip Booking", booking_name)
-	if booking.main_rider_user and booking.main_rider_user != user:
-		frappe.throw(_("Only the main rider can cancel"))
+	_require_booking_access(booking, user)
 	if booking.negotiation_status in ("Trip Created", "Cancelled"):
 		frappe.throw(_("Booking cannot be cancelled in current state"))
 
@@ -320,8 +348,7 @@ def reactivate_booking(booking_name):
 		frappe.throw(_("Login required"), frappe.PermissionError)
 
 	booking = frappe.get_doc("Trip Booking", booking_name)
-	if booking.main_rider_user and booking.main_rider_user != user:
-		frappe.throw(_("Only the main rider can reactivate"))
+	_require_booking_access(booking, user)
 	if booking.negotiation_status not in ("Cancelled", "Inactive"):
 		frappe.throw(_("Booking is not cancelled or inactive"))
 
@@ -330,38 +357,38 @@ def reactivate_booking(booking_name):
 	return {"status": "Awaiting Offers"}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def join_booking_group(group_code, passenger_name, nationality=None, mobile_no=None,
 					   document_type=None, document_number=None, luggage_qty=0, user=None):
 	"""Co-passenger joins a booking via group code."""
-	frappe.session.user = "Administrator"
-	try:
-		booking_name = frappe.db.get_value(
-			"Trip Booking",
-			{"booking_group_code": group_code, "negotiation_status": "Awaiting Offers"},
-			"name",
-		)
-		if not booking_name:
-			return {"error": "Booking not found or not accepting passengers"}
-		booking = frappe.get_doc("Trip Booking", booking_name)
+	if not group_code or not passenger_name:
+		frappe.throw(_("Group code and passenger name are required"))
+	booking_name = frappe.db.get_value(
+		"Trip Booking",
+		{"booking_group_code": group_code, "negotiation_status": "Awaiting Offers"},
+		"name",
+	)
+	if not booking_name:
+		return {"error": "Booking not found or not accepting passengers"}
+	booking = frappe.get_doc("Trip Booking", booking_name)
 
-		booking.append("passengers", {
-			"passenger_name": passenger_name,
-			"nationality": nationality,
-			"mobile_no": mobile_no,
-			"document_type": document_type,
-			"document_number": document_number,
-			"luggage_qty": luggage_qty or 0,
-			"booking_group": group_code,
-			"is_primary_booker": 0,
-			"user": user,
-		})
-		booking.save(ignore_permissions=True)
+	booking.append("passengers", {
+		"passenger_name": passenger_name,
+		"nationality": nationality,
+		"mobile_no": mobile_no,
+		"document_type": document_type,
+		"document_number": document_number,
+		"luggage_qty": luggage_qty or 0,
+		"booking_group": group_code,
+		"is_primary_booker": 0,
+		"user": frappe.session.user if frappe.session.user != "Guest" else None,
+	})
+	# Public joins are intentionally recorded as Guest/registered-user actions;
+	# never impersonate Administrator or accept a caller-controlled user.
+	booking.save(ignore_permissions=True)
 
-		return {
-			"booking": booking.name,
-			"booking_title": booking.booking_title,
-			"passenger_name": passenger_name,
-		}
-	finally:
-		frappe.session.user = "Guest"
+	return {
+		"booking": booking.name,
+		"booking_title": booking.booking_title,
+		"passenger_name": passenger_name,
+	}

@@ -1,0 +1,24 @@
+{
+  "doctype": "DocType",
+  "name": "Service Type",
+  "module": "Transport System",
+  "autoname": "field:service_name",
+  "engine": "InnoDB",
+  "field_order": ["service_name", "service_category", "column_break_service", "enabled", "requires_driver", "requires_vehicle", "requires_manifest", "allows_recurring", "allows_offers", "allows_direct_agreement", "section_templates", "agreement_template", "kashf_template"],
+  "fields": [
+    {"fieldname": "service_name", "fieldtype": "Data", "label": "Service Name", "reqd": 1, "unique": 1, "in_list_view": 1},
+    {"fieldname": "service_category", "fieldtype": "Select", "label": "Service Category", "options": "Ride\nTransfer\nSchool\nStaff\nRental\nContract\nTour", "reqd": 1},
+    {"fieldname": "column_break_service", "fieldtype": "Column Break"},
+    {"fieldname": "enabled", "fieldtype": "Check", "label": "Enabled", "default": "1", "in_list_view": 1},
+    {"fieldname": "requires_driver", "fieldtype": "Check", "label": "Requires Driver", "default": "1"},
+    {"fieldname": "requires_vehicle", "fieldtype": "Check", "label": "Requires Vehicle", "default": "1"},
+    {"fieldname": "requires_manifest", "fieldtype": "Check", "label": "Requires Manifest", "default": "0"},
+    {"fieldname": "allows_recurring", "fieldtype": "Check", "label": "Allows Recurring", "default": "0"},
+    {"fieldname": "allows_offers", "fieldtype": "Check", "label": "Allows Offers", "default": "1"},
+    {"fieldname": "allows_direct_agreement", "fieldtype": "Check", "label": "Allows Direct Agreement", "default": "1"},
+    {"fieldname": "section_templates", "fieldtype": "Section Break", "label": "Templates"},
+    {"fieldname": "agreement_template", "fieldtype": "Link", "label": "Agreement Template", "options": "Agreement Template"},
+    {"fieldname": "kashf_template", "fieldtype": "Link", "label": "Kashf Template", "options": "Kashf Template"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

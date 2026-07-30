@@ -1,0 +1,28 @@
+{
+  "doctype": "DocType",
+  "name": "Payment Transaction",
+  "module": "Transport System",
+  "autoname": "format:PAY-{YYYY}-{#####}",
+  "engine": "InnoDB",
+  "field_order": ["transaction_id", "user", "company", "agreement", "order", "status", "column_break_payment", "provider", "currency", "amount", "gateway_reference", "section_dates", "initiated_on", "paid_on", "refunded_on", "failure_reason", "webhook_event_id"],
+  "fields": [
+    {"fieldname": "transaction_id", "fieldtype": "Data", "label": "Transaction ID", "unique": 1, "read_only": 1},
+    {"fieldname": "user", "fieldtype": "Link", "label": "User", "options": "User", "in_list_view": 1},
+    {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "agreement", "fieldtype": "Link", "label": "Agreement", "options": "Agreement"},
+    {"fieldname": "order", "fieldtype": "Link", "label": "Order", "options": "Trip Booking"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Initiated\nPending\nAuthorized\nPaid\nPartially Refunded\nRefunded\nFailed\nDisputed", "default": "Initiated", "in_list_view": 1},
+    {"fieldname": "column_break_payment", "fieldtype": "Column Break"},
+    {"fieldname": "provider", "fieldtype": "Data", "label": "Payment Provider"},
+    {"fieldname": "currency", "fieldtype": "Link", "label": "Currency", "options": "Currency", "default": "SAR"},
+    {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "reqd": 1},
+    {"fieldname": "gateway_reference", "fieldtype": "Data", "label": "Gateway Reference"},
+    {"fieldname": "section_dates", "fieldtype": "Section Break", "label": "Transaction History"},
+    {"fieldname": "initiated_on", "fieldtype": "Datetime", "label": "Initiated On"},
+    {"fieldname": "paid_on", "fieldtype": "Datetime", "label": "Paid On"},
+    {"fieldname": "refunded_on", "fieldtype": "Datetime", "label": "Refunded On"},
+    {"fieldname": "failure_reason", "fieldtype": "Small Text", "label": "Failure Reason"},
+    {"fieldname": "webhook_event_id", "fieldtype": "Data", "label": "Webhook Event ID", "unique": 1}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Desk User", "read": 1}]
+}

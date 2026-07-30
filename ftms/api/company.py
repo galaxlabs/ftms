@@ -10,6 +10,7 @@ from ftms.tenant import get_user_company, resolve_company
 def list_companies(company=None, limit=100):
 	if frappe.session.user == "Guest":
 		filters = {"status": "Active", "blacklisted": 0}
+		fields = ["name", "company_code", "company_name", "legal_name", "company_name_ar", "domain", "status"]
 	else:
 		active_company = get_user_company()
 		if not active_company:
@@ -17,10 +18,11 @@ def list_companies(company=None, limit=100):
 		if company and company != active_company:
 			frappe.throw(_("Not permitted for this company"), frappe.PermissionError)
 		filters = {"name": active_company}
+		fields = ["name", "company_code", "company_name", "legal_name", "company_name_ar", "vat_no", "tax_id", "cr_no", "domain", "phone", "email", "status", "blacklisted"]
 	return frappe.get_all(
 		"Company",
 		filters=filters,
-		fields=["name", "company_code", "company_name", "legal_name", "company_name_ar", "vat_no", "tax_id", "cr_no", "domain", "phone", "email", "status", "blacklisted"],
+		fields=fields,
 		order_by="modified desc",
 		limit_page_length=int(limit),
 	)

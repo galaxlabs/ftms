@@ -1,0 +1,27 @@
+{
+  "doctype": "DocType",
+  "name": "Country Document Format",
+  "module": "Transport System",
+  "autoname": "hash",
+  "engine": "InnoDB",
+  "field_order": ["country", "document_type", "pattern", "placeholder", "column_break_format", "minimum_length", "maximum_length", "normalization_rule", "description", "section_rules", "enabled", "attachment_allowed", "requires_expiry", "requires_verification", "validation_error_message", "priority"],
+  "fields": [
+    {"fieldname": "country", "fieldtype": "Link", "label": "Country", "options": "Country", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "document_type", "fieldtype": "Link", "label": "Document Type", "options": "Document Type", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "pattern", "fieldtype": "Code", "label": "Pattern / Regex", "options": "Python Regular Expression"},
+    {"fieldname": "placeholder", "fieldtype": "Data", "label": "Placeholder"},
+    {"fieldname": "column_break_format", "fieldtype": "Column Break"},
+    {"fieldname": "minimum_length", "fieldtype": "Int", "label": "Minimum Length"},
+    {"fieldname": "maximum_length", "fieldtype": "Int", "label": "Maximum Length"},
+    {"fieldname": "normalization_rule", "fieldtype": "Select", "label": "Normalization Rule", "options": "None\nUppercase\nLowercase\nDigits Only\nRemove Spaces", "default": "None"},
+    {"fieldname": "description", "fieldtype": "Small Text", "label": "Description"},
+    {"fieldname": "section_rules", "fieldtype": "Section Break", "label": "Validation Rules"},
+    {"fieldname": "enabled", "fieldtype": "Check", "label": "Enabled", "default": "1", "in_list_view": 1},
+    {"fieldname": "attachment_allowed", "fieldtype": "Check", "label": "Attachment Allowed", "default": "1"},
+    {"fieldname": "requires_expiry", "fieldtype": "Check", "label": "Requires Expiry", "default": "0"},
+    {"fieldname": "requires_verification", "fieldtype": "Check", "label": "Requires Verification", "default": "0"},
+    {"fieldname": "validation_error_message", "fieldtype": "Small Text", "label": "Validation Error Message"},
+    {"fieldname": "priority", "fieldtype": "Int", "label": "Priority", "default": "0"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
