@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
 import json
+import time
 import uuid
 
 import frappe
 from frappe import _
-from frappe.utils import now_datetime, today
+from frappe.utils import add_to_date, get_datetime, now_datetime, today
 
 from ftms.tenant import company_filters, get_user_company, has_company_access, resolve_company
 
@@ -44,6 +48,49 @@ def _require_booking_access(booking, user, *, owner_allowed=True):
 
 def _generate_group_code():
 	return uuid.uuid4().hex[:8].upper()
+
+
+def _invite_secret():
+	secret = frappe.get_site_config().get("secret_key")
+	if not secret:
+		frappe.throw(_("Public group invitations are not configured"))
+	return secret.encode("utf-8")
+
+
+def _group_invite_token(booking_name, expires_at):
+	payload = {
+		"v": 1,
+		"booking": booking_name,
+		"expires_at": int(get_datetime(expires_at).timestamp()),
+		"nonce": uuid.uuid4().hex,
+	}
+	encoded = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode().rstrip("=")
+	signature = hmac.new(_invite_secret(), encoded.encode("ascii"), hashlib.sha256).hexdigest()
+	return f"{encoded}.{signature}", payload["expires_at"]
+
+
+def _decode_group_invite(token):
+	try:
+		encoded, signature = token.split(".", 1)
+		valid_signature = hmac.new(_invite_secret(), encoded.encode("ascii"), hashlib.sha256).hexdigest()
+		if not hmac.compare_digest(signature, valid_signature):
+			raise ValueError
+		padding = "=" * (-len(encoded) % 4)
+		payload = json.loads(base64.urlsafe_b64decode(f"{encoded}{padding}"))
+		if payload.get("v") != 1 or int(payload["expires_at"]) < int(time.time()):
+			raise ValueError
+		return payload
+	except (TypeError, ValueError, KeyError, json.JSONDecodeError, UnicodeDecodeError):
+		frappe.throw(_("This group invitation is invalid or expired"), frappe.PermissionError)
+
+
+def _group_invite_expiry(hours=None):
+	configured = frappe.db.get_single_value("Platform Settings", "default_group_invite_expiry_hours")
+	try:
+		hours = float(hours if hours is not None else configured or 24)
+	except (TypeError, ValueError):
+		hours = 24
+	return max(1, min(hours, 168))
 
 
 def _create_trip_from_booking(booking, offer):
@@ -171,6 +218,18 @@ def create_booking(**kwargs):
 		"negotiation_status": doc.negotiation_status,
 		"vehicle_type": doc.vehicle_type,
 	}
+
+
+@frappe.whitelist()
+def create_group_invite(booking_name, expires_in_hours=None):
+	"""Issue a signed, expiring invite for passengers to join a booking."""
+	booking = frappe.get_doc("Trip Booking", booking_name)
+	_require_booking_access(booking, frappe.session.user)
+	if booking.negotiation_status != "Awaiting Offers" or booking.booking_status == "Cancelled":
+		frappe.throw(_("This booking is not accepting passengers"))
+	expires_at = add_to_date(now_datetime(), hours=_group_invite_expiry(expires_in_hours))
+	token, expires_timestamp = _group_invite_token(booking.name, expires_at)
+	return {"booking": booking.name, "token": token, "expires_at": expires_timestamp}
 
 
 @frappe.whitelist()
@@ -357,20 +416,30 @@ def reactivate_booking(booking_name):
 	return {"status": "Awaiting Offers"}
 
 
-@frappe.whitelist()
-def join_booking_group(group_code, passenger_name, nationality=None, mobile_no=None,
-					   document_type=None, document_number=None, luggage_qty=0, user=None):
-	"""Co-passenger joins a booking via group code."""
-	if not group_code or not passenger_name:
-		frappe.throw(_("Group code and passenger name are required"))
-	booking_name = frappe.db.get_value(
-		"Trip Booking",
-		{"booking_group_code": group_code, "negotiation_status": "Awaiting Offers"},
-		"name",
-	)
-	if not booking_name:
+@frappe.whitelist(allow_guest=True)
+def join_booking_group(token, passenger_name, nationality=None, mobile_no=None,
+					   document_type=None, document_number=None, luggage_qty=0):
+	"""Join a booking with a signed, expiring group invitation."""
+	if not token or not passenger_name:
+		frappe.throw(_("Invitation token and passenger name are required"))
+	payload = _decode_group_invite(token)
+	booking = frappe.get_doc("Trip Booking", payload["booking"])
+	frappe.db.sql("SELECT name FROM `tabTrip Booking` WHERE name=%s FOR UPDATE", booking.name)
+	booking.reload()
+	if booking.negotiation_status != "Awaiting Offers" or booking.booking_status == "Cancelled":
 		return {"error": "Booking not found or not accepting passengers"}
-	booking = frappe.get_doc("Trip Booking", booking_name)
+	passengers = list(booking.passengers or [])
+	seat_count = int(booking.seat_count or 0)
+	if seat_count and len(passengers) >= seat_count:
+		frappe.throw(_("This booking has no available passenger seats"))
+	current_user = frappe.session.user if frappe.session.user != "Guest" else None
+	normalized_name = passenger_name.strip().casefold()
+	normalized_mobile = (mobile_no or "").strip()
+	for existing in passengers:
+		if current_user and existing.user == current_user:
+			frappe.throw(_("You have already joined this booking"))
+		if normalized_mobile and existing.mobile_no == normalized_mobile and (existing.passenger_name or "").strip().casefold() == normalized_name:
+			frappe.throw(_("This passenger has already joined the booking"))
 
 	booking.append("passengers", {
 		"passenger_name": passenger_name,
@@ -379,16 +448,16 @@ def join_booking_group(group_code, passenger_name, nationality=None, mobile_no=N
 		"document_type": document_type,
 		"document_number": document_number,
 		"luggage_qty": luggage_qty or 0,
-		"booking_group": group_code,
+		"booking_group": booking.booking_group_code,
 		"is_primary_booker": 0,
-		"user": frappe.session.user if frappe.session.user != "Guest" else None,
+		"user": current_user,
 	})
-	# Public joins are intentionally recorded as Guest/registered-user actions;
-	# never impersonate Administrator or accept a caller-controlled user.
+	booking.passenger_count = len(passengers) + 1
 	booking.save(ignore_permissions=True)
 
 	return {
 		"booking": booking.name,
 		"booking_title": booking.booking_title,
 		"passenger_name": passenger_name,
+		"passenger_count": len(passengers) + 1,
 	}
