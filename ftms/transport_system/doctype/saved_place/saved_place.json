@@ -1,0 +1,29 @@
+{
+  "doctype": "DocType",
+  "name": "Saved Place",
+  "module": "Transport System",
+  "autoname": "format:PLACE-{YYYY}-{#####}",
+  "engine": "InnoDB",
+  "field_order": ["title", "user", "company", "status", "column_break_owner", "source", "place_type", "google_place_id", "section_location", "name_en", "name_ar", "address", "column_break_location", "latitude", "longitude", "region", "city", "notes"],
+  "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Saved Place Title", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "user", "fieldtype": "Link", "label": "User", "options": "User", "reqd": 1, "read_only": 1},
+    {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nArchived", "default": "Active", "in_list_view": 1},
+    {"fieldname": "column_break_owner", "fieldtype": "Column Break"},
+    {"fieldname": "source", "fieldtype": "Select", "label": "Source", "options": "Google Places\nManual Pin\nLocal Registry", "reqd": 1},
+    {"fieldname": "place_type", "fieldtype": "Data", "label": "Place Type"},
+    {"fieldname": "google_place_id", "fieldtype": "Data", "label": "Google Place ID"},
+    {"fieldname": "section_location", "fieldtype": "Section Break", "label": "Location"},
+    {"fieldname": "name_en", "fieldtype": "Data", "label": "Name English"},
+    {"fieldname": "name_ar", "fieldtype": "Data", "label": "Name Arabic"},
+    {"fieldname": "address", "fieldtype": "Small Text", "label": "Address"},
+    {"fieldname": "column_break_location", "fieldtype": "Column Break"},
+    {"fieldname": "latitude", "fieldtype": "Float", "label": "Latitude", "reqd": 1},
+    {"fieldname": "longitude", "fieldtype": "Float", "label": "Longitude", "reqd": 1},
+    {"fieldname": "region", "fieldtype": "Data", "label": "Region"},
+    {"fieldname": "city", "fieldtype": "Data", "label": "City"},
+    {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Desk User", "read": 1}]
+}

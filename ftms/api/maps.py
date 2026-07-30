@@ -110,6 +110,7 @@ def _local_ksa_places(query, limit=10):
 def _google_ksa_places(query, limit=10):
     settings = get_integration_settings(include_private=True)
     key = settings.get("maps_api_key")
+    country_code = (settings.get("maps_country_restriction") or "SA").strip().upper()
     if not key or not query:
         return []
 
@@ -120,7 +121,7 @@ def _google_ksa_places(query, limit=10):
                 "https://maps.googleapis.com/maps/api/place/autocomplete/json",
                 params={
                     "input": query,
-                    "components": "country:sa",
+                    "components": f"country:{country_code.lower()}",
                     "language": language,
                     "types": "establishment|geocode",
                     "key": key,
@@ -171,7 +172,7 @@ def _google_ksa_places(query, limit=10):
 
 @frappe.whitelist(allow_guest=True)
 def search_ksa_places(query, limit=10):
-    """Search Saudi places only, returning Arabic and English labels."""
+    """Search configured country places, returning Arabic and English labels."""
     query = (query or "").strip()
     if not query:
         return []
@@ -190,9 +191,12 @@ def search_ksa_places(query, limit=10):
     if merged:
         return merged
     try:
+        settings = get_integration_settings()
+        country_code = (settings.get("maps_country_restriction") or "SA").strip().lower()
+        country_name = "Saudi Arabia" if country_code == "sa" else country_code.upper()
         resp = requests.get(
             "https://nominatim.openstreetmap.org/search",
-            params={"q": f"{query}, Saudi Arabia", "format": "json", "limit": limit, "countrycodes": "sa", "addressdetails": 1},
+            params={"q": f"{query}, {country_name}", "format": "json", "limit": limit, "countrycodes": country_code, "addressdetails": 1},
             headers={"User-Agent": "FTMS/1.0"},
             timeout=10,
         )

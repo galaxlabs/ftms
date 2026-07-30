@@ -126,7 +126,7 @@ def get_public_trip(uuid):
 		frappe.throw("Trip not found")
 
 	passengers = frappe.db.get_all("Trip Passenger", filters={"parent": trip.name},
-		fields=["passenger_name", "nationality", "document_number", "document_type", "luggage_qty", "seat_number"],
+		fields=["passenger_name", "nationality", "luggage_qty", "seat_number"],
 		order_by="idx asc")
 
 	driver_name = ""

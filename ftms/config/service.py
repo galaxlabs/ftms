@@ -123,6 +123,33 @@ def get_document_format(country, document_type):
     return None
 
 
+def get_kashf_config(service_type=None, country=None):
+    filters = {"enabled": 1}
+    if service_type:
+        filters["service_type"] = service_type
+    if country:
+        filters["country"] = country
+    try:
+        rows = frappe.get_all(
+            "Kashf Template",
+            filters=filters,
+            fields=["template_name", "provider_identity_source", "show_passenger_documents", "show_passenger_mobile", "show_qr", "language", "footer_text"],
+            order_by="modified desc",
+            limit=1,
+        )
+    except Exception:
+        rows = []
+    return rows[0] if rows else {
+        "template_name": "Default",
+        "provider_identity_source": "Verified Company First",
+        "show_passenger_documents": 0,
+        "show_passenger_mobile": 0,
+        "show_qr": 1,
+        "language": "Bilingual",
+        "footer_text": "",
+    }
+
+
 def normalize_document(value, rule=None):
     value = (value or "").strip()
     if rule == "Uppercase":
