@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:PEN-{YYYY}-{#####}",
+ "creation": "2026-07-30 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["idempotency_key", "policy", "booking", "trip", "company", "actor_user", "actor_type", "basis_amount", "penalty_amount", "currency", "status", "reason", "created_at"],
+ "fields": [
+  {"fieldname": "idempotency_key", "fieldtype": "Data", "label": "Idempotency Key", "unique": 1, "read_only": 1},
+  {"fieldname": "policy", "fieldtype": "Link", "label": "Cancellation Policy", "options": "Cancellation Policy"},
+  {"fieldname": "booking", "fieldtype": "Link", "in_list_view": 1, "label": "Booking", "options": "Trip Booking", "reqd": 1},
+  {"fieldname": "trip", "fieldtype": "Link", "label": "Trip", "options": "Trip"},
+  {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Company", "reqd": 1},
+  {"fieldname": "actor_user", "fieldtype": "Link", "in_list_view": 1, "label": "Actor", "options": "User", "reqd": 1},
+  {"fieldname": "actor_type", "fieldtype": "Select", "in_list_view": 1, "label": "Actor Type", "options": "Passenger\nDriver\nProvider", "reqd": 1},
+  {"fieldname": "basis_amount", "fieldtype": "Currency", "label": "Basis Amount"},
+  {"fieldname": "penalty_amount", "fieldtype": "Currency", "in_list_view": 1, "label": "Penalty Amount", "reqd": 1},
+  {"default": "SAR", "fieldname": "currency", "fieldtype": "Link", "label": "Currency", "options": "Currency"},
+  {"default": "Pending", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Pending\nCollected\nWaived\nRefunded"},
+  {"fieldname": "reason", "fieldtype": "Small Text", "label": "Reason"},
+  {"fieldname": "created_at", "fieldtype": "Datetime", "label": "Created At", "read_only": 1}
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-30 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Transport System",
+ "name": "Penalty Entry",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "read": 1, "write": 1, "delete": 1, "role": "System Manager"},
+  {"read": 1, "role": "Desk User"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "booking, trip, actor_user, actor_type",
+ "sort_field": "created_at",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

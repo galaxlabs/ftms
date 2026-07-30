@@ -9,6 +9,7 @@ from frappe.utils import now_datetime
 
 from ftms.config.service import get_integration_settings
 from ftms.wallet.service import credit_wallet, get_wallet_summary
+from ftms.notifications.service import emit_event
 
 
 def _request_payload():
@@ -46,6 +47,11 @@ def payment_webhook():
     event_id = payload.get("event_id") or payload.get("payment_id") or payload.get("reference")
     if not user or not amount or not event_id:
         frappe.throw("Payment webhook requires user, amount, and event_id")
+    company = payload.get("company") or frappe.db.get_value(
+        "User Company Link", {"user": user, "status": "Active"}, "company"
+    )
+    if not company:
+        frappe.throw("Payment webhook requires a company")
 
     existing = frappe.db.get_value("Payment Transaction", {"webhook_event_id": event_id}, "name")
     if existing:
@@ -54,6 +60,8 @@ def payment_webhook():
     payment = frappe.get_doc({
         "doctype": "Payment Transaction",
         "user": user,
+        "company": company,
+        "order": payload.get("order") or payload.get("booking"),
         "provider": payload.get("provider") or get_integration_settings().get("payment_provider"),
         "currency": currency,
         "amount": amount,
@@ -64,6 +72,13 @@ def payment_webhook():
         "paid_on": now_datetime(),
     })
     payment.insert(ignore_permissions=True)
+    subscription_name = payload.get("subscription")
+    if subscription_name:
+        subscription = frappe.get_doc("User Subscription", subscription_name)
+        if subscription.user != user or subscription.company != company:
+            frappe.throw("Payment subscription ownership mismatch", frappe.PermissionError)
+        if subscription.status == "Overdue":
+            subscription.mark_paid(invoice=payment.name)
     result = credit_wallet(
         user=user,
         amount=amount,
@@ -71,6 +86,16 @@ def payment_webhook():
         external_reference=event_id,
         payment_transaction=payment.name,
         description=payload.get("description") or "Verified payment wallet credit",
+    )
+    emit_event(
+        "Payment Received",
+        user,
+        "Payment received",
+        f"Your payment of {amount} {currency} was received.",
+        company=company,
+        reference_doctype="Payment Transaction",
+        reference_name=payment.name,
+        dedupe_key=f"payment-notice:{event_id}",
     )
     frappe.db.commit()
     return {"status": "credited", "payment_transaction": payment.name, **result}

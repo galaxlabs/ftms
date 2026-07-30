@@ -80,6 +80,49 @@ def credit_wallet(user, amount, currency="SAR", external_reference=None, payment
     return {"status": "credited", "wallet": wallet_name, "transaction": transaction.name, "balance": float(balance_after)}
 
 
+def debit_wallet(user, amount, currency="SAR", external_reference=None, description=None):
+    amount = _money(amount)
+    if external_reference:
+        existing = frappe.db.get_value("Wallet Transaction", {"external_reference": external_reference}, "name")
+        if existing:
+            return {"status": "already_processed", "transaction": existing}
+
+    wallet_name = frappe.db.get_value("Wallet", {"user": user}, "name")
+    if not wallet_name:
+        return {"status": "insufficient_balance", "balance": 0}
+    row = frappe.db.sql(
+        "select name, balance, reserved_balance, currency, status from `tabWallet` where name=%s for update",
+        (wallet_name,),
+        as_dict=True,
+    )
+    if not row:
+        frappe.throw("Wallet not found")
+    wallet = row[0]
+    available = Decimal(str(wallet.balance or 0)) - Decimal(str(wallet.reserved_balance or 0))
+    if wallet.status != "Active" or available < amount:
+        return {"status": "insufficient_balance", "balance": float(wallet.balance or 0)}
+    balance_after = Decimal(str(wallet.balance or 0)) - amount
+    transaction = frappe.get_doc({
+        "doctype": "Wallet Transaction",
+        "wallet": wallet_name,
+        "user": user,
+        "transaction_type": "Debit",
+        "status": "Completed",
+        "currency": currency or wallet.currency,
+        "amount": float(amount),
+        "balance_after": float(balance_after),
+        "external_reference": external_reference,
+        "description": description or "Wallet debit",
+        "created_on": now_datetime(),
+    })
+    transaction.insert(ignore_permissions=True)
+    frappe.db.set_value("Wallet", wallet_name, {
+        "balance": float(balance_after),
+        "last_transaction_on": now_datetime(),
+    }, update_modified=False)
+    return {"status": "debited", "wallet": wallet_name, "transaction": transaction.name, "balance": float(balance_after)}
+
+
 def get_wallet_summary(user):
     wallet = get_or_create_wallet(user=user)
     return {

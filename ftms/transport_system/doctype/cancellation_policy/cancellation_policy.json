@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:CP-{####}",
+ "creation": "2026-07-30 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["policy_name", "company", "service_type", "actor_type", "column_break_scope", "hours_before_min", "hours_before_max", "penalty_type", "penalty_value", "max_penalty", "status", "reason"],
+ "fields": [
+  {"fieldname": "policy_name", "fieldtype": "Data", "in_list_view": 1, "label": "Policy Name", "reqd": 1},
+  {"fieldname": "company", "fieldtype": "Link", "in_list_view": 1, "label": "Company", "options": "Company"},
+  {"fieldname": "service_type", "fieldtype": "Link", "label": "Service Type", "options": "Service Type"},
+  {"fieldname": "actor_type", "fieldtype": "Select", "in_list_view": 1, "label": "Actor", "options": "Passenger\nDriver\nProvider", "reqd": 1},
+  {"fieldname": "column_break_scope", "fieldtype": "Column Break"},
+  {"default": "0", "fieldname": "hours_before_min", "fieldtype": "Float", "label": "Minimum Hours Before Trip"},
+  {"default": "0", "fieldname": "hours_before_max", "fieldtype": "Float", "label": "Maximum Hours Before Trip"},
+  {"fieldname": "penalty_type", "fieldtype": "Select", "in_list_view": 1, "label": "Penalty Type", "options": "Fixed\nPercentage\nPlatform Fee", "reqd": 1},
+  {"default": "0", "fieldname": "penalty_value", "fieldtype": "Float", "label": "Penalty Value (Amount or %)"},
+  {"fieldname": "max_penalty", "fieldtype": "Currency", "label": "Maximum Penalty"},
+  {"default": "Active", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Draft\nActive\nInactive"},
+  {"fieldname": "reason", "fieldtype": "Small Text", "label": "Policy Notes"}
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-30 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Transport System",
+ "name": "Cancellation Policy",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "read": 1, "write": 1, "delete": 1, "role": "System Manager"},
+  {"read": 1, "role": "Desk User"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "policy_name, company, service_type, actor_type",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

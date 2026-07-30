@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "field_order": ["document_type", "document_number", "issue_date", "expiry_date", "ocr_status", "ocr_confidence", "attachment", "notes"],
  "fields": [
-  {"fieldname": "document_type", "fieldtype": "Select", "in_list_view": 1, "label": "Document Type", "options": "Registration\nInsurance\nSafety Inspection\nOperation Card\nPermit\nOther", "reqd": 1},
+   {"fieldname": "document_type", "fieldtype": "Select", "in_list_view": 1, "label": "Document Type", "options": "Registration\nInsurance\nSafety Inspection\nOperation Card\nPermit\nFitness Certificate\nTax\nOther", "reqd": 1},
   {"fieldname": "document_number", "fieldtype": "Data", "in_list_view": 1, "label": "Document Number"},
   {"fieldname": "issue_date", "fieldtype": "Date", "label": "Issue Date"},
   {"fieldname": "expiry_date", "fieldtype": "Date", "in_list_view": 1, "label": "Expiry Date"},

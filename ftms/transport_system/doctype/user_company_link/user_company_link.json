@@ -14,7 +14,7 @@
     {"fieldname": "role", "fieldtype": "Select", "label": "Role", "options": "Company Admin\nDispatcher\nCaptain\nPassenger\nAccountant\nViewer", "reqd": 1},
     {"default": "0", "fieldname": "is_owner", "fieldtype": "Check", "in_list_view": 1, "label": "Is Owner"},
     {"default": "Signup", "fieldname": "joined_via", "fieldtype": "Select", "label": "Joined Via", "options": "Signup\nInvite\nAdmin\nJoin Request"},
-    {"default": "Pending", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Pending\nActive\nBlocked"},
+     {"default": "Pending", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Pending\nActive\nSuspended\nRevoked\nBlocked"},
     {"fieldname": "approved_by", "fieldtype": "Link", "label": "Approved By", "options": "User"},
     {"fieldname": "approved_on", "fieldtype": "Datetime", "label": "Approved On"}
   ],

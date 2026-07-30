@@ -30,28 +30,30 @@ class UserSubscription(Document):
             return
 
         if self.status == "Active":
-            if self.current_period_end and getdate(self.current_period_end) < today_date:
-                if self.auto_renew:
-                    self._auto_renew()
-                else:
-                    self.status = "Overdue"
+            if self.active_hours_limit and (self.active_hours_remaining or 0) <= 0:
+                self.status = "Read Only"
 
     def _auto_renew(self):
         """Create next period, mark as overdue until paid."""
         today_date = getdate()
-        unused = self.PERIOD_DAYS - (self.active_days_used or 0)
-        rollover = max(unused, 0)
-        new_end = add_days(today_date, self.PERIOD_DAYS + rollover)
+        from ftms.subscriptions.utils import subscription_settings
+        active_days, hours_per_day, monthly_fee = subscription_settings()
+        new_end = add_days(today_date, active_days)
 
         self.append("periods", {
             "period_start": str(today_date),
             "period_end": str(new_end),
-            "amount": self.MONTHLY_FEE,
+            "amount": monthly_fee,
             "paid": 0,
         })
         self.status = "Overdue"
         self.active_days_used = 0
-        self.rollover_days = rollover
+        self.active_days_remaining = active_days
+        self.active_hours_used = 0
+        self.active_hours_per_day = hours_per_day
+        self.active_hours_limit = active_days * hours_per_day
+        self.active_hours_remaining = self.active_hours_limit
+        self.rollover_days = 0
 
     def mark_paid(self, invoice=None):
         """Mark current unpaid period as paid and activate."""
@@ -67,6 +69,15 @@ class UserSubscription(Document):
             period.invoice = invoice
         self.current_period_start = str(getdate())
         self.current_period_end = period.period_end
+        from ftms.subscriptions.utils import subscription_settings
+        active_days, hours_per_day, _ = subscription_settings()
+        self.active_hours_used = 0
+        self.active_hours_per_day = hours_per_day
+        self.active_hours_limit = active_days * hours_per_day
+        self.active_hours_remaining = self.active_hours_limit
+        self.active_days_used = 0
+        self.active_days_remaining = active_days
+        self.is_online = 1
         self.status = "Active"
         self.last_payment_date = str(today())
         self.last_invoice = invoice

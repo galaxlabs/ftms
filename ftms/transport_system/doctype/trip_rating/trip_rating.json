@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:RTG-{####}",
+ "creation": "2026-07-30 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["trip", "booking", "rating_key", "rater_user", "rated_user", "rating_type", "rating", "comment", "status", "submitted_at"],
+ "fields": [
+  {"fieldname": "trip", "fieldtype": "Link", "in_list_view": 1, "label": "Trip", "options": "Trip", "reqd": 1},
+  {"fieldname": "booking", "fieldtype": "Link", "label": "Booking", "options": "Trip Booking"},
+  {"fieldname": "rating_key", "fieldtype": "Data", "label": "Rating Key", "unique": 1, "read_only": 1},
+  {"fieldname": "rater_user", "fieldtype": "Link", "in_list_view": 1, "label": "Rater", "options": "User", "reqd": 1, "read_only": 1},
+  {"fieldname": "rated_user", "fieldtype": "Link", "in_list_view": 1, "label": "Rated User", "options": "User", "reqd": 1},
+  {"fieldname": "rating_type", "fieldtype": "Select", "in_list_view": 1, "label": "Rating Type", "options": "Passenger to Driver\nDriver to Passenger", "reqd": 1},
+  {"fieldname": "rating", "fieldtype": "Int", "in_list_view": 1, "label": "Rating", "reqd": 1},
+  {"fieldname": "comment", "fieldtype": "Small Text", "label": "Comment"},
+  {"default": "Pending", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Pending\nPublished\nHidden"},
+  {"fieldname": "submitted_at", "fieldtype": "Datetime", "label": "Submitted At", "read_only": 1}
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-30 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Transport System",
+ "name": "Trip Rating",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "read": 1, "write": 1, "role": "System Manager"},
+  {"read": 1, "role": "Desk User"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "trip, rater_user, rated_user, rating_type",
+ "sort_field": "submitted_at",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

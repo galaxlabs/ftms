@@ -73,6 +73,8 @@ scheduler_events = {
     "daily": [
         "ftms.subscriptions.utils.daily_subscription_sync",
         "ftms.commissions.engine.daily_commission_summary",
+        "ftms.api.vehicle.mark_due_service_records",
+        "ftms.notifications.service.dispatch_queued_notifications",
     ],
     "hourly": [
         "ftms.subscriptions.utils.hourly_trial_check",

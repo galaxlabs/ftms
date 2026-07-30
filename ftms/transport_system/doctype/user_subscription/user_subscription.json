@@ -15,9 +15,17 @@
   "sb_period",
   "current_period_start",
   "current_period_end",
-  "active_days_used",
-  "active_days_remaining",
-  "rollover_days",
+   "active_days_used",
+   "active_days_remaining",
+   "rollover_days",
+   "active_hours_used",
+   "active_hours_remaining",
+   "active_hours_limit",
+   "active_hours_per_day",
+   "is_online",
+   "offline_until",
+   "offline_reason",
+   "last_activity_at",
   "sb_payment",
   "auto_renew",
   "last_payment_date",
@@ -113,14 +121,65 @@
    "no_copy": 1,
    "read_only": 1
   },
-  {
-   "description": "Unused days carried from previous period",
+   {
+    "description": "Unused days carried from previous period",
    "fieldname": "rollover_days",
    "fieldtype": "Int",
    "label": "Rollover Days",
    "no_copy": 1,
-   "read_only": 1
-  },
+    "read_only": 1
+   },
+   {
+    "description": "Heartbeat-based active usage in the current billing period",
+    "fieldname": "active_hours_used",
+    "fieldtype": "Float",
+    "label": "Active Hours Used",
+    "no_copy": 1,
+    "read_only": 1
+   },
+   {
+    "fieldname": "active_hours_remaining",
+    "fieldtype": "Float",
+    "label": "Active Hours Remaining",
+    "no_copy": 1,
+    "read_only": 1
+   },
+   {
+    "fieldname": "active_hours_limit",
+    "fieldtype": "Float",
+    "label": "Active Hours Limit",
+    "no_copy": 1,
+    "read_only": 1
+   },
+   {
+    "default": "8",
+    "fieldname": "active_hours_per_day",
+    "fieldtype": "Float",
+    "label": "Active Hours Per Day",
+    "read_only": 1
+   },
+   {
+    "default": "1",
+    "fieldname": "is_online",
+    "fieldtype": "Check",
+    "label": "Online"
+   },
+   {
+    "fieldname": "offline_until",
+    "fieldtype": "Datetime",
+    "label": "Offline Until"
+   },
+   {
+    "fieldname": "offline_reason",
+    "fieldtype": "Small Text",
+    "label": "Offline Reason"
+   },
+   {
+    "fieldname": "last_activity_at",
+    "fieldtype": "Datetime",
+    "label": "Last Activity",
+    "read_only": 1
+   },
   {
    "collapsible": 1,
    "fieldname": "sb_payment",

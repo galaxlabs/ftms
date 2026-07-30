@@ -10,6 +10,15 @@ class CaptainJoinRequest(Document):
 			user = frappe.db.get_value("Captain Profile", self.captain_profile, "user")
 			if user and not self.requested_by:
 				self.requested_by = user
+		if self.status == "Approved" and self.approved_by and self.approved_by != "Administrator":
+			link = frappe.db.get_value(
+				"User Company Link",
+				{"user": self.approved_by, "company": self.company, "status": "Active"},
+				["role", "is_owner"],
+				as_dict=True,
+			)
+			if not link or (link.role != "Company Admin" and not link.is_owner):
+				frappe.throw("Only a company owner or admin can approve a captain")
 
 	def on_update(self):
 		if self.status != "Approved":

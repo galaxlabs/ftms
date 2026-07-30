@@ -5,6 +5,7 @@ from frappe import _
 from frappe.utils import now_datetime
 
 from ftms.tenant import get_user_company, resolve_company
+from ftms.api.membership import _require_company_admin
 
 
 @frappe.whitelist()
@@ -138,6 +139,7 @@ def approve_join_request(name, notes=None):
 	if user == "Guest":
 		frappe.throw(_("Login is required"), frappe.PermissionError)
 	doc = frappe.get_doc("Captain Join Request", name)
+	_require_company_admin(doc.company, user=user)
 	if doc.status != "Pending":
 		frappe.throw(_("This request is already {0}").format(doc.status))
 	doc.status = "Approved"
@@ -156,6 +158,7 @@ def reject_join_request(name, notes=None):
 	if user == "Guest":
 		frappe.throw(_("Login is required"), frappe.PermissionError)
 	doc = frappe.get_doc("Captain Join Request", name)
+	_require_company_admin(doc.company, user=user)
 	if doc.status != "Pending":
 		frappe.throw(_("This request is already {0}").format(doc.status))
 	doc.status = "Rejected"

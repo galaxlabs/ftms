@@ -11,6 +11,10 @@ import frappe
 from frappe import _
 from frappe.utils import add_to_date, get_datetime, now_datetime, today
 
+from ftms.api.pricing_rule import calculate_quote
+from ftms.penalties.service import calculate_penalty, record_cancellation_penalty
+from ftms.notifications.service import emit_event
+from ftms.api.partnership import create_agreement_for_booking
 from ftms.tenant import company_filters, get_user_company, has_company_access, resolve_company
 
 
@@ -124,6 +128,22 @@ def _create_trip_from_booking(booking, offer):
 	})
 	doc.flags.ignore_validate = True
 	doc.insert(ignore_permissions=True)
+	provider_company = booking.provider_company or frappe.db.get_value("Vehicle", offer.vehicle, "company")
+	if provider_company and not frappe.db.exists("Settlement", {"trip": doc.name}):
+		platform_fee = float(booking.platform_fee_amount or 0)
+		gross_amount = float(offer.offered_fare or 0)
+		frappe.get_doc({
+			"doctype": "Settlement",
+			"company": booking.company,
+			"provider_company": provider_company,
+			"trip": doc.name,
+			"status": "Draft",
+			"currency": "SAR",
+			"gross_amount": gross_amount,
+			"platform_commission": platform_fee,
+			"partner_commission": 0,
+			"net_amount": max(gross_amount - platform_fee, 0),
+		}).insert(ignore_permissions=True)
 
 	booking.db_set("trip", doc.name)
 	booking.db_set("negotiation_status", "Trip Created")
@@ -168,8 +188,21 @@ def create_booking(**kwargs):
 
 	vehicle_type = data.get("vehicle_type")
 	pricing_rule = data.get("pricing_rule")
-	if vehicle_type and not pricing_rule and company:
-		pricing_rule = _lookup_pricing_rule(vehicle_type, company)
+	quote = None
+	if vehicle_type and company:
+		quote = calculate_quote(
+			company,
+			vehicle_type,
+			route=route,
+			distance_km=data.get("distance_km"),
+			passenger_count=seat_count,
+			vehicle=data.get("selected_vehicle") or data.get("vehicle"),
+			rule_name=pricing_rule,
+		)
+	if quote:
+		pricing_rule = quote["pricing_rule"]
+	platform_fee_rate = float(frappe.db.get_single_value("Platform Settings", "platform_fee_rate") or 5)
+	quoted_amount = float(quote["final_fare"] if quote else data.get("fare_amount") or 0)
 
 	group_code = _generate_group_code()
 
@@ -188,7 +221,14 @@ def create_booking(**kwargs):
 		"group_leader_name": data.get("group_leader_name"),
 		"group_leader_mobile": data.get("group_leader_mobile"),
 		"is_group_leader_self": data.get("is_group_leader_self") or 0,
-		"fare_amount": data.get("fare_amount"),
+		"fare_amount": quote["final_fare"] if quote else data.get("fare_amount"),
+		"quoted_fare": quote["final_fare"] if quote else data.get("fare_amount"),
+		"platform_fee_rate": platform_fee_rate,
+		"platform_fee_amount": round(quoted_amount * platform_fee_rate / 100, 2),
+		"minimum_offer_fare": quote["minimum_fare"] if quote else None,
+		"maximum_offer_fare": quote["maximum_fare"] if quote else None,
+		"demand_index": quote["demand_index"] if quote else None,
+		"supply_index": quote["supply_index"] if quote else None,
 		"payment_status": data.get("payment_status") or "Unpaid",
 		"seat_count": seat_count,
 		"passenger_count": len(passengers) or data.get("passenger_count") or 0,
@@ -201,6 +241,7 @@ def create_booking(**kwargs):
 		"dropoff_latitude": data.get("dropoff_latitude"),
 		"dropoff_longitude": data.get("dropoff_longitude"),
 		"vehicle_type": vehicle_type,
+		"selected_vehicle": data.get("selected_vehicle") or data.get("vehicle"),
 		"pricing_rule": pricing_rule,
 		"offer_deadline": data.get("offer_deadline"),
 		"notes": data.get("notes"),
@@ -217,6 +258,11 @@ def create_booking(**kwargs):
 		"passenger_count": doc.passenger_count,
 		"negotiation_status": doc.negotiation_status,
 		"vehicle_type": doc.vehicle_type,
+		"quoted_fare": doc.quoted_fare,
+		"minimum_offer_fare": doc.minimum_offer_fare,
+		"maximum_offer_fare": doc.maximum_offer_fare,
+		"platform_fee_rate": doc.platform_fee_rate,
+		"platform_fee_amount": doc.platform_fee_amount,
 	}
 
 
@@ -264,7 +310,8 @@ def list_available_bookings(company=None, vehicle_type=None, limit=50):
 		fields=[
 			"name", "company", "booking_title", "booking_date",
 			"customer_name", "mobile_no", "route",
-			"vehicle_type", "pricing_rule", "passenger_count",
+			"vehicle_type", "pricing_rule", "passenger_count", "quoted_fare",
+			"minimum_offer_fare", "maximum_offer_fare", "demand_index", "supply_index",
 			"pickup_point", "drop_point",
 			"pickup_latitude", "pickup_longitude",
 			"dropoff_latitude", "dropoff_longitude",
@@ -286,8 +333,8 @@ def get_booking(name, company=None):
 	data["offers"] = frappe.get_all(
 		"Booking Offer",
 		filters={"booking": name},
-		fields=["name", "captain_user", "vehicle", "offered_fare", "fare_type", "captain_notes", "status", "created_at"],
-		order_by="created_at desc",
+		fields=["name", "captain_user", "vehicle", "offered_fare", "pricing_rule", "minimum_allowed_fare", "maximum_allowed_fare", "fare_type", "captain_notes", "status", "created_at"],
+		order_by="offered_fare desc, created_at asc",
 	)
 	return data
 
@@ -307,9 +354,27 @@ def make_offer(booking, vehicle, offered_fare, fare_type="Total Trip", captain_n
 		frappe.throw(_("Booking is not accepting offers"))
 	if booking_doc.company and not has_company_access(booking_doc.company, user=user):
 		frappe.throw(_("You cannot offer on a booking outside your company"), frappe.PermissionError)
+	try:
+		offered_fare = float(offered_fare)
+	except (TypeError, ValueError):
+		frappe.throw(_("Offer fare must be a valid amount"))
+	vehicle_quote = calculate_quote(
+		booking_doc.company,
+		booking_doc.vehicle_type,
+		route=booking_doc.route,
+		passenger_count=booking_doc.seat_count or booking_doc.passenger_count or 1,
+		vehicle=vehicle,
+	)
+	minimum_offer = float((vehicle_quote or {}).get("minimum_fare") or booking_doc.minimum_offer_fare or 0)
+	maximum_offer = float((vehicle_quote or {}).get("maximum_fare") or booking_doc.maximum_offer_fare or 0)
+	if minimum_offer and offered_fare < minimum_offer:
+		frappe.throw(_("Offer is below the configured minimum fare of {0}").format(minimum_offer))
+	if maximum_offer and offered_fare > maximum_offer:
+		frappe.throw(_("Offer exceeds the configured maximum fare of {0}").format(maximum_offer))
 	vehicle_doc = frappe.get_doc("Vehicle", vehicle)
 	if not vehicle_doc.is_active or vehicle_doc.status != "Active":
 		frappe.throw(_("Vehicle is not active"))
+	vehicle_doc.validate_required_documents()
 	if vehicle_doc.assigned_captain_user and vehicle_doc.assigned_captain_user != user:
 		frappe.throw(_("Vehicle is assigned to another captain"), frappe.PermissionError)
 	if vehicle_doc.company and booking_doc.company and vehicle_doc.company != booking_doc.company:
@@ -323,6 +388,9 @@ def make_offer(booking, vehicle, offered_fare, fare_type="Total Trip", captain_n
 		"captain_user": user,
 		"vehicle": vehicle,
 		"offered_fare": offered_fare,
+		"pricing_rule": (vehicle_quote or {}).get("pricing_rule") or booking_doc.pricing_rule,
+		"minimum_allowed_fare": minimum_offer or None,
+		"maximum_allowed_fare": maximum_offer or None,
 		"fare_type": fare_type,
 		"captain_notes": captain_notes,
 		"status": "Pending",
@@ -341,8 +409,8 @@ def list_offers(booking):
 	return frappe.get_all(
 		"Booking Offer",
 		filters={"booking": booking},
-		fields=["name", "captain_user", "vehicle", "offered_fare", "fare_type", "captain_notes", "status", "created_at"],
-		order_by="created_at desc",
+		fields=["name", "captain_user", "vehicle", "offered_fare", "pricing_rule", "minimum_allowed_fare", "maximum_allowed_fare", "fare_type", "captain_notes", "status", "created_at"],
+		order_by="offered_fare desc, created_at asc",
 	)
 
 
@@ -364,7 +432,32 @@ def accept_offer(offer_name):
 	if booking.negotiation_status != "Awaiting Offers":
 		frappe.throw(_("Booking is no longer accepting offers"))
 
+	booking.fare_amount = offer.offered_fare
+	booking.platform_fee_amount = round(float(offer.offered_fare or 0) * float(booking.platform_fee_rate or 0) / 100, 2)
+	booking.save(ignore_permissions=True)
 	trip = _create_trip_from_booking(booking, offer)
+	provider_company = booking.provider_company or frappe.db.get_value("Vehicle", offer.vehicle, "company")
+	create_agreement_for_booking(booking, trip, provider_company)
+	emit_event(
+		"Offer Accepted",
+		booking.main_rider_user,
+		"Offer accepted",
+		f"Your transport booking has been assigned to {offer.captain_user}.",
+		company=booking.company,
+		reference_doctype="Trip",
+		reference_name=trip.name,
+		dedupe_key=f"offer-accepted:{offer.name}",
+	)
+	emit_event(
+		"Trip Assigned",
+		offer.captain_user,
+		"Trip assignment received",
+		f"You have been assigned trip {trip.name}.",
+		company=booking.company,
+		reference_doctype="Trip",
+		reference_name=trip.name,
+		dedupe_key=f"trip-assigned:{trip.name}",
+	)
 	return {
 		"trip": trip.name,
 		"trip_title": trip.trip_title,
@@ -387,6 +480,11 @@ def cancel_booking(booking_name):
 	if booking.negotiation_status in ("Trip Created", "Cancelled"):
 		frappe.throw(_("Booking cannot be cancelled in current state"))
 
+	penalty = record_cancellation_penalty(
+		booking,
+		actor_user=user,
+		reason="Passenger booking cancellation",
+	)
 	booking.db_set("negotiation_status", "Cancelled")
 	booking.db_set("booking_status", "Cancelled")
 
@@ -396,7 +494,17 @@ def cancel_booking(booking_name):
 		frappe.db.set_value("Booking Offer", o.name, "status", "Withdrawn")
 		frappe.db.set_value("Booking Offer", o.name, "responded_at", now_datetime())
 
-	return {"status": "Cancelled"}
+	return {"status": "Cancelled", "penalty": penalty}
+
+
+@frappe.whitelist()
+def preview_cancellation_penalty(booking_name):
+	user = frappe.session.user
+	if user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
+	booking = frappe.get_doc("Trip Booking", booking_name)
+	_require_booking_access(booking, user)
+	return calculate_penalty(booking, actor_user=user) or {"penalty_amount": 0, "currency": "SAR"}
 
 
 @frappe.whitelist()

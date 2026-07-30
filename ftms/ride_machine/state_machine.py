@@ -156,6 +156,13 @@ def _auto_cancel_bookings(trip_doc):
         fields=["name"],
     )
     for b in bookings:
+        booking = frappe.get_doc("Trip Booking", b.name)
+        from ftms.penalties.service import record_cancellation_penalty
+        record_cancellation_penalty(
+            booking,
+            actor_user=frappe.session.user,
+            reason="Trip cancellation",
+        )
         frappe.db.set_value("Trip Booking", b.name, "booking_status", "Cancelled")
 
 
