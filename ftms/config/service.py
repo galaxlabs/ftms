@@ -69,10 +69,10 @@ def get_integration_settings(include_private=False):
         "play_integrity_project_number": _value(doc, "play_integrity_project_number", ""),
     }
     if include_private and doc:
-        result["firebase_web_api_key"] = doc.get_password("firebase_api_key") if doc.get("firebase_api_key") else ""
-        result["firebase_android_api_key"] = doc.get_password("firebase_android_api_key") if doc.get("firebase_android_api_key") else ""
-        result["payment_webhook_secret"] = doc.get_password("payment_webhook_secret") if doc.get("payment_webhook_secret") else ""
-        result["maps_api_key"] = doc.get_password("maps_api_key") if doc.get("maps_api_key") else ""
+        result["firebase_web_api_key"] = doc.get_password("firebase_api_key") or ""
+        result["firebase_android_api_key"] = doc.get_password("firebase_android_api_key") or ""
+        result["payment_webhook_secret"] = doc.get_password("payment_webhook_secret") or ""
+        result["maps_api_key"] = doc.get_password("maps_api_key") or ""
     return result
 
 
