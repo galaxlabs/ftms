@@ -14,6 +14,10 @@ app_include_css = [
     "/assets/ftms/css/fonts.css",
 ]
 
+after_request = [
+    "ftms.cors.add_cors_headers",
+]
+
 override_doctype_class = {
     "Address": "ftms.overrides.address.CustomAddress",
     "Trip": "ftms.transport_system.doctype.trip.trip.Trip",
