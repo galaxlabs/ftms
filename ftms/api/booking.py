@@ -171,6 +171,9 @@ def create_booking(**kwargs):
 		frappe.throw(_("Unauthorized"), frappe.PermissionError)
 
 	data = frappe._dict(kwargs)
+	main_rider_user = data.get("main_rider_user")
+	if not main_rider_user and frappe.session.user != "Guest":
+		main_rider_user = frappe.session.user
 	trip = data.get("trip")
 	route = data.get("route")
 	if trip and not route:
@@ -217,7 +220,7 @@ def create_booking(**kwargs):
 		"customer_name": data.get("customer_name"),
 		"mobile_no": data.get("mobile_no"),
 		"source_channel": data.get("source_channel") or ("Website" if data.get("main_rider_user") else "API"),
-		"main_rider_user": data.get("main_rider_user"),
+		"main_rider_user": main_rider_user,
 		"group_leader_name": data.get("group_leader_name"),
 		"group_leader_mobile": data.get("group_leader_mobile"),
 		"is_group_leader_self": data.get("is_group_leader_self") or 0,
@@ -279,8 +282,27 @@ def create_group_invite(booking_name, expires_in_hours=None):
 
 
 @frappe.whitelist()
-def list_bookings(company=None, limit=50):
-	filters = company_filters(company=company)
+def list_bookings(company=None, limit=50, mine=None):
+	"""List bookings visible to the caller.
+
+	- mine=True (default for app users): only bookings owned by the caller
+	  (as main rider or as a joined group passenger).
+	- Otherwise: company-scoped bookings (used by ops/admin/captains).
+	"""
+	user = frappe.session.user if frappe.session.user != "Guest" else None
+	if mine and user:
+		owned = frappe.db.sql_list("""
+			SELECT name FROM `tabTrip Booking`
+			WHERE main_rider_user = %s
+			UNION
+			SELECT parent FROM `tabTrip Passenger`
+			WHERE user = %s
+		""", (user, user))
+		filters = {"name": ("in", owned) if owned else ("in", [])}
+	elif mine:
+		filters = {"name": ("in", [])}
+	else:
+		filters = company_filters(company=company)
 	return frappe.get_all(
 		"Trip Booking",
 		filters=filters,
@@ -290,6 +312,11 @@ def list_bookings(company=None, limit=50):
 			"booking_status", "negotiation_status", "vehicle_type",
 			"booking_group_code", "main_rider_user",
 			"group_leader_name", "group_leader_mobile", "is_group_leader_self",
+			"pickup_point", "drop_point",
+			"pickup_latitude", "pickup_longitude",
+			"dropoff_latitude", "dropoff_longitude",
+			"quoted_fare", "minimum_offer_fare", "maximum_offer_fare",
+			"passenger_count", "seat_count",
 		],
 		order_by="booking_date desc, modified desc",
 		limit_page_length=int(limit),

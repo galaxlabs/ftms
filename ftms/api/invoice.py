@@ -8,8 +8,22 @@ from ftms.tenant import company_filters, get_user_company, resolve_company
 
 
 @frappe.whitelist(allow_guest=True)
-def list_invoices(company=None, limit=50):
-	filters = company_filters(company=company)
+def list_invoices(company=None, limit=50, mine=None):
+	user = frappe.session.user if frappe.session.user != "Guest" else None
+	if mine and user:
+		owned = frappe.db.sql_list("""
+			SELECT i.name FROM `tabTrip Invoice` i
+			LEFT JOIN `tabTrip` t ON t.name = i.trip
+			LEFT JOIN `tabTrip Booking` b ON b.name = t.trip_booking
+			WHERE b.main_rider_user = %s OR b.name IN (
+				SELECT p.parent FROM `tabTrip Passenger` p WHERE p.user = %s
+			)
+		""", (user, user))
+		filters = {"name": ("in", owned) if owned else ("in", [])}
+	elif mine:
+		filters = {"name": ("in", [])}
+	else:
+		filters = company_filters(company=company)
 	return frappe.get_all(
 		"Trip Invoice",
 		filters=filters,

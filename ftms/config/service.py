@@ -50,6 +50,7 @@ def get_integration_settings(include_private=False):
         "firebase_project_id": _value(doc, "firebase_project_id", ""),
         "firebase_auth_domain": _value(doc, "firebase_auth_domain", ""),
         "firebase_web_app_id": _value(doc, "firebase_web_app_id", ""),
+        "firebase_android_app_id": _value(doc, "firebase_android_app_id", ""),
         "firebase_storage_bucket": _value(doc, "firebase_storage_bucket", ""),
         "firebase_messaging_sender_id": _value(doc, "firebase_messaging_sender_id", ""),
         "firebase_measurement_id": _value(doc, "firebase_measurement_id", ""),
@@ -62,12 +63,51 @@ def get_integration_settings(include_private=False):
         "payment_public_key": _value(doc, "payment_public_key", ""),
         "maps_provider": _value(doc, "maps_provider", "Google"),
         "maps_country_restriction": _value(doc, "maps_country_restriction", "SA"),
+        "apk_download_url": _value(doc, "apk_download_url", ""),
+        "update_check_url": _value(doc, "update_check_url", ""),
+        "min_supported_build": int(_value(doc, "min_supported_build", 0) or 0),
+        "play_integrity_project_number": _value(doc, "play_integrity_project_number", ""),
     }
     if include_private and doc:
-        result["firebase_api_key"] = doc.get_password("firebase_api_key") if doc.get("firebase_api_key") else ""
+        result["firebase_web_api_key"] = doc.get_password("firebase_api_key") if doc.get("firebase_api_key") else ""
+        result["firebase_android_api_key"] = doc.get_password("firebase_android_api_key") if doc.get("firebase_android_api_key") else ""
         result["payment_webhook_secret"] = doc.get_password("payment_webhook_secret") if doc.get("payment_webhook_secret") else ""
         result["maps_api_key"] = doc.get_password("maps_api_key") if doc.get("maps_api_key") else ""
     return result
+
+
+def get_app_config(include_private=False):
+    """Complete mobile app configuration: Firebase keys, Maps key, Play Integrity,
+    update/APK URLs and min supported build. Used by the Flutter app at startup."""
+    integration = get_integration_settings(include_private=True)
+    platform = get_platform_settings()
+    return {
+        "firebase": {
+            "project_id": integration.get("firebase_project_id"),
+            "auth_domain": integration.get("firebase_auth_domain"),
+            "storage_bucket": integration.get("firebase_storage_bucket"),
+            "messaging_sender_id": integration.get("firebase_messaging_sender_id"),
+            "measurement_id": integration.get("firebase_measurement_id"),
+            "web_app_id": integration.get("firebase_web_app_id"),
+            "android_app_id": integration.get("firebase_android_app_id"),
+            "web_api_key": integration.get("firebase_web_api_key", "") if include_private else "",
+            "android_api_key": integration.get("firebase_android_api_key", "") if include_private else "",
+        },
+        "maps": {
+            "provider": integration.get("maps_provider", "Google"),
+            "country_restriction": integration.get("maps_country_restriction", "SA"),
+            "api_key": integration.get("maps_api_key", "") if include_private else "",
+        },
+        "play_integrity_project_number": integration.get("play_integrity_project_number", ""),
+        "updates": {
+            "apk_download_url": integration.get("apk_download_url", ""),
+            "update_check_url": integration.get("update_check_url", ""),
+            "min_supported_build": integration.get("min_supported_build", 0),
+        },
+        "api": {"base_url": integration.get("frappe_api_base_url")},
+        "platform": platform,
+        "version": frappe.get_attr("ftms.__version__"),
+    }
 
 
 def get_feature_flags(user=None, company=None, platform=None, country=None):

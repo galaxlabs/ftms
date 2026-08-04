@@ -5,8 +5,23 @@ from ftms.config.service import get_public_frontend_url
 
 
 @frappe.whitelist()
-def list_trips(company=None, limit=50):
-	filters = company_filters(company=company)
+def list_trips(company=None, limit=50, mine=None):
+	user = frappe.session.user if frappe.session.user != "Guest" else None
+	if mine and user:
+		owned = frappe.db.sql_list("""
+			SELECT t.name FROM `tabTrip` t
+			WHERE t.assigned_captain_user = %s
+			UNION
+			SELECT b.trip FROM `tabTrip Booking` b
+			WHERE b.main_rider_user = %s OR b.name IN (
+				SELECT p.parent FROM `tabTrip Passenger` p WHERE p.user = %s
+			)
+		""", (user, user, user))
+		filters = {"name": ("in", owned) if owned else ("in", [])}
+	elif mine:
+		filters = {"name": ("in", [])}
+	else:
+		filters = company_filters(company=company)
 	return frappe.get_all(
 		"Trip",
 		filters=filters,

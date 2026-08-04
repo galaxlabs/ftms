@@ -3,11 +3,19 @@ from __future__ import annotations
 import frappe
 
 from ftms.config.service import (
+    get_app_config as resolve_app_config,
     get_client_config as resolve_client_config,
     get_document_format as resolve_document_format,
     get_kashf_config,
     validate_configured_document,
 )
+
+
+@frappe.whitelist(allow_guest=True)
+def get_app_config(include_private=0):
+    """Complete mobile app configuration (Firebase keys, Maps key, update URLs).
+    Private keys are returned only for the mobile clients, which must embed them anyway."""
+    return resolve_app_config(include_private=bool(include_private))
 
 
 @frappe.whitelist(allow_guest=True)
