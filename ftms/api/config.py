@@ -9,12 +9,14 @@ from ftms.config.service import (
     get_kashf_config,
     validate_configured_document,
 )
+from ftms.security import rate_limit
 
 
 @frappe.whitelist(allow_guest=True)
 def get_app_config(include_private=0):
-    """Complete mobile app configuration (Firebase keys, Maps key, update URLs).
-    Private keys are returned only for the mobile clients, which must embed them anyway."""
+    """Mobile app configuration. Only Firebase client keys are returned; payment
+    webhook secrets and server-side Maps keys are never exposed."""
+    rate_limit("get_app_config", limit=60, seconds=60)
     return resolve_app_config(include_private=bool(include_private))
 
 

@@ -16,6 +16,7 @@ from ftms.penalties.service import calculate_penalty, record_cancellation_penalt
 from ftms.notifications.service import emit_event
 from ftms.api.partnership import create_agreement_for_booking
 from ftms.tenant import company_filters, get_user_company, has_company_access, resolve_company
+from ftms.security import rate_limit
 
 
 def _coerce_passengers(value):
@@ -165,6 +166,7 @@ def _create_trip_from_booking(booking, offer):
 
 @frappe.whitelist(allow_guest=True)
 def create_booking(**kwargs):
+	rate_limit("create_booking", limit=20, seconds=60)
 	required_key = frappe.get_site_config().get("transport_hub_api_key")
 	sent_key = frappe.get_request_header("X-TransportHub-Key") or frappe.form_dict.get("api_key")
 	if required_key and sent_key != required_key:
@@ -555,6 +557,7 @@ def reactivate_booking(booking_name):
 def join_booking_group(token, passenger_name, nationality=None, mobile_no=None,
 					   document_type=None, document_number=None, luggage_qty=0):
 	"""Join a booking with a signed, expiring group invitation."""
+	rate_limit("join_booking_group", limit=30, seconds=60)
 	passenger_name = (passenger_name or "").strip()
 	mobile_no = (mobile_no or "").strip()
 	nationality = (nationality or "").strip()

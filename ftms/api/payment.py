@@ -10,6 +10,7 @@ from frappe.utils import now_datetime
 from ftms.config.service import get_integration_settings
 from ftms.wallet.service import credit_wallet, get_wallet_summary
 from ftms.notifications.service import emit_event
+from ftms.security import rate_limit
 
 
 def _request_payload():
@@ -35,6 +36,7 @@ def _verify_signature(raw):
 @frappe.whitelist(allow_guest=True)
 def payment_webhook():
     """Verify a gateway callback and credit the user's Frappe wallet exactly once."""
+    rate_limit("payment_webhook", limit=120, seconds=60)
     raw, payload = _request_payload()
     _verify_signature(raw)
 
