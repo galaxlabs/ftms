@@ -96,7 +96,7 @@ def get_app_config(include_private=False):
         "maps": {
             "provider": integration.get("maps_provider", "Google"),
             "country_restriction": integration.get("maps_country_restriction", "SA"),
-            "api_key": integration.get("maps_api_key", "") if include_private else "",
+            "api_key": "",
         },
         "play_integrity_project_number": integration.get("play_integrity_project_number", ""),
         "updates": {
