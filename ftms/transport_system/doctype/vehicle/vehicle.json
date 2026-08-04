@@ -6,7 +6,8 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "company",
+   "company",
+   "owner_captain_user",
   "vehicle_code",
   "vehicle_name",
   "vehicle_name_ar",
@@ -51,7 +52,8 @@
   "documents"
  ],
  "fields": [
-  {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company", "reqd": 1},
+   {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company"},
+   {"fieldname": "owner_captain_user", "fieldtype": "Link", "label": "Owner Captain User", "options": "User", "in_list_view": 1},
   {"fieldname": "vehicle_code", "fieldtype": "Data", "in_list_view": 1, "label": "Vehicle Code", "read_only": 1, "unique": 1},
   {"fieldname": "vehicle_name", "fieldtype": "Data", "in_list_view": 1, "label": "Vehicle Name", "reqd": 1},
   {"fieldname": "vehicle_name_ar", "fieldtype": "Data", "label": "Vehicle Name Arabic"},

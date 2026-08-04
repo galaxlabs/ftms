@@ -49,17 +49,24 @@ def _resolve_rule(company, vehicle_type, route=None, distance_km=0, vehicle=None
 	)[0]
 
 
-def calculate_quote(company, vehicle_type, route=None, distance_km=None, passenger_count=1, vehicle=None, rule_name=None):
-	"""Calculate a bounded quote using distance, demand, and available supply."""
+def calculate_quote(company, vehicle_type, route=None, distance_km=None, passenger_count=1, vehicle=None, rule_name=None, fare_mode="flat"):
+	"""Calculate a bounded quote using distance, demand, and available supply.
+
+	Fare modes:
+	  - flat (default): priced on route distance only; passenger count does not change the fare.
+	  - per_passenger: adds per_passenger_rate for each passenger on top of the distance base.
+	"""
 	if not company or not vehicle_type:
 		return None
 	if distance_km is None and route:
 		distance_km = frappe.db.get_value("Route", route, "distance_km")
 	distance_km = max(float(distance_km or 0), 0)
 	passenger_count = max(int(passenger_count or 1), 1)
+	fare_mode = (fare_mode or "flat").lower()
 	rule = _resolve_rule(company, vehicle_type, route, distance_km, vehicle=vehicle, rule_name=rule_name)
 	if not rule:
 		return None
+	per_passenger_rate = float(rule.per_passenger_rate or 0)
 
 	demand_filters = {
 		"company": company,
@@ -90,8 +97,9 @@ def calculate_quote(company, vehicle_type, route=None, distance_km=None, passeng
 	base_fare = (
 		float(rule.base_fare or 0)
 		+ distance_km * float(rule.per_km_rate or 0)
-		+ passenger_count * float(rule.per_passenger_rate or 0)
 	)
+	if fare_mode == "per_passenger":
+		base_fare += passenger_count * per_passenger_rate
 	market_fare = base_fare * (1 + demand_adjustment - supply_adjustment)
 	minimum = float(rule.min_fare or 0)
 	maximum = float(rule.max_fare or 0)
@@ -101,8 +109,10 @@ def calculate_quote(company, vehicle_type, route=None, distance_km=None, passeng
 	return {
 		"pricing_rule": rule.name,
 		"vehicle": rule.vehicle,
+		"fare_mode": fare_mode,
 		"distance_km": round(distance_km, 2),
 		"base_fare": round(base_fare, 2),
+		"per_passenger_rate": round(per_passenger_rate, 2),
 		"demand_count": demand_count,
 		"supply_count": supply_count,
 		"demand_index": round(demand_index, 4),
@@ -134,7 +144,7 @@ def list_pricing_rules(company=None, limit=50):
 
 
 @frappe.whitelist()
-def get_price_quote(vehicle_type, route=None, distance_km=None, passenger_count=1, vehicle=None, company=None, pricing_rule=None):
+def get_price_quote(vehicle_type, route=None, distance_km=None, passenger_count=1, vehicle=None, company=None, pricing_rule=None, fare_mode="flat"):
 	company = resolve_company(company=company)
 	quote = calculate_quote(
 		company,
@@ -144,6 +154,7 @@ def get_price_quote(vehicle_type, route=None, distance_km=None, passenger_count=
 		passenger_count=passenger_count,
 		vehicle=vehicle,
 		rule_name=pricing_rule,
+		fare_mode=fare_mode,
 	)
 	if not quote:
 		frappe.throw(_("No active pricing rule matches this vehicle, route, and distance"))

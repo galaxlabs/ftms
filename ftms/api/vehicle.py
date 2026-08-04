@@ -86,7 +86,7 @@ def list_vehicle_catalog(make=None, vehicle_type=None, vehicle_category=None, li
 
 @frappe.whitelist()
 def create_vehicle(
-	vehicle_name, plate_no,
+	plate_no, vehicle_name=None,
 	vehicle_name_ar=None, plate_no_ar=None,
 	vehicle_make=None, vehicle_model=None, vehicle_type=None,
 	registration_no=None, model_year=None, color=None,
@@ -96,7 +96,7 @@ def create_vehicle(
 	operation_card_no=None, operation_card_expiry_date=None,
 	registration_expiry_date=None, insurance_expiry_date=None,
 	operation_card_document=None, registration_document=None, insurance_document=None,
-	assigned_captain_user=None,
+	assigned_captain_user=None, owner_captain_user=None,
 	max_luggage_qty=0, max_luggage_weight=None, max_weight_per_passenger=None,
 ):
 	user = frappe.session.user
@@ -104,15 +104,19 @@ def create_vehicle(
 		frappe.throw(_("Login is required"), frappe.PermissionError)
 
 	resolved_company = get_user_company()
-	if not resolved_company:
-		frappe.throw(_("Company is required. You must be linked to a company."))
+	owner_captain_user = owner_captain_user or user
+	if not resolved_company and not frappe.db.exists("Captain Profile", {"user": user}):
+		frappe.throw(_("Create a captain profile or join a company before registering a vehicle."))
 
 	vehicle_code = plate_no
 
 	doc = frappe.get_doc({
 		"doctype": "Vehicle",
 		"company": resolved_company,
-		"vehicle_name": vehicle_name,
+		"owner_captain_user": owner_captain_user if not resolved_company else None,
+		# Vehicle controller generates vehicle_code and vehicle_name from
+		# company abbreviation, plate, make, and model.
+		"vehicle_name": vehicle_name or "Pending vehicle name",
 		"vehicle_name_ar": vehicle_name_ar,
 		"plate_no": plate_no,
 		"vehicle_code": vehicle_code,
@@ -155,6 +159,24 @@ def create_vehicle(
 		"max_luggage_weight": doc.max_luggage_weight,
 		"max_weight_per_passenger": doc.max_weight_per_passenger,
 	}
+
+
+@frappe.whitelist()
+def list_my_vehicles(limit=50):
+	user = frappe.session.user
+	if user == "Guest":
+		frappe.throw(_("Login is required"), frappe.PermissionError)
+	company = get_user_company()
+	filters = {"owner_captain_user": user}
+	if company:
+		filters = [["company", "=", company], ["assigned_captain_user", "=", user]]
+	return frappe.get_all(
+		"Vehicle",
+		filters=filters,
+		fields=["name", "company", "owner_captain_user", "vehicle_name", "plate_no", "vehicle_make", "vehicle_model", "vehicle_type", "passenger_capacity", "status"],
+		order_by="modified desc",
+		limit_page_length=int(limit),
+	)
 
 
 @frappe.whitelist()

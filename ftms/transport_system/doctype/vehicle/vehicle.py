@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -75,8 +77,28 @@ class Vehicle(Document):
 		return {}
 
 	def set_vehicle_code(self):
-		if not self.vehicle_code and self.plate_no:
-			self.vehicle_code = self.plate_no
+		"""Use a stable, readable identifier instead of a manually entered name."""
+		if not self.plate_no:
+			return
+		company_code = frappe.db.get_value("Company", self.company, "company_code") if self.company else None
+		company_code = company_code or self.company or "CAPTAIN"
+		company_abbr = re.sub(r"[^A-Z0-9]", "", str(company_code).upper())[:3] or "CAP"
+		parts = [company_abbr, self.plate_no, self.vehicle_model, self.vehicle_make]
+		base = "-".join(
+			re.sub(r"[^A-Z0-9]+", "-", str(part or "").upper()).strip("-")
+			for part in parts
+			if part
+		)
+		if not base:
+			return
+		code = base[:140]
+		counter = 2
+		while frappe.db.exists("Vehicle", {"vehicle_code": code, "name": ("!=", self.name or "")}):
+			suffix = f"-{counter}"
+			code = f"{base[:140 - len(suffix)]}{suffix}"
+			counter += 1
+		self.vehicle_code = code
+		self.vehicle_name = code
 
 	def set_passenger_capacity(self):
 		if self.seat_capacity and not self.passenger_capacity:
