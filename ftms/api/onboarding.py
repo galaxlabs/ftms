@@ -5,6 +5,7 @@ import re
 import frappe
 from frappe import _
 from frappe.utils import now_datetime, random_string
+from ftms.security import rate_limit
 
 
 def _make_code(value, fallback):
@@ -21,6 +22,23 @@ def _unique_code(doctype, fieldname, seed):
         code = f"{base[:24 - len(suffix)]}{suffix}"
         counter += 1
     return code
+
+
+def _identity_value(value):
+    return re.sub(r"[^A-Z0-9]", "", (value or "").upper())
+
+
+def _company_code(company_name, vat_no=None, tax_id=None):
+    return _identity_value(vat_no) or _identity_value(tax_id) or _make_code(company_name, "COMPANY")
+
+
+def _assert_company_identity(company_name, vat_no=None, tax_id=None):
+    if company_name and frappe.db.exists("Company", {"company_name": company_name.strip()}):
+        frappe.throw(_("A company with this name already exists"))
+    if vat_no and frappe.db.exists("Company", {"vat_no": vat_no.strip()}):
+        frappe.throw(_("This VAT number is already registered"))
+    if tax_id and frappe.db.exists("Company", {"tax_id": tax_id.strip()}):
+        frappe.throw(_("This Tax ID is already registered"))
 
 
 def _default_domain(domain=None):
@@ -44,6 +62,7 @@ def _send_reset_password_email(user_doc):
 @frappe.whitelist(allow_guest=True)
 def signup_user(email, password, confirm_password, username=None, first_name=None, last_name=None):
     """Create only a login user. Company/captain onboarding happens after login."""
+    rate_limit("signup_user", limit=5, seconds=3600)
     email = (email or "").strip().lower()
     username = (username or email).strip()
     first_name = (first_name or username or email).strip()
@@ -76,6 +95,7 @@ def signup_user(email, password, confirm_password, username=None, first_name=Non
 @frappe.whitelist(allow_guest=True)
 def signup(company_name, email, username=None, first_name=None, last_name=None, domain=None):
     """Public onboarding: create a company admin user and active company link."""
+    rate_limit("signup_company", limit=5, seconds=3600)
     company_name = (company_name or "").strip()
     email = (email or "").strip().lower()
     username = (username or email).strip()
@@ -181,19 +201,23 @@ def register_transportation_company(company_name, domain=None, legal_name=None, 
         frappe.throw(_("User is already linked to a company"))
     if frappe.db.exists("Captain Profile", {"user": user}):
         frappe.throw(_("Captain profile already exists. A captain must join a company by request or invitation."))
+    _assert_company_identity(company_name, vat_no=vat_no, tax_id=tax_id)
 
     company_domain = _default_domain(domain)
     if not company_domain:
         frappe.throw(_("No Transportation Domain is configured. Create one before company onboarding."))
     company_doc = frappe.get_doc({
         "doctype": "Company",
-        "company_code": _unique_code("Company", "company_code", company_name),
+        "company_code": _company_code(company_name, vat_no=vat_no, tax_id=tax_id),
         "company_name": company_name,
         "legal_name": legal_name,
         "domain": company_domain,
         "vat_no": vat_no,
         "tax_id": tax_id,
         "cr_no": cr_no,
+        "organization_type": "Transport Provider",
+        "provider_enabled": 1,
+        "customer_enabled": 0,
         "address": address,
         "phone": phone,
         "email": email or user,
@@ -293,6 +317,18 @@ def request_join_company(company):
 
 
 @frappe.whitelist()
+def request_join_company_by_vat(vat_no):
+    """Let a captain request a company connection using its VAT number."""
+    vat_no = (vat_no or "").strip()
+    if not vat_no:
+        frappe.throw(_("VAT number is required"))
+    company = frappe.db.get_value("Company", {"vat_no": vat_no}, "name")
+    if not company:
+        frappe.throw(_("No company was found for this VAT number"))
+    return request_join_company(company)
+
+
+@frappe.whitelist()
 def get_status():
     user = frappe.session.user
     if user == "Guest":
@@ -355,7 +391,7 @@ def set_user_type(user_type):
 @frappe.whitelist()
 def set_role(role):
     """Set the user's intended role before onboarding begins."""
-    valid_roles = ["Passenger", "Partner", "Captain"]
+    valid_roles = ["Passenger", "Captain", "Customer Company", "Partner"]
     if role not in valid_roles:
         frappe.throw(_("Invalid role. Must be one of: {0}").format(", ".join(valid_roles)))
     user = frappe.session.user
@@ -402,7 +438,7 @@ def create_partner_profile(
     vat_no=None, cr_no=None, tax_id=None, license_no=None,
     phone=None, email=None, address=None, city=None, country=None,
     full_name=None, mobile_no=None,
-    partner_data=None,
+    partner_data=None, service_types=None,
 ):
     """Create a partner profile with company registration."""
     user = frappe.session.user
@@ -417,6 +453,7 @@ def create_partner_profile(
         frappe.throw(_("Partner profile already exists for this user"))
     if frappe.db.exists("User Company Link", {"user": user, "status": "Active"}):
         frappe.throw(_("User is already linked to a company"))
+    _assert_company_identity(company_name, vat_no=vat_no, tax_id=tax_id)
 
     domain = _default_domain()
     if not domain:
@@ -424,7 +461,7 @@ def create_partner_profile(
 
     company_doc = frappe.get_doc({
         "doctype": "Company",
-        "company_code": _unique_code("Company", "company_code", company_name or "Partner"),
+        "company_code": _company_code(company_name or "Partner", vat_no=vat_no, tax_id=tax_id),
         "company_name": company_name or f"{user}'s Company",
         "legal_name": legal_name,
         "company_name_ar": company_name_ar,
@@ -435,6 +472,9 @@ def create_partner_profile(
         "email": email or user,
         "address": address,
         "owner_user": user,
+        "organization_type": "Hybrid",
+        "provider_enabled": 1,
+        "customer_enabled": 1,
         "domain": domain,
         "onboarding_status": "Profile Complete",
         "status": "Active",
@@ -476,7 +516,7 @@ def create_partner_profile(
         "address": address,
         "city": city,
         "country": country,
-        "partner_data": partner_data,
+        "partner_data": partner_data or service_types,
     })
     profile.insert(ignore_permissions=True)
 
@@ -489,6 +529,68 @@ def create_partner_profile(
         "company": company_doc.name,
         "partner_type": partner_type,
     }
+
+
+@frappe.whitelist()
+def create_customer_company(
+    company_name, legal_name=None, vat_no=None, tax_id=None, cr_no=None,
+    phone=None, email=None, address=None, city=None, country=None,
+    organization_type="Corporate Customer", full_name=None, mobile_no=None,
+):
+    """Create a customer-side company account with VAT as its identity."""
+    user = frappe.session.user
+    if not user or user == "Guest":
+        frappe.throw(_("Login is required"), frappe.PermissionError)
+    company_name = (company_name or "").strip()
+    vat_no = (vat_no or "").strip()
+    if not company_name or not vat_no:
+        frappe.throw(_("Company name and VAT number are required"))
+    if frappe.db.exists("User Company Link", {"user": user, "status": "Active"}):
+        frappe.throw(_("User is already linked to a company"))
+    if frappe.db.exists("Captain Profile", {"user": user}):
+        frappe.throw(_("A captain cannot create a customer company"))
+    _assert_company_identity(company_name, vat_no=vat_no, tax_id=tax_id)
+    domain = _default_domain()
+    if not domain:
+        frappe.throw(_("No Transportation Domain configured"))
+
+    company_doc = frappe.get_doc({
+        "doctype": "Company",
+        "company_code": _company_code(company_name, vat_no=vat_no),
+        "company_name": company_name,
+        "legal_name": legal_name,
+        "domain": domain,
+        "organization_type": organization_type or "Corporate Customer",
+        "customer_enabled": 1,
+        "provider_enabled": 0,
+        "vat_no": vat_no,
+        "tax_id": tax_id,
+        "cr_no": cr_no,
+        "address": address,
+        "phone": phone or mobile_no,
+        "email": email or user,
+        "owner_user": user,
+        "onboarding_status": "Profile Complete",
+        "status": "Active",
+        "blacklisted": 0,
+    })
+    company_doc.insert(ignore_permissions=True)
+    link_doc = frappe.get_doc({
+        "doctype": "User Company Link",
+        "link_code": _unique_code("User Company Link", "link_code", f"{company_doc.name}-{user}"),
+        "user": user,
+        "company": company_doc.name,
+        "role": "Company Admin",
+        "is_owner": 1,
+        "joined_via": "Signup",
+        "status": "Active",
+        "approved_by": user,
+        "approved_on": now_datetime(),
+    })
+    link_doc.insert(ignore_permissions=True)
+    frappe.db.set_value("User", user, {"user_type": "Customer Company", "onboarded": 1})
+    frappe.db.commit()
+    return {"status": "ok", "company": company_doc.name, "company_code": company_doc.company_code, "link": link_doc.name}
 
 
 @frappe.whitelist()
