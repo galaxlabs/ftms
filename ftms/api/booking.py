@@ -555,8 +555,13 @@ def reactivate_booking(booking_name):
 def join_booking_group(token, passenger_name, nationality=None, mobile_no=None,
 					   document_type=None, document_number=None, luggage_qty=0):
 	"""Join a booking with a signed, expiring group invitation."""
-	if not token or not passenger_name:
-		frappe.throw(_("Invitation token and passenger name are required"))
+	passenger_name = (passenger_name or "").strip()
+	mobile_no = (mobile_no or "").strip()
+	nationality = (nationality or "").strip()
+	document_type = (document_type or "").strip()
+	document_number = (document_number or "").strip()
+	if not token or not passenger_name or not mobile_no or not nationality or not document_number:
+		frappe.throw(_("Invitation token, full name, mobile, nationality and document number are required"))
 	payload = _decode_group_invite(token)
 	booking = frappe.get_doc("Trip Booking", payload["booking"])
 	frappe.db.sql("SELECT name FROM `tabTrip Booking` WHERE name=%s FOR UPDATE", booking.name)
