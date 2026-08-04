@@ -263,6 +263,15 @@ def _login_as(user):
     login_manager = LoginManager()
     login_manager.user = user.name
     login_manager.post_login()
+    # TLS terminates at nginx, so Frappe can see the upstream request as HTTP.
+    # SameSite=None cookies are rejected by browsers unless Secure is explicit.
+    frappe.local.cookie_manager.set_cookie(
+        "sid",
+        frappe.session.sid,
+        secure=True,
+        httponly=True,
+        samesite="None",
+    )
     frappe.db.commit()
     return frappe.session.sid
 
