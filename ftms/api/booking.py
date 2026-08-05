@@ -45,7 +45,8 @@ def _can_create_booking(user, company=None):
 	"""Passengers and operator roles (Company Admin / Dispatcher / owner) may create bookings."""
 	if user in ("Guest", "Administrator"):
 		return True
-	if frappe.get_roles(user) and "Passenger" in frappe.get_roles(user):
+	roles = frappe.get_roles()
+	if "Passenger" in roles:
 		return True
 	link = _booking_operator_link(user, company)
 	return bool(link)
