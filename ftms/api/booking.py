@@ -172,7 +172,11 @@ def _create_trip_from_booking(booking, offer):
 		"from_location": booking.pickup_point,
 		"to_location": booking.drop_point,
 		"trip_booking": booking.name,
+		"booking_ref": booking.name,
+		"has_booking": 1,
 		"vehicle": offer.vehicle,
+		"vehicle_ref": offer.vehicle,
+		"has_vehicle": 1,
 		"assigned_captain_user": offer.captain_user,
 		"trip_status": "Scheduled",
 		"trip_value": offer.offered_fare,
@@ -212,6 +216,8 @@ def _create_trip_from_booking(booking, offer):
 		}).insert(ignore_permissions=True)
 
 	booking.db_set("trip", doc.name)
+	booking.db_set("trip_ref", doc.name)
+	booking.db_set("has_trip", 1)
 	booking.db_set("negotiation_status", "Trip Created")
 	booking.db_set("booking_status", "Confirmed")
 

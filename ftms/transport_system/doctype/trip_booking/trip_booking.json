@@ -10,31 +10,33 @@
   "booking_title",
   "booking_group_code",
   "external_reference",
-   "main_rider_user",
-   "customer_company",
-   "provider_company",
-   "service_type",
-   "agreement",
+  "main_rider_user",
+  "customer_company",
+  "provider_company",
+  "service_type",
+  "agreement",
   "booking_date",
   "trip",
+  "trip_ref",
+  "has_trip",
   "route",
   "column_break_customer",
-   "customer_name",
-   "mobile_no",
-   "group_leader_name",
-   "group_leader_mobile",
-   "is_group_leader_self",
-   "source_channel",
+  "customer_name",
+  "mobile_no",
+  "group_leader_name",
+  "group_leader_mobile",
+  "is_group_leader_self",
+  "source_channel",
   "section_booking_details",
-   "fare_amount",
-   "quoted_fare",
-   "platform_fee_rate",
-   "platform_fee_amount",
-   "minimum_offer_fare",
-   "maximum_offer_fare",
-   "demand_index",
-   "supply_index",
-   "payment_status",
+  "fare_amount",
+  "quoted_fare",
+  "platform_fee_rate",
+  "platform_fee_amount",
+  "minimum_offer_fare",
+  "maximum_offer_fare",
+  "demand_index",
+  "supply_index",
+  "payment_status",
   "seat_count",
   "passenger_count",
   "column_break_details",
@@ -60,63 +62,336 @@
   "notes"
  ],
  "fields": [
-  {"fieldname": "company", "fieldtype": "Link", "label": "Company", "options": "Company", "reqd": 1},
-  {"fieldname": "booking_title", "fieldtype": "Data", "in_list_view": 1, "label": "Booking Title", "reqd": 1, "unique": 1},
-  {"fieldname": "booking_group_code", "fieldtype": "Data", "label": "Booking Group Code", "unique": 1},
-  {"fieldname": "external_reference", "fieldtype": "Data", "label": "External Reference", "unique": 1},
-   {"fieldname": "main_rider_user", "fieldtype": "Link", "label": "Main Rider User", "options": "User"},
-   {"fieldname": "customer_company", "fieldtype": "Link", "label": "Customer Organization", "options": "Company"},
-   {"fieldname": "provider_company", "fieldtype": "Link", "label": "Provider Organization", "options": "Company"},
-   {"fieldname": "service_type", "fieldtype": "Link", "label": "Service Type", "options": "Service Type"},
-   {"fieldname": "agreement", "fieldtype": "Link", "label": "Agreement", "options": "Agreement"},
-  {"default": "Today", "fieldname": "booking_date", "fieldtype": "Date", "in_list_view": 1, "label": "Booking Date"},
-  {"fieldname": "trip", "fieldtype": "Link", "in_list_view": 1, "label": "Trip", "options": "Trip"},
-  {"fetch_from": "trip.route", "fieldname": "route", "fieldtype": "Link", "in_list_view": 1, "label": "Route", "options": "Route", "read_only": 1},
-  {"fieldname": "column_break_customer", "fieldtype": "Column Break"},
-  {"fieldname": "customer_name", "fieldtype": "Data", "in_list_view": 1, "label": "Customer Name"},
-  {"fieldname": "mobile_no", "fieldtype": "Data", "label": "Mobile No"},
-  {"fieldname": "group_leader_name", "fieldtype": "Data", "label": "Group Leader Name"},
-  {"fieldname": "group_leader_mobile", "fieldtype": "Data", "label": "Group Leader Mobile"},
-  {"default": "0", "fieldname": "is_group_leader_self", "fieldtype": "Check", "label": "Group Leader is Self"},
-  {"default": "Desk", "fieldname": "source_channel", "fieldtype": "Select", "label": "Source Channel", "options": "Desk\nWebsite\nAPI\nAgent\nWhatsApp\nOther"},
-  {"fieldname": "section_booking_details", "fieldtype": "Section Break", "label": "Booking Details"},
-   {"fieldname": "fare_amount", "fieldtype": "Currency", "label": "Fare Amount"},
-    {"fieldname": "quoted_fare", "fieldtype": "Currency", "label": "Market Quote", "read_only": 1},
-    {"fieldname": "platform_fee_rate", "fieldtype": "Percent", "label": "Platform Fee Rate", "read_only": 1},
-    {"fieldname": "platform_fee_amount", "fieldtype": "Currency", "label": "Platform Fee", "read_only": 1},
-   {"fieldname": "minimum_offer_fare", "fieldtype": "Currency", "label": "Minimum Offer Fare", "read_only": 1},
-   {"fieldname": "maximum_offer_fare", "fieldtype": "Currency", "label": "Maximum Offer Fare", "read_only": 1},
-   {"fieldname": "demand_index", "fieldtype": "Float", "label": "Demand Index", "read_only": 1},
-   {"fieldname": "supply_index", "fieldtype": "Float", "label": "Supply Index", "read_only": 1},
-  {"default": "Unpaid", "fieldname": "payment_status", "fieldtype": "Select", "in_list_view": 1, "label": "Payment Status", "options": "Unpaid\nPartially Paid\nPaid\nRefunded"},
-  {"default": "1", "fieldname": "seat_count", "fieldtype": "Int", "in_list_view": 1, "label": "Seat Count"},
-  {"fieldname": "passenger_count", "fieldtype": "Int", "label": "Passenger Count", "read_only": 1},
-  {"fieldname": "column_break_details", "fieldtype": "Column Break"},
-  {"default": "Draft", "fieldname": "booking_status", "fieldtype": "Select", "in_list_view": 1, "label": "Booking Status", "options": "Draft\nConfirmed\nChecked In\nBoarded\nCancelled\nClosed"},
-  {"default": "Awaiting Offers", "fieldname": "negotiation_status", "fieldtype": "Select", "in_list_view": 1, "label": "Negotiation Status", "options": "Awaiting Offers\nOffer Accepted\nTrip Created\nCancelled\nInactive"},
-  {"fieldname": "pickup_point", "fieldtype": "Small Text", "label": "Pickup Point"},
-  {"fieldname": "drop_point", "fieldtype": "Small Text", "label": "Drop Point"},
-  {"fieldname": "section_location", "fieldtype": "Section Break", "label": "GPS Location"},
-  {"fieldname": "pickup_latitude", "fieldtype": "Float", "label": "Pickup Latitude"},
-  {"fieldname": "pickup_longitude", "fieldtype": "Float", "label": "Pickup Longitude"},
-  {"fieldname": "dropoff_latitude", "fieldtype": "Float", "label": "Dropoff Latitude"},
-  {"fieldname": "dropoff_longitude", "fieldtype": "Float", "label": "Dropoff Longitude"},
-  {"fieldname": "section_vehicle", "fieldtype": "Section Break", "label": "Vehicle & Pricing"},
-  {"fieldname": "vehicle_type", "fieldtype": "Link", "in_list_view": 1, "label": "Desired Vehicle Type", "options": "Vehicle Type"},
-  {"fieldname": "pricing_rule", "fieldtype": "Link", "label": "Pricing Rule", "options": "Pricing Rule"},
-  {"fieldname": "column_break_offer", "fieldtype": "Column Break"},
-  {"fieldname": "offer_deadline", "fieldtype": "Datetime", "label": "Offer Deadline"},
-  {"fieldname": "selected_captain", "fieldtype": "Link", "label": "Selected Captain", "options": "User"},
-  {"fieldname": "selected_vehicle", "fieldtype": "Link", "label": "Selected Vehicle", "options": "Vehicle"},
-  {"fieldname": "section_passengers", "fieldtype": "Section Break", "label": "Passengers"},
-  {"fieldname": "passengers", "fieldtype": "Table", "label": "Passengers", "options": "Trip Passenger"},
-  {"fieldname": "section_notes", "fieldtype": "Section Break", "label": "Notes"},
-  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "booking_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Booking Title",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "booking_group_code",
+   "fieldtype": "Data",
+   "label": "Booking Group Code",
+   "unique": 1
+  },
+  {
+   "fieldname": "external_reference",
+   "fieldtype": "Data",
+   "label": "External Reference",
+   "unique": 1
+  },
+  {
+   "fieldname": "main_rider_user",
+   "fieldtype": "Link",
+   "label": "Main Rider User",
+   "options": "User"
+  },
+  {
+   "fieldname": "customer_company",
+   "fieldtype": "Link",
+   "label": "Customer Organization",
+   "options": "Company"
+  },
+  {
+   "fieldname": "provider_company",
+   "fieldtype": "Link",
+   "label": "Provider Organization",
+   "options": "Company"
+  },
+  {
+   "fieldname": "service_type",
+   "fieldtype": "Link",
+   "label": "Service Type",
+   "options": "Service Type"
+  },
+  {
+   "fieldname": "agreement",
+   "fieldtype": "Link",
+   "label": "Agreement",
+   "options": "Agreement"
+  },
+  {
+   "default": "Today",
+   "fieldname": "booking_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Booking Date"
+  },
+  {
+   "fieldname": "trip",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Trip",
+   "options": "Trip"
+  },
+  {
+   "fetch_from": "trip.route",
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Route",
+   "options": "Route",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_customer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name"
+  },
+  {
+   "fieldname": "mobile_no",
+   "fieldtype": "Data",
+   "label": "Mobile No"
+  },
+  {
+   "fieldname": "group_leader_name",
+   "fieldtype": "Data",
+   "label": "Group Leader Name"
+  },
+  {
+   "fieldname": "group_leader_mobile",
+   "fieldtype": "Data",
+   "label": "Group Leader Mobile"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_group_leader_self",
+   "fieldtype": "Check",
+   "label": "Group Leader is Self"
+  },
+  {
+   "default": "Desk",
+   "fieldname": "source_channel",
+   "fieldtype": "Select",
+   "label": "Source Channel",
+   "options": "Desk\nWebsite\nAPI\nAgent\nWhatsApp\nOther"
+  },
+  {
+   "fieldname": "section_booking_details",
+   "fieldtype": "Section Break",
+   "label": "Booking Details"
+  },
+  {
+   "fieldname": "fare_amount",
+   "fieldtype": "Currency",
+   "label": "Fare Amount"
+  },
+  {
+   "fieldname": "quoted_fare",
+   "fieldtype": "Currency",
+   "label": "Market Quote",
+   "read_only": 1
+  },
+  {
+   "fieldname": "platform_fee_rate",
+   "fieldtype": "Percent",
+   "label": "Platform Fee Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "platform_fee_amount",
+   "fieldtype": "Currency",
+   "label": "Platform Fee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "minimum_offer_fare",
+   "fieldtype": "Currency",
+   "label": "Minimum Offer Fare",
+   "read_only": 1
+  },
+  {
+   "fieldname": "maximum_offer_fare",
+   "fieldtype": "Currency",
+   "label": "Maximum Offer Fare",
+   "read_only": 1
+  },
+  {
+   "fieldname": "demand_index",
+   "fieldtype": "Float",
+   "label": "Demand Index",
+   "read_only": 1
+  },
+  {
+   "fieldname": "supply_index",
+   "fieldtype": "Float",
+   "label": "Supply Index",
+   "read_only": 1
+  },
+  {
+   "default": "Unpaid",
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Payment Status",
+   "options": "Unpaid\nPartially Paid\nPaid\nRefunded"
+  },
+  {
+   "default": "1",
+   "fieldname": "seat_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Seat Count"
+  },
+  {
+   "fieldname": "passenger_count",
+   "fieldtype": "Int",
+   "label": "Passenger Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_details",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "booking_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Booking Status",
+   "options": "Draft\nConfirmed\nChecked In\nBoarded\nCancelled\nClosed"
+  },
+  {
+   "default": "Awaiting Offers",
+   "fieldname": "negotiation_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Negotiation Status",
+   "options": "Awaiting Offers\nOffer Accepted\nTrip Created\nCancelled\nInactive"
+  },
+  {
+   "fieldname": "pickup_point",
+   "fieldtype": "Small Text",
+   "label": "Pickup Point"
+  },
+  {
+   "fieldname": "drop_point",
+   "fieldtype": "Small Text",
+   "label": "Drop Point"
+  },
+  {
+   "fieldname": "section_location",
+   "fieldtype": "Section Break",
+   "label": "GPS Location"
+  },
+  {
+   "fieldname": "pickup_latitude",
+   "fieldtype": "Float",
+   "label": "Pickup Latitude"
+  },
+  {
+   "fieldname": "pickup_longitude",
+   "fieldtype": "Float",
+   "label": "Pickup Longitude"
+  },
+  {
+   "fieldname": "dropoff_latitude",
+   "fieldtype": "Float",
+   "label": "Dropoff Latitude"
+  },
+  {
+   "fieldname": "dropoff_longitude",
+   "fieldtype": "Float",
+   "label": "Dropoff Longitude"
+  },
+  {
+   "fieldname": "section_vehicle",
+   "fieldtype": "Section Break",
+   "label": "Vehicle & Pricing"
+  },
+  {
+   "fieldname": "vehicle_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Desired Vehicle Type",
+   "options": "Vehicle Type"
+  },
+  {
+   "fieldname": "pricing_rule",
+   "fieldtype": "Link",
+   "label": "Pricing Rule",
+   "options": "Pricing Rule"
+  },
+  {
+   "fieldname": "column_break_offer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "offer_deadline",
+   "fieldtype": "Datetime",
+   "label": "Offer Deadline"
+  },
+  {
+   "fieldname": "selected_captain",
+   "fieldtype": "Link",
+   "label": "Selected Captain",
+   "options": "User"
+  },
+  {
+   "fieldname": "selected_vehicle",
+   "fieldtype": "Link",
+   "label": "Selected Vehicle",
+   "options": "Vehicle"
+  },
+  {
+   "fieldname": "section_passengers",
+   "fieldtype": "Section Break",
+   "label": "Passengers"
+  },
+  {
+   "fieldname": "passengers",
+   "fieldtype": "Table",
+   "label": "Passengers",
+   "options": "Trip Passenger"
+  },
+  {
+   "fieldname": "section_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "trip_ref",
+   "fieldtype": "Data",
+   "label": "Trip Reference",
+   "read_only": 1,
+   "description": "Stores trip name even if Trip doc is later deleted"
+  },
+  {
+   "fieldname": "has_trip",
+   "fieldtype": "Check",
+   "label": "Has Trip",
+   "read_only": 1,
+   "default": "0"
+  }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [
-  {"group": "Trip", "link_doctype": "Trip", "link_fieldname": "trip_booking", "table_or_field": "Field"}
+  {
+   "group": "Trip",
+   "link_doctype": "Trip",
+   "link_fieldname": "trip_booking",
+   "table_or_field": "Field"
+  }
  ],
  "modified": "2026-07-19 00:00:00",
  "modified_by": "Administrator",
@@ -125,8 +400,24 @@
  "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
-  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
-  {"create": 1, "read": 1, "role": "Desk User", "write": 1}
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Desk User",
+   "write": 1
+  }
  ],
  "row_format": "Dynamic",
  "search_fields": "booking_title, customer_name, mobile_no, route, trip",

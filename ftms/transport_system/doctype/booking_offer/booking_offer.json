@@ -8,12 +8,14 @@
  "field_order": [
   "booking",
   "captain_user",
-   "vehicle",
-   "pricing_rule",
-   "column_break_fare",
-   "offered_fare",
-   "minimum_allowed_fare",
-   "maximum_allowed_fare",
+  "vehicle",
+  "vehicle_ref",
+  "has_vehicle",
+  "pricing_rule",
+  "column_break_fare",
+  "offered_fare",
+  "minimum_allowed_fare",
+  "maximum_allowed_fare",
   "fare_type",
   "captain_notes",
   "column_break_status",
@@ -22,20 +24,107 @@
   "responded_at"
  ],
  "fields": [
-  {"fieldname": "booking", "fieldtype": "Link", "in_list_view": 1, "label": "Booking", "options": "Trip Booking", "reqd": 1},
-  {"fieldname": "captain_user", "fieldtype": "Link", "in_list_view": 1, "label": "Captain User", "options": "User", "reqd": 1},
-   {"fieldname": "vehicle", "fieldtype": "Link", "in_list_view": 1, "label": "Vehicle", "options": "Vehicle", "reqd": 1},
-   {"fieldname": "pricing_rule", "fieldtype": "Link", "label": "Pricing Rule", "options": "Pricing Rule"},
-   {"fieldname": "column_break_fare", "fieldtype": "Column Break"},
-   {"fieldname": "offered_fare", "fieldtype": "Currency", "in_list_view": 1, "label": "Offered Fare", "reqd": 1},
-   {"fieldname": "minimum_allowed_fare", "fieldtype": "Currency", "label": "Minimum Allowed Fare", "read_only": 1},
-   {"fieldname": "maximum_allowed_fare", "fieldtype": "Currency", "label": "Maximum Allowed Fare", "read_only": 1},
-  {"default": "Total Trip", "fieldname": "fare_type", "fieldtype": "Select", "in_list_view": 1, "label": "Fare Type", "options": "Total Trip\nPer Passenger\nPer KM"},
-  {"fieldname": "captain_notes", "fieldtype": "Small Text", "label": "Captain Notes"},
-  {"fieldname": "column_break_status", "fieldtype": "Column Break"},
-  {"default": "Pending", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Pending\nAccepted\nRejected\nWithdrawn"},
-  {"fieldname": "created_at", "fieldtype": "Datetime", "label": "Created At"},
-  {"fieldname": "responded_at", "fieldtype": "Datetime", "label": "Responded At"}
+  {
+   "fieldname": "booking",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Booking",
+   "options": "Trip Booking",
+   "reqd": 1
+  },
+  {
+   "fieldname": "captain_user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Captain User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Vehicle",
+   "options": "Vehicle",
+   "reqd": 1
+  },
+  {
+   "fieldname": "pricing_rule",
+   "fieldtype": "Link",
+   "label": "Pricing Rule",
+   "options": "Pricing Rule"
+  },
+  {
+   "fieldname": "column_break_fare",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "offered_fare",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Offered Fare",
+   "reqd": 1
+  },
+  {
+   "fieldname": "minimum_allowed_fare",
+   "fieldtype": "Currency",
+   "label": "Minimum Allowed Fare",
+   "read_only": 1
+  },
+  {
+   "fieldname": "maximum_allowed_fare",
+   "fieldtype": "Currency",
+   "label": "Maximum Allowed Fare",
+   "read_only": 1
+  },
+  {
+   "default": "Total Trip",
+   "fieldname": "fare_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Fare Type",
+   "options": "Total Trip\nPer Passenger\nPer KM"
+  },
+  {
+   "fieldname": "captain_notes",
+   "fieldtype": "Small Text",
+   "label": "Captain Notes"
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Pending\nAccepted\nRejected\nWithdrawn"
+  },
+  {
+   "fieldname": "created_at",
+   "fieldtype": "Datetime",
+   "label": "Created At"
+  },
+  {
+   "fieldname": "responded_at",
+   "fieldtype": "Datetime",
+   "label": "Responded At"
+  },
+  {
+   "fieldname": "vehicle_ref",
+   "fieldtype": "Data",
+   "label": "Vehicle Reference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "has_vehicle",
+   "fieldtype": "Check",
+   "label": "Has Vehicle",
+   "read_only": 1,
+   "default": "0"
+  }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
@@ -47,8 +136,22 @@
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
-  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
-  {"read": 1, "role": "Desk User"}
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Desk User"
+  }
  ],
  "row_format": "Dynamic",
  "search_fields": "booking, captain_user, offered_fare",
