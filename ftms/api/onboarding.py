@@ -9,6 +9,12 @@ from ftms.security import rate_limit
 from ftms.user_roles import assign_business_role, get_business_role
 
 
+def _fd(form_dict, key):
+    """Safely get a key from form_dict, returning None if absent."""
+    val = form_dict.get(key)
+    return val.strip() if isinstance(val, str) else val
+
+
 def _make_code(value, fallback):
     code = re.sub(r"[^A-Z0-9]+", "-", (value or fallback).upper()).strip("-")
     return (code or fallback)[:24]
@@ -261,6 +267,24 @@ def create_captain_profile(
     user = frappe.session.user
     if not user or user == "Guest":
         frappe.throw(_("Login is required"), frappe.PermissionError)
+
+    # Resolve params from frappe.form_dict if not passed as args (POST body may be empty)
+    fd = frappe.form_dict
+    full_name = full_name or _fd(fd, "full_name")
+    mobile_no = mobile_no or _fd(fd, "mobile_no")
+    national_id = national_id or _fd(fd, "national_id")
+    license_no = license_no or _fd(fd, "license_no")
+    license_expiry_date = license_expiry_date or _fd(fd, "license_expiry_date")
+    city = city or _fd(fd, "city")
+    address = address or _fd(fd, "address")
+    id_document_type = id_document_type or _fd(fd, "id_document_type")
+    nationality = nationality or _fd(fd, "nationality")
+    iqama_no = iqama_no or _fd(fd, "iqama_no")
+    iqama_expiry_date = iqama_expiry_date or _fd(fd, "iqama_expiry_date")
+    driver_card_no = driver_card_no or _fd(fd, "driver_card_no")
+    driver_card_expiry_date = driver_card_expiry_date or _fd(fd, "driver_card_expiry_date")
+    provider_name = provider_name or _fd(fd, "provider_name")
+
     if frappe.db.exists("User Company Link", {"user": user, "status": "Active"}):
         frappe.throw(_("Company-linked users cannot create an independent captain profile"))
     if frappe.db.exists("Captain Profile", {"user": user}):
