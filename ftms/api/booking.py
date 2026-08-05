@@ -608,6 +608,8 @@ def list_offers(booking):
 @frappe.whitelist()
 def accept_offer(offer_name):
 	"""Rider accepts an offer. Creates Trip, rejects all others."""
+	from ftms.matching import check_schedule_availability
+
 	user = frappe.session.user
 	if user == "Guest":
 		frappe.throw(_("Login required"), frappe.PermissionError)
@@ -621,12 +623,17 @@ def accept_offer(offer_name):
 	_require_booking_change_access(booking, user)
 	if booking.negotiation_status != "Awaiting Offers":
 		frappe.throw(_("Booking is no longer accepting offers"))
+	can_accept, reason = check_schedule_availability(offer.captain_user, offer.booking)
+	if not can_accept:
+		frappe.throw(reason)
 	return _accept_offer_for_booking(offer, booking)
 
 
 @frappe.whitelist()
 def accept_booking_as_captain(booking_name, offered_fare, vehicle=None):
 	"""Accept an open booking using the authenticated captain's active vehicle."""
+	from ftms.matching import check_schedule_availability
+
 	user = frappe.session.user
 	profile = frappe.db.get_value("Captain Profile", {"user": user}, ["name", "status"], as_dict=True)
 	if user == "Guest" or not profile or profile.status != "Active":
@@ -662,6 +669,10 @@ def accept_booking_as_captain(booking_name, offered_fare, vehicle=None):
 		)
 	if not vehicle_name:
 		frappe.throw(_("Assign an active vehicle to this captain before accepting rides"))
+
+	can_accept, reason = check_schedule_availability(user, booking_name)
+	if not can_accept:
+		frappe.throw(reason)
 
 	offer_result = make_offer(booking.name, vehicle_name, offered_fare)
 	offer = frappe.get_doc("Booking Offer", offer_result["name"])
