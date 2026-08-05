@@ -263,6 +263,7 @@ def create_captain_profile(
     provider_name=None, provider_legal_name=None, provider_tax_id=None,
     provider_cr_no=None, provider_logo=None, provider_stamp=None,
     vehicle_card_document=None, vehicle_ownership_document=None,
+    company_name=None, company_tax_id=None, company_name_ar=None,
 ):
     user = frappe.session.user
     if not user or user == "Guest":
@@ -284,6 +285,9 @@ def create_captain_profile(
     driver_card_no = driver_card_no or _fd(fd, "driver_card_no")
     driver_card_expiry_date = driver_card_expiry_date or _fd(fd, "driver_card_expiry_date")
     provider_name = provider_name or _fd(fd, "provider_name")
+    company_name_final = company_name or _fd(fd, "company_name")
+    company_tax_id_final = company_tax_id or _fd(fd, "company_tax_id")
+    company_name_ar_final = company_name_ar or _fd(fd, "company_name_ar")
 
     if frappe.db.exists("User Company Link", {"user": user, "status": "Active"}):
         frappe.throw(_("Company-linked users cannot create an independent captain profile"))
@@ -311,8 +315,11 @@ def create_captain_profile(
         "provider_cr_no": provider_cr_no,
         "provider_logo": provider_logo,
         "provider_stamp": provider_stamp,
-        "vehicle_card_document": vehicle_card_document,
+"vehicle_card_document": vehicle_card_document,
         "vehicle_ownership_document": vehicle_ownership_document,
+        "company_name": company_name_final,
+        "company_tax_id": company_tax_id_final,
+        "company_name_ar": company_name_ar_final,
         "status": "Pending",
     })
     profile.insert(ignore_permissions=True)

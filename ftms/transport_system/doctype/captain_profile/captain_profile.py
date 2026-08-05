@@ -2,6 +2,12 @@ import frappe
 from frappe.model.document import Document
 
 
+def _default_domain():
+	"""Fallback Transportation Domain for auto-created companies."""
+	d = frappe.db.get_single_value("Transport Settings", "default_domain") or frappe.db.exists("Transportation Domain", "FTMS")
+	return d or "FTMS"
+
+
 class CaptainProfile(Document):
 	def _can_change_approval_status(self):
 		if frappe.session.user == "Administrator" or "System Manager" in frappe.get_roles():
@@ -28,13 +34,15 @@ class CaptainProfile(Document):
 			self.national_id = self.iqama_no
 
 	def after_insert(self):
-		"""Auto-create User and Employee when a Captain Profile is created."""
+		"""Auto-create User, Company, and Employee when a Captain Profile is created."""
 		self._sync_user()
+		self._sync_company()
 		self._sync_employee()
 
 	def on_update(self):
-		"""Sync User and Employee on every save."""
+		"""Sync User, Company, and Employee on every save."""
 		self._sync_user()
+		self._sync_company()
 		self._sync_employee()
 
 	def _sync_user(self):
@@ -68,6 +76,42 @@ class CaptainProfile(Document):
 
 		if changed or user_doc.is_new():
 			user_doc.save(ignore_permissions=True)
+
+	def _sync_company(self):
+		"""Auto-create a Company from captain's company_name + company_tax_id + company_name_ar.
+		If the company already exists (by tax_id or name), link to it.
+		"""
+		if not self.company_name or not self.company_tax_id:
+			return
+
+		# Check if company exists by tax_id or name
+		existing = None
+		if self.company_tax_id:
+			existing = frappe.db.exists("Company", {"tax_id": self.company_tax_id})
+		if not existing and self.company_name:
+			existing = frappe.db.exists("Company", {"company_name": self.company_name})
+
+		if existing:
+			company_name = existing
+		else:
+			code = (self.company_tax_id or self.company_name or "NEW")[:8].upper().replace(" ", "")
+			doc = frappe.get_doc({
+				"doctype": "Company",
+				"company_name": self.company_name,
+				"company_code": code,
+				"tax_id": self.company_tax_id,
+				"company_name_ar": self.company_name_ar,
+				"domain": _default_domain(),
+				"owner_user": self.user,
+				"status": "Active",
+				"customer_enabled": 1,
+			})
+			doc.flags.ignore_mandatory = True
+			doc.insert(ignore_permissions=True)
+			company_name = doc.name
+
+		if self.current_company != company_name:
+			self.db_set("current_company", company_name)
 
 	def _sync_employee(self):
 		"""Create or update an Employee record for this captain.
