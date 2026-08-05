@@ -414,6 +414,7 @@ def set_user_type(user_type):
 @frappe.whitelist()
 def set_role(role):
     """Set the user's intended role before onboarding begins."""
+    role = role or _fd(frappe.form_dict, "role")
     valid_roles = ["Passenger", "Captain", "Customer Company", "Partner"]
     if role not in valid_roles:
         frappe.throw(_("Invalid role. Must be one of: {0}").format(", ".join(valid_roles)))
@@ -431,6 +432,13 @@ def set_role(role):
 @frappe.whitelist()
 def create_passenger_profile(full_name=None, mobile_no=None, nationality=None, id_document_type=None, id_number=None, id_expiry_date=None):
     """Create a passenger profile and mark onboarding complete."""
+    fd = frappe.form_dict
+    full_name = full_name or _fd(fd, "full_name")
+    mobile_no = mobile_no or _fd(fd, "mobile_no")
+    nationality = nationality or _fd(fd, "nationality")
+    id_document_type = id_document_type or _fd(fd, "id_document_type")
+    id_number = id_number or _fd(fd, "id_number")
+    id_expiry_date = id_expiry_date or _fd(fd, "id_expiry_date")
     user = frappe.session.user
     if not user or user == "Guest":
         frappe.throw(_("Login is required"), frappe.PermissionError)
@@ -468,6 +476,14 @@ def create_partner_profile(
     partner_data=None, service_types=None,
 ):
     """Create a partner profile with company registration."""
+    fd = frappe.form_dict
+    partner_type = partner_type or _fd(fd, "partner_type")
+    company_name = company_name or _fd(fd, "company_name")
+    legal_name = legal_name or _fd(fd, "legal_name")
+    vat_no = vat_no or _fd(fd, "vat_no")
+    cr_no = cr_no or _fd(fd, "cr_no")
+    phone = phone or _fd(fd, "phone")
+    full_name = full_name or _fd(fd, "full_name")
     user = frappe.session.user
     if not user or user == "Guest":
         frappe.throw(_("Login is required"), frappe.PermissionError)
@@ -560,11 +576,14 @@ def create_partner_profile(
 
 @frappe.whitelist()
 def create_customer_company(
-    company_name, legal_name=None, vat_no=None, tax_id=None, cr_no=None,
+    company_name=None, legal_name=None, vat_no=None, tax_id=None, cr_no=None,
     phone=None, email=None, address=None, city=None, country=None,
     organization_type="Corporate Customer", full_name=None, mobile_no=None,
 ):
     """Create a customer-side company account with VAT as its identity."""
+    fd = frappe.form_dict
+    company_name = company_name or _fd(fd, "company_name")
+    vat_no = vat_no or _fd(fd, "vat_no")
     user = frappe.session.user
     if not user or user == "Guest":
         frappe.throw(_("Login is required"), frappe.PermissionError)
