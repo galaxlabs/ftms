@@ -70,9 +70,14 @@ class CaptainProfile(Document):
 			user_doc.save(ignore_permissions=True)
 
 	def _sync_employee(self):
-		"""Create or update an Employee record for this captain."""
+		"""Create or update an Employee record for this captain.
+		Skips if no company is assigned on the Captain Profile.
+		"""
 		if not self.user or not self.full_name:
 			return
+		if not self.current_company:
+			return
+
 		existing = frappe.db.get_value("Employee", {"email": self.user}, "name")
 		if existing:
 			emp = frappe.get_doc("Employee", existing)
@@ -81,6 +86,7 @@ class CaptainProfile(Document):
 				"doctype": "Employee",
 				"email": self.user,
 				"employee_name": self.full_name,
+				"company": self.current_company,
 				"status": "Active" if self.status == "Active" else "Inactive",
 				"enabled": 1,
 				"is_employee": 1,
@@ -103,6 +109,9 @@ class CaptainProfile(Document):
 		elif self.status != "Active" and emp.status == "Active":
 			emp.status = "Inactive"
 			emp.enabled = 0
+			changed = True
+		if self.current_company and emp.company != self.current_company:
+			emp.company = self.current_company
 			changed = True
 
 		if changed or emp.is_new():
