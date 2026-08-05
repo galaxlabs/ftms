@@ -1,8 +1,88 @@
+import hashlib
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, getdate
 from frappe.utils.oauth import get_oauth2_authorize_url
 from ftms.security import rate_limit
+
+
+def _authenticate_frappe_password(email, password):
+    from frappe.auth import LoginManager
+    from frappe.twofactor import should_run_2fa
+
+    if frappe.get_system_settings("disable_user_pass_login"):
+        raise frappe.AuthenticationError
+    login_manager = LoginManager()
+    login_manager.authenticate(user=email, pwd=password)
+    if login_manager.force_user_to_reset_password() or should_run_2fa(login_manager.user):
+        raise frappe.AuthenticationError
+    login_manager.post_login()
+    return login_manager.user
+
+
+def _rate_limit_password_bridge(email):
+    rate_limit("firebase_bridge_ip", limit=10, seconds=300)
+    rate_limit(
+        "firebase_bridge_user",
+        limit=8,
+        seconds=300,
+        identity=hashlib.sha256(email.encode("utf-8")).hexdigest(),
+    )
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def firebase_token_from_frappe_password(email=None, password=None):
+    """Verify the Frappe password and return a short-lived Firebase custom token."""
+    email = (email or "").strip().lower()
+    _rate_limit_password_bridge(email)
+    if not email or not password:
+        frappe.throw(_("Invalid email or password"), frappe.AuthenticationError)
+    try:
+        user = _authenticate_frappe_password(email, password)
+    except Exception:
+        frappe.throw(_("Invalid email or password"), frappe.AuthenticationError)
+    if not frappe.db.get_value("User", user, "enabled"):
+        frappe.throw(_("Invalid email or password"), frappe.AuthenticationError)
+
+    from ftms.firebase_auth_bridge import create_custom_token
+
+    return {"custom_token": create_custom_token(user), "expires_in": 3600}
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def register_with_frappe_password(email=None, password=None, display_name=None):
+    """Create the Frappe identity first, then provision its Firebase identity."""
+    from ftms.api.onboarding import signup_user
+    from ftms.firebase_auth_bridge import create_custom_token
+
+    email = (email or "").strip().lower()
+    _rate_limit_password_bridge(email)
+    if frappe.db.exists("User", email):
+        try:
+            user = _authenticate_frappe_password(email, password)
+        except Exception:
+            frappe.throw(_("Invalid email or password"), frappe.AuthenticationError)
+    else:
+        result = signup_user(
+            email=email,
+            password=password,
+            confirm_password=password,
+            first_name=display_name,
+        )
+        user = result["user"]
+    return {"custom_token": create_custom_token(user), "expires_in": 3600}
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def request_frappe_password_reset(email=None):
+    """Send a Frappe password reset without disclosing whether the user exists."""
+    from frappe.core.doctype.user.user import reset_password
+
+    email = (email or "").strip().lower()
+    rate_limit("frappe_password_reset", limit=5, seconds=3600)
+    reset_password(user=email)
+    return {"status": "ok"}
 
 
 @frappe.whitelist()
@@ -69,8 +149,8 @@ def get_google_login_url(redirect_to=None):
     return get_oauth2_authorize_url("google", redirect_to)
 
 
-@frappe.whitelist(allow_guest=True)
-def login_with_firebase(id_token=None, firebase_uid=None):
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def login_with_firebase(id_token=None):
     """Verify a Firebase Auth ID token, find or create the matching Frappe user,
     and log them in. Returns the session cookie (sid) via Set-Cookie.
     """
@@ -78,16 +158,11 @@ def login_with_firebase(id_token=None, firebase_uid=None):
     if not id_token:
         frappe.throw(_("id_token is required"))
 
-    claims = _verify_firebase_id_token(id_token)
-    email = (claims.get("email") or "").strip().lower()
-    uid = claims.get("uid") or claims.get("sub") or firebase_uid
-    name = (claims.get("name") or "").strip()
-    email_verified = claims.get("email_verified", False)
+    from ftms.firebase_auth_bridge import resolve_frappe_user, verify_id_token
 
-    if not email:
-        frappe.throw(_("A verified email is required for Firebase login"))
-
-    user = _find_or_create_firebase_user(email, uid=uid, name=name, email_verified=email_verified)
+    claims = verify_id_token(id_token)
+    uid = claims.get("sub")
+    user = frappe.get_doc("User", resolve_frappe_user(claims, create=True))
     _login_as(user)
 
     return {
@@ -101,70 +176,6 @@ def login_with_firebase(id_token=None, firebase_uid=None):
         "roles": frappe.get_roles(),
         "uid": uid,
     }
-
-
-def _verify_firebase_id_token(token):
-    from google.auth.transport import requests as google_requests
-    from google.oauth2 import id_token as google_id_token
-
-    try:
-        request = google_requests.Request()
-        return google_id_token.verify_firebase_token(token, request, audience=None)
-    except Exception as exc:
-        frappe.log_error(frappe.get_traceback(), "FTMS Firebase token verification failed")
-        frappe.throw(_("Invalid or expired Firebase ID token: {0}").format(str(exc)))
-
-
-def _find_or_create_firebase_user(email, uid=None, name=None, email_verified=False):
-    email = (email or "").strip().lower()
-    existing = frappe.db.exists("User", email)
-    if existing:
-        user_doc = frappe.get_doc("User", email)
-        changed = False
-        if name and not user_doc.full_name:
-            parts = name.strip().split(" ", 1)
-            user_doc.first_name = parts[0][:140]
-            user_doc.last_name = parts[1].strip() if len(parts) > 1 else ""
-            changed = True
-        if uid and user_doc.meta.has_field("ftms_firebase_uid") and not user_doc.ftms_firebase_uid:
-            user_doc.ftms_firebase_uid = uid
-            changed = True
-        if changed:
-            user_doc.save(ignore_permissions=True)
-            frappe.db.commit()
-        return user_doc
-
-    from frappe.exceptions import DuplicateEntryError
-    from frappe.utils import random_string
-
-    first_name = email.split("@")[0][:140]
-    last_name = ""
-    if name:
-        parts = name.strip().split(" ", 1)
-        first_name = parts[0][:140]
-        last_name = parts[1].strip() if len(parts) > 1 else ""
-
-    try:
-        user_doc = frappe.get_doc({
-            "doctype": "User",
-            "email": email,
-            "username": email.split("@")[0],
-            "first_name": first_name,
-            "last_name": last_name,
-            "enabled": 1,
-            "send_welcome_email": 0,
-            "new_password": random_string(24),
-            "user_type": "Website User",
-        })
-        user_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
-        return user_doc
-    except DuplicateEntryError:
-        # Concurrent sign-in from another device created the user first.
-        frappe.db.rollback()
-        user_doc = frappe.get_doc("User", email)
-        frappe.db.commit()
-        return user_doc
 
 
 @frappe.whitelist(allow_guest=True)

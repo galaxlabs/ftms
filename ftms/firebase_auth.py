@@ -14,30 +14,11 @@ def authenticate():
         return
 
     try:
-        claims = _verify_token(token)
+        from ftms.firebase_auth_bridge import resolve_frappe_user, verify_id_token
+
+        claims = verify_id_token(token)
+        user = resolve_frappe_user(claims)
     except Exception as exc:
         raise frappe.AuthenticationError("Invalid Firebase authentication token") from exc
 
-    email = (claims.get("email") or "").strip().lower()
-    if not email:
-        raise frappe.AuthenticationError("Firebase token does not contain an email")
-
-    user = frappe.db.get_value("User", {"name": email, "enabled": 1}, "name")
-    if not user:
-        raise frappe.AuthenticationError("No enabled Frappe user matches this Firebase account")
-
     frappe.set_user(user)
-
-
-def _verify_token(token):
-    from google.auth.transport import requests as google_requests
-    from google.oauth2 import id_token as google_id_token
-
-    project_id = None
-    if frappe.db.exists("DocType", "Integration Settings"):
-        project_id = frappe.db.get_single_value("Integration Settings", "firebase_project_id")
-    return google_id_token.verify_firebase_token(
-        token,
-        google_requests.Request(),
-        audience=project_id or None,
-    )

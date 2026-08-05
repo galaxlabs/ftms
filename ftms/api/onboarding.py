@@ -53,14 +53,14 @@ def _default_domain(domain=None):
 
 def _send_reset_password_email(user_doc):
     try:
-        user_doc.reset_password(send_email=True)
+        user_doc._reset_password(send_email=True)
         return True, None
     except Exception as exc:
         frappe.log_error(frappe.get_traceback(), "FTMS signup reset password email failed")
         return False, str(exc)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=True, methods=["POST"])
 def signup_user(email, password, confirm_password, username=None, first_name=None, last_name=None):
     """Create only a login user. Company/captain onboarding happens after login."""
     rate_limit("signup_user", limit=5, seconds=3600)
@@ -85,11 +85,11 @@ def signup_user(email, password, confirm_password, username=None, first_name=Non
         "first_name": first_name,
         "last_name": last_name,
         "enabled": 1,
+        "user_type": "Website User",
         "send_welcome_email": 0,
         "new_password": password,
     })
     user_doc.insert(ignore_permissions=True)
-    frappe.db.commit()
     return {"status": "ok", "user": user_doc.name, "message": "User created. Login to continue onboarding."}
 
 

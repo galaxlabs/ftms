@@ -15,7 +15,7 @@
     {"fieldname": "firebase_storage_bucket", "fieldtype": "Data", "label": "Firebase Storage Bucket"},
     {"fieldname": "firebase_messaging_sender_id", "fieldtype": "Data", "label": "Firebase Messaging Sender ID"},
     {"fieldname": "firebase_measurement_id", "fieldtype": "Data", "label": "Firebase Measurement ID"},
-    {"fieldname": "firebase_service_account_json", "fieldtype": "Password", "label": "Firebase Service Account JSON", "description": "Server-only service account used for FCM delivery."},
+    {"fieldname": "firebase_service_account_json", "fieldtype": "Password", "label": "Firebase Service Account JSON", "description": "Server-only Firebase Admin service account used for authentication bridging and FCM delivery."},
     {"fieldname": "section_mobile", "fieldtype": "Section Break", "label": "Mobile App Configuration"},
     {"fieldname": "firebase_android_api_key", "fieldtype": "Password", "label": "Firebase Android API Key"},
     {"fieldname": "firebase_android_app_id", "fieldtype": "Data", "label": "Firebase Android App ID"},
