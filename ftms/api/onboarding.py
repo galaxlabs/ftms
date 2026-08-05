@@ -61,7 +61,7 @@ def _send_reset_password_email(user_doc):
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
-def signup_user(email, password, confirm_password, username=None, first_name=None, last_name=None):
+def signup_user(email, password, confirm_password, username=None, first_name=None, last_name=None, mobile_no=None):
     """Create only a login user. Company/captain onboarding happens after login."""
     rate_limit("signup_user", limit=5, seconds=3600)
     email = (email or "").strip().lower()
@@ -89,6 +89,8 @@ def signup_user(email, password, confirm_password, username=None, first_name=Non
         "send_welcome_email": 0,
         "new_password": password,
     })
+    if mobile_no:
+        user_doc.mobile_no = (mobile_no or "").strip()
     user_doc.insert(ignore_permissions=True)
     return {"status": "ok", "user": user_doc.name, "message": "User created. Login to continue onboarding."}
 

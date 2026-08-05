@@ -1,4 +1,5 @@
 import hashlib
+import re
 
 import frappe
 from frappe import _
@@ -7,18 +8,50 @@ from frappe.utils.oauth import get_oauth2_authorize_url
 from ftms.security import rate_limit
 
 
-def _authenticate_frappe_password(email, password):
-    from frappe.auth import LoginManager
-    from frappe.twofactor import should_run_2fa
+def _normalize_mobile(value):
+	"""Strip +966 prefix, leading zero and non-digits for comparisons."""
+	digits = re.sub(r"\D", "", str(value or ""))
+	if digits.startswith("966") and len(digits) > 9:
+		digits = digits[3:]
+	if digits.startswith("0"):
+		digits = digits[1:]
+	return digits
 
-    if frappe.get_system_settings("disable_user_pass_login"):
-        raise frappe.AuthenticationError
-    login_manager = LoginManager()
-    login_manager.authenticate(user=email, pwd=password)
-    if login_manager.force_user_to_reset_password() or should_run_2fa(login_manager.user):
-        raise frappe.AuthenticationError
-    login_manager.post_login()
-    return login_manager.user
+
+def _resolve_login_identifier(identifier):
+	"""Return a Frappe User email for either an email address or mobile number."""
+	identifier = (identifier or "").strip().lower()
+	if not identifier:
+		return None
+	if "@" in identifier:
+		return identifier
+	# Treat as mobile number
+	normalized = _normalize_mobile(identifier)
+	if not normalized:
+		return None
+	users = frappe.get_all(
+		"User",
+		filters=[["enabled", "=", 1], ["mobile_no", "is", "set"]],
+		fields=["name", "mobile_no"],
+	)
+	for user in users:
+		if _normalize_mobile(user.mobile_no) == normalized:
+			return user.name
+	return None
+
+
+def _authenticate_frappe_password(email, password):
+	from frappe.auth import LoginManager
+	from frappe.twofactor import should_run_2fa
+
+	if frappe.get_system_settings("disable_user_pass_login"):
+		raise frappe.AuthenticationError
+	login_manager = LoginManager()
+	login_manager.authenticate(user=email, pwd=password)
+	if login_manager.force_user_to_reset_password() or should_run_2fa(login_manager.user):
+		raise frappe.AuthenticationError
+	login_manager.post_login()
+	return login_manager.user
 
 
 def _rate_limit_password_bridge(email):
@@ -32,46 +65,53 @@ def _rate_limit_password_bridge(email):
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
-def firebase_token_from_frappe_password(email=None, password=None):
-    """Verify the Frappe password and return a short-lived Firebase custom token."""
-    email = (email or "").strip().lower()
-    _rate_limit_password_bridge(email)
-    if not email or not password:
-        frappe.throw(_("Invalid email or password"), frappe.AuthenticationError)
-    try:
-        user = _authenticate_frappe_password(email, password)
-    except Exception:
-        frappe.throw(_("Invalid email or password"), frappe.AuthenticationError)
-    if not frappe.db.get_value("User", user, "enabled"):
-        frappe.throw(_("Invalid email or password"), frappe.AuthenticationError)
+def firebase_token_from_frappe_password(email=None, password=None, mobile_no=None):
+	"""Verify the Frappe password and return a short-lived Firebase custom token.
 
-    from ftms.firebase_auth_bridge import create_custom_token
+	`email` may be an email address or a mobile phone number (auto-detected).
+	A notebook mobile_no is resolved to the owning Frappe User before auth.
+	"""
+	identifier = _resolve_login_identifier(email or mobile_no)
+	_rate_limit_password_bridge(identifier or "guest")
+	if not identifier or not password:
+		frappe.throw(_("Invalid email or mobile and password"), frappe.AuthenticationError)
+	try:
+		user = _authenticate_frappe_password(identifier, password)
+	except Exception:
+		frappe.throw(_("Invalid email or mobile and password"), frappe.AuthenticationError)
+	if not frappe.db.get_value("User", user, "enabled"):
+		frappe.throw(_("Invalid email or mobile and password"), frappe.AuthenticationError)
 
-    return {"custom_token": create_custom_token(user), "expires_in": 3600}
+	from ftms.firebase_auth_bridge import create_custom_token
+
+	return {"custom_token": create_custom_token(user), "expires_in": 3600}
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
-def register_with_frappe_password(email=None, password=None, display_name=None):
-    """Create the Frappe identity first, then provision its Firebase identity."""
-    from ftms.api.onboarding import signup_user
-    from ftms.firebase_auth_bridge import create_custom_token
+def register_with_frappe_password(email=None, password=None, display_name=None, mobile_no=None):
+	"""Create the Frappe identity first, then provision its Firebase identity."""
+	from ftms.api.onboarding import signup_user
+	from ftms.firebase_auth_bridge import create_custom_token
 
-    email = (email or "").strip().lower()
-    _rate_limit_password_bridge(email)
-    if frappe.db.exists("User", email):
-        try:
-            user = _authenticate_frappe_password(email, password)
-        except Exception:
-            frappe.throw(_("Invalid email or password"), frappe.AuthenticationError)
-    else:
-        result = signup_user(
-            email=email,
-            password=password,
-            confirm_password=password,
-            first_name=display_name,
-        )
-        user = result["user"]
-    return {"custom_token": create_custom_token(user), "expires_in": 3600}
+	identifier = _resolve_login_identifier(email or mobile_no)
+	_rate_limit_password_bridge(identifier or "guest")
+	if not identifier:
+		frappe.throw(_("A valid email or mobile number is required"), frappe.AuthenticationError)
+	if frappe.db.exists("User", identifier):
+		try:
+			user = _authenticate_frappe_password(identifier, password)
+		except Exception:
+			frappe.throw(_("Invalid email or mobile and password"), frappe.AuthenticationError)
+	else:
+		result = signup_user(
+			email=identifier,
+			password=password,
+			confirm_password=password,
+			first_name=display_name,
+			mobile_no=mobile_no,
+		)
+		user = result["user"]
+	return {"custom_token": create_custom_token(user), "expires_in": 3600}
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
@@ -79,9 +119,9 @@ def request_frappe_password_reset(email=None):
     """Send a Frappe password reset without disclosing whether the user exists."""
     from frappe.core.doctype.user.user import reset_password
 
-    email = (email or "").strip().lower()
+    identifier = _resolve_login_identifier(email) or (email or "").strip().lower()
     rate_limit("frappe_password_reset", limit=5, seconds=3600)
-    reset_password(user=email)
+    reset_password(user=identifier)
     return {"status": "ok"}
 
 

@@ -41,6 +41,16 @@ def _lookup_pricing_rule(vehicle_type, company):
 	return rules[0].name if rules else None
 
 
+def _can_create_booking(user, company=None):
+	"""Passengers and operator roles (Company Admin / Dispatcher / owner) may create bookings."""
+	if user in ("Guest", "Administrator"):
+		return True
+	if frappe.get_roles(user) and "Passenger" in frappe.get_roles(user):
+		return True
+	link = _booking_operator_link(user, company)
+	return bool(link)
+
+
 def _booking_operator_link(user, company=None):
 	filters = {"user": user, "status": "Active"}
 	if company:
@@ -227,6 +237,11 @@ def create_booking(**kwargs):
 		frappe.throw(_("Unauthorized"), frappe.PermissionError)
 
 	data = frappe._dict(kwargs)
+	if frappe.session.user != "Guest" and not _can_create_booking(frappe.session.user, data.get("company")):
+		frappe.throw(
+			_("You are not permitted to create bookings"),
+			frappe.PermissionError,
+		)
 	main_rider_user = data.get("main_rider_user")
 	if not main_rider_user and frappe.session.user != "Guest":
 		main_rider_user = frappe.session.user
@@ -260,8 +275,23 @@ def create_booking(**kwargs):
 		company = get_user_company()
 
 	passengers = _coerce_passengers(data.get("passengers"))
-	seat_count = data.get("seat_count") or data.get("passenger_count") or len(passengers) or 1
 	group_code = _generate_group_code()
+
+	# Reuse a saved passenger group for a new trip/route
+	saved_group = data.get("group") or data.get("group_name")
+	if saved_group and frappe.session.user != "Guest":
+		from ftms.api.group import apply_group_to_booking
+		group_passengers = frappe.get_all(
+			"Trip Group Passenger",
+			filters={"parent": saved_group},
+			fields=["passenger_name", "nationality", "document_type", "document_number",
+					"mobile_no", "luggage_qty", "is_primary_booker"],
+			order_by="idx",
+		)
+		if group_passengers:
+			passengers = _coerce_passengers(group_passengers)
+
+	seat_count = data.get("seat_count") or data.get("passenger_count") or len(passengers) or 1
 	booking_title = data.get("booking_title") or " - ".join(
 		value for value in [data.get("customer_name"), route or trip or "Booking", group_code] if value
 	)
@@ -284,6 +314,18 @@ def create_booking(**kwargs):
 	platform_fee_rate = float(frappe.db.get_single_value("Platform Settings", "platform_fee_rate") or 5)
 	quoted_amount = float(quote["final_fare"] if quote else data.get("fare_amount") or 0)
 
+	group_name = data.get("group") or data.get("group_name")
+	group_leader_name = data.get("group_leader_name")
+	group_leader_mobile = data.get("group_leader_mobile")
+	if group_name and frappe.session.user != "Guest":
+		group_meta = frappe.db.get_value(
+			"Trip Group", group_name, ["group_leader_name", "group_leader_mobile", "is_group_leader_self"],
+			as_dict=True,
+		)
+		if group_meta:
+			group_leader_name = group_leader_name or group_meta.get("group_leader_name")
+			group_leader_mobile = group_leader_mobile or group_meta.get("group_leader_mobile")
+
 	doc = frappe.get_doc({
 		"doctype": "Trip Booking",
 		"company": company,
@@ -293,12 +335,12 @@ def create_booking(**kwargs):
 		"booking_date": data.get("booking_date") or today(),
 		"trip": trip,
 		"route": route,
-		"customer_name": data.get("customer_name"),
-		"mobile_no": data.get("mobile_no"),
+		"customer_name": data.get("customer_name") or group_leader_name,
+		"mobile_no": data.get("mobile_no") or group_leader_mobile,
 		"source_channel": data.get("source_channel") or ("Website" if data.get("main_rider_user") else "API"),
 		"main_rider_user": main_rider_user,
-		"group_leader_name": data.get("group_leader_name"),
-		"group_leader_mobile": data.get("group_leader_mobile"),
+		"group_leader_name": group_leader_name,
+		"group_leader_mobile": group_leader_mobile,
 		"is_group_leader_self": data.get("is_group_leader_self") or 0,
 		"fare_amount": quote["final_fare"] if quote else data.get("fare_amount"),
 		"quoted_fare": quote["final_fare"] if quote else data.get("fare_amount"),
@@ -326,6 +368,10 @@ def create_booking(**kwargs):
 		"notes": data.get("notes"),
 		"passengers": passengers,
 	})
+
+	if saved_group and frappe.session.user != "Guest":
+		frappe.db.set_value("Trip Group", saved_group, "times_used", (frappe.db.get_value("Trip Group", saved_group, "times_used") or 0) + 1)
+		frappe.db.set_value("Trip Group", saved_group, "last_used_on", today())
 
 	try:
 		doc.insert(ignore_permissions=True)
@@ -714,6 +760,54 @@ def reactivate_booking(booking_name):
 	booking.db_set("negotiation_status", "Awaiting Offers")
 	booking.db_set("booking_status", "Draft")
 	return {"status": "Awaiting Offers"}
+
+
+@frappe.whitelist()
+def start_booking(booking_name):
+	"""Passenger owner confirms the ride started / departed for pickup."""
+	user = frappe.session.user
+	if user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
+	booking = frappe.get_doc("Trip Booking", booking_name)
+	access = _booking_detail_access(booking, user)
+	if access not in ("owner", "company"):
+		frappe.throw(_("Only the booking owner or company operator can start this ride"), frappe.PermissionError)
+	if booking.booking_status == "Cancelled" or booking.negotiation_status == "Cancelled":
+		frappe.throw(_("A cancelled booking cannot be started"))
+	if booking.negotiation_status not in ("Awaiting Offers", "Trip Created", "Confirmed"):
+		frappe.throw(_("Booking cannot be started in current state"))
+	from ftms.ride_machine.state_machine import BookingStateMachine
+	from ftms.ride_machine.state_machine import TripStateMachine
+
+	if booking.trip:
+		trip_doc = frappe.get_doc("Trip", booking.trip)
+		_try_trip_action(trip_doc, "depart", "Scheduled")
+		trip_doc.save(ignore_permissions=True)
+	try:
+		BookingStateMachine(booking, "booking_status").action("check_in")
+		booking.save(ignore_permissions=True)
+	except Exception:
+		pass
+	return {"status": booking.booking_status, "negotiation_status": booking.negotiation_status, "name": booking.name}
+
+
+def _try_trip_action(trip_doc, action, expected):
+	from ftms.ride_machine.state_machine import TripStateMachine
+	if trip_doc.trip_status == expected:
+		TripStateMachine(trip_doc).action(action)
+
+
+@frappe.whitelist()
+def complete_booking(booking_name):
+	"""Assigned captain completes the trip after the ride finishes."""
+	user = frappe.session.user
+	if user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
+	booking = frappe.get_doc("Trip Booking", booking_name)
+	if booking.trip:
+		from ftms.api.ride import complete_assigned_trip
+		return complete_assigned_trip(name=booking.trip, booking=booking_name)
+	frappe.throw(_("No trip is linked to this booking"))
 
 
 @frappe.whitelist(allow_guest=True)

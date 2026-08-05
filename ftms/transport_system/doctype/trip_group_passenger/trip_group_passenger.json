@@ -1,0 +1,37 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-05 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "passenger_name",
+  "nationality",
+  "document_type",
+  "document_number",
+  "mobile_no",
+  "luggage_qty",
+  "is_primary_booker"
+ ],
+ "fields": [
+  {"fieldname": "passenger_name", "fieldtype": "Data", "in_list_view": 1, "label": "Passenger Name", "reqd": 1},
+  {"fieldname": "nationality", "fieldtype": "Data", "in_list_view": 1, "label": "Nationality"},
+  {"fieldname": "document_type", "fieldtype": "Select", "in_list_view": 1, "label": "Document Type", "options": "Passport\nNational ID\nResidency\nVisa\nOther"},
+  {"fieldname": "document_number", "fieldtype": "Data", "in_list_view": 1, "label": "Document Number"},
+  {"fieldname": "mobile_no", "fieldtype": "Data", "in_list_view": 1, "label": "Mobile No"},
+  {"default": "0", "fieldname": "luggage_qty", "fieldtype": "Int", "in_list_view": 1, "label": "Luggage Qty"},
+  {"default": "0", "fieldname": "is_primary_booker", "fieldtype": "Check", "label": "Primary Booker"}
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "module": "Transport System",
+ "name": "Trip Group Passenger",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
