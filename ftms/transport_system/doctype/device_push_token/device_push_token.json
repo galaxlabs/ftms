@@ -1,0 +1,20 @@
+{
+  "doctype": "DocType",
+  "name": "Device Push Token",
+  "module": "Transport System",
+  "autoname": "hash",
+  "engine": "InnoDB",
+  "field_order": ["user", "token", "platform", "device_id", "active", "last_seen_at", "last_error"],
+  "fields": [
+    {"fieldname": "user", "fieldtype": "Link", "label": "User", "options": "User", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "token", "fieldtype": "Data", "label": "FCM Token", "length": 512, "reqd": 1, "unique": 1},
+    {"fieldname": "platform", "fieldtype": "Select", "label": "Platform", "options": "android\nweb\nios\nunknown", "default": "unknown"},
+    {"fieldname": "device_id", "fieldtype": "Data", "label": "Device ID"},
+    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1", "in_list_view": 1},
+    {"fieldname": "last_seen_at", "fieldtype": "Datetime", "label": "Last Seen At"},
+    {"fieldname": "last_error", "fieldtype": "Small Text", "label": "Last Error", "read_only": 1}
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}
+  ]
+}

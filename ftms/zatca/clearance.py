@@ -67,13 +67,11 @@ def submit_to_zatca(invoice_name, doctype="Trip Invoice"):
 
     resp = call_zatca_api("POST", api_url, headers, payload, timeout=60)
 
-    status = "Submitted"
+    status = "REPORTED"
     if resp.get("clearanceStatus") == "Cleared":
-        status = "Cleared"
+        status = "CLEARED"
     elif resp.get("clearanceStatus") == "Rejected":
-        status = "Rejected"
-    elif resp.get("status") == "Submitted":
-        status = "Submitted"
+        status = "FAILED"
 
     adapter.save_zatca_data(invoice, {
         "zatca_submit_status": status,

@@ -54,7 +54,7 @@ doc_events = {
     },
     "Trip": {
         "validate": ["ftms.api.permissions.validate_user_access", "ftms.subscriptions.utils.enforce_subscription"],
-        "on_update": "ftms.commissions.engine.accrue_commissions",
+        "on_update": ["ftms.commissions.engine.accrue_commissions", "ftms.realtime.publish_document_update"],
     },
     "Trip Invoice": {
         "validate": ["ftms.api.permissions.validate_user_access", "ftms.subscriptions.utils.enforce_subscription", "ftms.zatca.trip_adapter.validate_trip_invoice"],
@@ -62,6 +62,14 @@ doc_events = {
     },
     "Trip Booking": {
         "validate": ["ftms.api.permissions.validate_user_access", "ftms.subscriptions.utils.enforce_subscription"],
+        "on_update": "ftms.realtime.publish_document_update",
+    },
+    "Booking Offer": {"on_update": "ftms.realtime.publish_document_update"},
+    "Payment Transaction": {"on_update": "ftms.realtime.publish_document_update"},
+    "User Subscription": {"on_update": "ftms.realtime.publish_document_update"},
+    "Notification Event": {
+        "after_insert": "ftms.realtime.publish_document_update",
+        "on_update": "ftms.realtime.publish_document_update",
     },
     "Vehicle": {
         "validate": "ftms.api.permissions.validate_user_access",
@@ -86,6 +94,11 @@ scheduler_events = {
     ],
     "hourly": [
         "ftms.subscriptions.utils.hourly_trial_check",
+        "ftms.maintenance.expire_company_invitations",
+        "ftms.maintenance.retry_failed_notifications",
+    ],
+    "weekly": [
+        "ftms.maintenance.cleanup_old_notifications",
     ],
 }
 

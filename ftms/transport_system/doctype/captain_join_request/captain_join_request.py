@@ -3,6 +3,8 @@ import re
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
+from ftms.user_roles import assign_business_role
+
 
 class CaptainJoinRequest(Document):
 	def validate(self):
@@ -48,3 +50,4 @@ class CaptainJoinRequest(Document):
 		profile.approved_by = self.approved_by or frappe.session.user
 		profile.approved_on = self.approved_on or now_datetime()
 		profile.save(ignore_permissions=True)
+		assign_business_role(profile.user, "Captain", onboarded=True)

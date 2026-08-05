@@ -9,6 +9,10 @@ def validate_user_access(doc, method):
     user = frappe.session.user
     if user in SYSTEM_USERS:
         return
+    if doc.flags.get("ignore_company_validation"):
+        return
+    if doc.doctype == "Trip" and doc.get("assigned_captain_user") == user:
+        return
     if not doc.meta.has_field("company"):
         return
     link = get_active_link(user)

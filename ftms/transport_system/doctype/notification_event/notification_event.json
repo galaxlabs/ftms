@@ -5,7 +5,7 @@
  "creation": "2026-07-30 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["event_type", "recipient_user", "company", "reference_doctype", "reference_name", "title", "message", "channel", "status", "dedupe_key", "created_at", "sent_at", "error_message"],
+ "field_order": ["event_type", "recipient_user", "company", "reference_doctype", "reference_name", "title", "message", "channel", "status", "dedupe_key", "created_at", "sent_at", "attempt_count", "next_retry_at", "error_message"],
  "fields": [
   {"fieldname": "event_type", "fieldtype": "Data", "in_list_view": 1, "label": "Event Type", "reqd": 1},
   {"fieldname": "recipient_user", "fieldtype": "Link", "in_list_view": 1, "label": "Recipient", "options": "User", "reqd": 1},
@@ -19,6 +19,8 @@
   {"fieldname": "dedupe_key", "fieldtype": "Data", "label": "Dedupe Key", "unique": 1},
   {"fieldname": "created_at", "fieldtype": "Datetime", "label": "Created At", "read_only": 1},
   {"fieldname": "sent_at", "fieldtype": "Datetime", "label": "Sent At"},
+  {"default": "0", "fieldname": "attempt_count", "fieldtype": "Int", "label": "Attempt Count", "read_only": 1},
+  {"fieldname": "next_retry_at", "fieldtype": "Datetime", "label": "Next Retry At", "read_only": 1},
   {"fieldname": "error_message", "fieldtype": "Small Text", "label": "Error Message"}
  ],
  "grid_page_length": 50,

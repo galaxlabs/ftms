@@ -34,18 +34,36 @@ def on_submit_trip_invoice(doc, method=None):
     if not company_doc.enable_zatca_e_invoicing:
         return
 
+    frappe.enqueue(
+        "ftms.zatca.trip_adapter.submit_trip_invoice",
+        invoice_name=doc.name,
+        queue="short",
+        timeout=120,
+        enqueue_after_commit=True,
+        job_id=f"zatca-trip-invoice-{doc.name}",
+        deduplicate=True,
+    )
+
+
+def submit_trip_invoice(invoice_name):
     from ftms.zatca.clearance import submit_to_zatca
 
     try:
-        result = submit_to_zatca(doc.name, doctype="Trip Invoice")
-        doc.zatca_submit_status = result.get("status")
-    except Exception as e:
-        frappe.log_error(
-            f"ZATCA submission failed for {doc.name}: {e}",
-            "ZATCA Submission Error",
+        result = submit_to_zatca(invoice_name, doctype="Trip Invoice")
+        frappe.db.set_value(
+            "Trip Invoice",
+            invoice_name,
+            {"zatca_submit_status": result.get("status"), "zatca_error": None},
         )
-        doc.zatca_submit_status = "Failed"
-        doc.zatca_error = str(e)
+    except Exception as exc:
+        frappe.db.set_value(
+            "Trip Invoice",
+            invoice_name,
+            {"zatca_submit_status": "FAILED", "zatca_error": str(exc)[:1000]},
+        )
+        frappe.log_error(frappe.get_traceback(), f"ZATCA submission failed: {invoice_name}")
+        return {"status": "FAILED", "error": str(exc)}
+    return result
 
 
 def _validate_vat_fields(doc, company_doc):

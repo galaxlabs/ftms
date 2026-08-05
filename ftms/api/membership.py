@@ -9,6 +9,7 @@ from frappe.utils import add_to_date, now_datetime
 
 from ftms.notifications.service import emit_event
 from ftms.tenant import has_company_access, resolve_company
+from ftms.user_roles import assign_business_role
 
 
 ADMIN_ROLES = {"Company Admin"}
@@ -114,6 +115,7 @@ def approve_membership(link_name):
 	link.approved_by = user
 	link.approved_on = now_datetime()
 	link.save(ignore_permissions=True)
+	assign_business_role(link.user, link.role, onboarded=True)
 	emit_event("Membership Approved", link.user, "Company membership approved", f"Your membership in {link.company} is active.", company=link.company, reference_doctype="User Company Link", reference_name=link.name, dedupe_key=f"membership-approved:{link.name}")
 	return {"name": link.name, "status": link.status}
 

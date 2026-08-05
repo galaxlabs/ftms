@@ -6,6 +6,7 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime, random_string
 from ftms.security import rate_limit
+from ftms.user_roles import assign_business_role, get_business_role
 
 
 def _make_code(value, fallback):
@@ -289,6 +290,7 @@ def create_captain_profile(
         "status": "Pending",
     })
     profile.insert(ignore_permissions=True)
+    assign_business_role(user, "Captain", onboarded=False)
     frappe.db.commit()
     return {"status": "ok", "captain_profile": profile.name}
 
@@ -339,7 +341,7 @@ def get_status():
         return {"onboarded": False, "user_type": None, "available_roles": ["Passenger", "Partner", "Captain"]}
 
     onboarded = bool(profile.get("onboarded"))
-    user_type = profile.get("user_type")
+    user_type = get_business_role(user)
 
     existing_partner = frappe.db.exists("Partner Profile", {"user": user})
     existing_captain = frappe.db.exists("Captain Profile", {"user": user})
@@ -379,13 +381,8 @@ def get_status():
 
 @frappe.whitelist()
 def set_user_type(user_type):
-    valid_types = ["Captain", "Passenger", "Company Admin", "Partner", "Dispatcher", "Accountant"]
-    if user_type not in valid_types:
-        frappe.throw(_("Invalid user type. Must be one of: {0}").format(", ".join(valid_types)))
-
-    user = frappe.session.user
-    frappe.db.set_value("User", user, "user_type", user_type)
-    return {"status": "ok", "user_type": user_type}
+    result = set_role(user_type)
+    return {"status": "ok", "user_type": result["role"]}
 
 
 @frappe.whitelist()
@@ -395,8 +392,13 @@ def set_role(role):
     if role not in valid_roles:
         frappe.throw(_("Invalid role. Must be one of: {0}").format(", ".join(valid_roles)))
     user = frappe.session.user
-    frappe.db.set_value("User", user, "user_type", role)
-    frappe.db.set_value("User", user, "onboarded", 0)
+    if frappe.db.get_value("User", user, "onboarded"):
+        frappe.throw(_("Role selection is only available before onboarding"), frappe.PermissionError)
+    if frappe.db.exists("User Company Link", {"user": user, "status": "Active"}):
+        frappe.throw(_("Company-linked users cannot change their onboarding role"), frappe.PermissionError)
+    if frappe.db.exists("Captain Profile", {"user": user}) or frappe.db.exists("Partner Profile", {"user": user}):
+        frappe.throw(_("Users with an existing profile cannot change their onboarding role"), frappe.PermissionError)
+    assign_business_role(user, role, onboarded=False, replace=True)
     return {"status": "ok", "role": role}
 
 
@@ -417,8 +419,6 @@ def create_passenger_profile(full_name=None, mobile_no=None, nationality=None, i
                 frappe.throw(result.get("error") or "Invalid identity document format")
 
     frappe.db.set_value("User", user, {
-        "user_type": "Passenger",
-        "onboarded": 1,
         "mobile_no": mobile_no,
         "ftms_id_document_type": id_document_type,
         "ftms_id_no": id_number,
@@ -427,6 +427,7 @@ def create_passenger_profile(full_name=None, mobile_no=None, nationality=None, i
     })
     if full_name:
         frappe.db.set_value("User", user, "full_name", full_name)
+    assign_business_role(user, "Passenger", onboarded=True)
 
     return {"status": "ok", "user": user, "role": "Passenger"}
 
@@ -520,7 +521,7 @@ def create_partner_profile(
     })
     profile.insert(ignore_permissions=True)
 
-    frappe.db.set_value("User", user, {"user_type": "Partner", "onboarded": 1})
+    assign_business_role(user, "Partner", onboarded=True)
     frappe.db.commit()
 
     return {
@@ -588,7 +589,7 @@ def create_customer_company(
         "approved_on": now_datetime(),
     })
     link_doc.insert(ignore_permissions=True)
-    frappe.db.set_value("User", user, {"user_type": "Customer Company", "onboarded": 1})
+    assign_business_role(user, "Customer Company", onboarded=True)
     frappe.db.commit()
     return {"status": "ok", "company": company_doc.name, "company_code": company_doc.company_code, "link": link_doc.name}
 

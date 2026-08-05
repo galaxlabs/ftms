@@ -29,15 +29,19 @@ class StateMachine:
             raise ValidationError(
                 _("Cannot transition from {0} to {1}").format(self.current, new_state)
             )
-        hook_name = self.actions.get(new_state)
-        if hook_name:
-            getattr(self, hook_name)(**kwargs)
         self.doc.set(self.status_field, new_state)
 
     def action(self, name, **kwargs):
         new_state = self.actions.get(name)
         if not new_state:
             raise ValidationError(_("Unknown action: {0}").format(name))
+        if not self.can_transition(new_state):
+            raise ValidationError(
+                _("Cannot transition from {0} to {1}").format(self.current, new_state)
+            )
+        hook = getattr(self, name, None)
+        if hook:
+            hook(**kwargs)
         self.transition(new_state, **kwargs)
 
 
@@ -130,20 +134,32 @@ def _auto_board_bookings(trip_doc):
 def _auto_close_checked_in_bookings(trip_doc):
     """When trip completes, close all Boarded bookings."""
     import frappe
+    from frappe import _
+
+    blocking = frappe.get_all(
+        "Trip Booking",
+        filters={
+            "trip": trip_doc.name,
+            "booking_status": ("not in", ("Boarded", "Closed", "Cancelled")),
+        },
+        pluck="name",
+        limit_page_length=1,
+    )
+    if blocking:
+        frappe.throw(
+            _("Booking {0} must be boarded or cancelled before trip completion").format(blocking[0])
+        )
 
     bookings = frappe.get_all(
         "Trip Booking",
-        filters={"trip": trip_doc.name, "booking_status": ["in", ("Checked In", "Boarded")]},
+        filters={"trip": trip_doc.name, "booking_status": "Boarded"},
         fields=["name"],
     )
     for b in bookings:
         booking = frappe.get_doc("Trip Booking", b.name)
         machine = BookingStateMachine(booking, "booking_status")
-        try:
-            machine.action("close")
-            booking.save(ignore_permissions=True)
-        except Exception:
-            frappe.log_error(f"Failed to auto-close booking {b.name}")
+        machine.action("close")
+        booking.save(ignore_permissions=True)
 
 
 def _auto_cancel_bookings(trip_doc):

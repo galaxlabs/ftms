@@ -107,6 +107,9 @@ def _create_trip_from_booking(booking, offer):
 		"trip_title": trip_title,
 		"trip_date": booking.booking_date or today(),
 		"route": booking.route,
+		"from_location": booking.pickup_point,
+		"to_location": booking.drop_point,
+		"trip_booking": booking.name,
 		"vehicle": offer.vehicle,
 		"assigned_captain_user": offer.captain_user,
 		"trip_status": "Scheduled",
@@ -176,6 +179,26 @@ def create_booking(**kwargs):
 	main_rider_user = data.get("main_rider_user")
 	if not main_rider_user and frappe.session.user != "Guest":
 		main_rider_user = frappe.session.user
+	external_reference = data.get("external_reference")
+	if external_reference:
+		requested_company = data.get("company")
+		if frappe.session.user == "Guest" and not main_rider_user and not requested_company:
+			frappe.throw(
+				_("Company or authenticated rider is required with an external reference"),
+				frappe.PermissionError,
+			)
+		existing = frappe.db.get_value(
+			"Trip Booking",
+			{"external_reference": external_reference},
+			["name", "main_rider_user", "company"],
+			as_dict=True,
+		)
+		if existing:
+			if existing.main_rider_user != main_rider_user or (
+				requested_company and existing.company != requested_company
+			):
+				frappe.throw(_("External booking reference belongs to another user"), frappe.PermissionError)
+			return _booking_response(frappe.get_doc("Trip Booking", existing.name))
 	trip = data.get("trip")
 	route = data.get("route")
 	if trip and not route:
@@ -187,8 +210,9 @@ def create_booking(**kwargs):
 
 	passengers = _coerce_passengers(data.get("passengers"))
 	seat_count = data.get("seat_count") or data.get("passenger_count") or len(passengers) or 1
+	group_code = _generate_group_code()
 	booking_title = data.get("booking_title") or " - ".join(
-		value for value in [data.get("customer_name"), route or trip or "Booking"] if value
+		value for value in [data.get("customer_name"), route or trip or "Booking", group_code] if value
 	)
 
 	vehicle_type = data.get("vehicle_type")
@@ -209,13 +233,12 @@ def create_booking(**kwargs):
 	platform_fee_rate = float(frappe.db.get_single_value("Platform Settings", "platform_fee_rate") or 5)
 	quoted_amount = float(quote["final_fare"] if quote else data.get("fare_amount") or 0)
 
-	group_code = _generate_group_code()
-
 	doc = frappe.get_doc({
 		"doctype": "Trip Booking",
 		"company": company,
 		"booking_title": booking_title,
 		"booking_group_code": group_code,
+		"external_reference": external_reference,
 		"booking_date": data.get("booking_date") or today(),
 		"trip": trip,
 		"route": route,
@@ -253,7 +276,34 @@ def create_booking(**kwargs):
 		"passengers": passengers,
 	})
 
-	doc.insert(ignore_permissions=True)
+	try:
+		doc.insert(ignore_permissions=True)
+	except frappe.UniqueValidationError:
+		if not external_reference:
+			raise
+		existing_rows = frappe.db.sql(
+			"""
+			SELECT name, main_rider_user, company
+			FROM `tabTrip Booking`
+			WHERE external_reference=%s
+			FOR UPDATE
+			""",
+			(external_reference,),
+			as_dict=True,
+		)
+		if not existing_rows:
+			raise
+		existing_row = existing_rows[0]
+		if existing_row.main_rider_user != main_rider_user or (
+			data.get("company") and existing_row.company != data.get("company")
+		):
+			frappe.throw(_("External booking reference belongs to another user"), frappe.PermissionError)
+		existing = frappe.get_doc("Trip Booking", existing_row.name)
+		return _booking_response(existing)
+	return _booking_response(doc)
+
+
+def _booking_response(doc):
 	return {
 		"name": doc.name,
 		"booking_title": doc.booking_title,
@@ -406,6 +456,8 @@ def make_offer(booking, vehicle, offered_fare, fare_type="Total Trip", captain_n
 	vehicle_doc.validate_required_documents()
 	if vehicle_doc.assigned_captain_user and vehicle_doc.assigned_captain_user != user:
 		frappe.throw(_("Vehicle is assigned to another captain"), frappe.PermissionError)
+	if vehicle_doc.owner_captain_user and vehicle_doc.owner_captain_user != user:
+		frappe.throw(_("Vehicle belongs to another captain"), frappe.PermissionError)
 	if vehicle_doc.company and booking_doc.company and vehicle_doc.company != booking_doc.company:
 		frappe.throw(_("Vehicle belongs to another company"), frappe.PermissionError)
 	if frappe.db.exists("Booking Offer", {"booking": booking, "captain_user": user, "status": "Pending"}):
@@ -454,12 +506,61 @@ def accept_offer(offer_name):
 	if offer.status != "Pending":
 		frappe.throw(_("Offer is no longer available"))
 
+	frappe.db.sql("SELECT name FROM `tabTrip Booking` WHERE name=%s FOR UPDATE", offer.booking)
 	booking = frappe.get_doc("Trip Booking", offer.booking)
 	_require_booking_access(booking, user)
 	if not booking.main_rider_user and not has_company_access(booking.company, user=user):
 		frappe.throw(_("Only the booking owner or company operator can accept offers"), frappe.PermissionError)
 	if booking.negotiation_status != "Awaiting Offers":
 		frappe.throw(_("Booking is no longer accepting offers"))
+	return _accept_offer_for_booking(offer, booking)
+
+
+@frappe.whitelist()
+def accept_booking_as_captain(booking_name, offered_fare, vehicle=None):
+	"""Accept an open booking using the authenticated captain's active vehicle."""
+	user = frappe.session.user
+	profile = frappe.db.get_value("Captain Profile", {"user": user}, ["name", "status"], as_dict=True)
+	if user == "Guest" or not profile or profile.status != "Active":
+		frappe.throw(_("Only a registered captain can accept a booking"), frappe.PermissionError)
+
+	frappe.db.sql("SELECT name FROM `tabTrip Booking` WHERE name=%s FOR UPDATE", booking_name)
+	booking = frappe.get_doc("Trip Booking", booking_name)
+	if booking.negotiation_status != "Awaiting Offers":
+		if booking.trip and booking.negotiation_status == "Trip Created":
+			trip = frappe.get_doc("Trip", booking.trip)
+			if trip.assigned_captain_user == user:
+				return {"trip": trip.name, "booking": booking.name, "already_accepted": True}
+		frappe.throw(_("Booking is no longer accepting offers"))
+	active_captain_link = frappe.db.exists(
+		"User Company Link",
+		{"user": user, "company": booking.company, "role": "Captain", "status": "Active"},
+	)
+	if booking.company and not active_captain_link:
+		frappe.throw(_("You cannot accept a booking outside your company"), frappe.PermissionError)
+
+	vehicle_name = vehicle
+	if vehicle_name and not frappe.db.exists("Vehicle", vehicle_name):
+		vehicle_name = frappe.db.get_value(
+			"Vehicle",
+			{"plate_no": vehicle_name, "company": booking.company, "assigned_captain_user": user},
+			"name",
+		)
+	if not vehicle_name:
+		vehicle_name = frappe.db.get_value(
+			"Vehicle",
+			{"company": booking.company, "assigned_captain_user": user, "is_active": 1, "status": "Active"},
+			"name",
+		)
+	if not vehicle_name:
+		frappe.throw(_("Assign an active vehicle to this captain before accepting rides"))
+
+	offer_result = make_offer(booking.name, vehicle_name, offered_fare)
+	offer = frappe.get_doc("Booking Offer", offer_result["name"])
+	return _accept_offer_for_booking(offer, booking)
+
+
+def _accept_offer_for_booking(offer, booking):
 
 	booking.fare_amount = offer.offered_fare
 	booking.platform_fee_amount = round(float(offer.offered_fare or 0) * float(booking.platform_fee_rate or 0) / 100, 2)
@@ -489,6 +590,7 @@ def accept_offer(offer_name):
 	)
 	return {
 		"trip": trip.name,
+		"booking": booking.name,
 		"trip_title": trip.trip_title,
 		"offer": offer.name,
 		"offered_fare": offer.offered_fare,
