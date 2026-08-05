@@ -441,14 +441,7 @@ def list_bookings(company=None, limit=50, mine=None):
 	"""
 	user = frappe.session.user if frappe.session.user != "Guest" else None
 	if mine and user:
-		owned = frappe.db.sql_list("""
-			SELECT name FROM `tabTrip Booking`
-			WHERE main_rider_user = %s
-			UNION
-			SELECT parent FROM `tabTrip Passenger`
-			WHERE user = %s
-		""", (user, user))
-		filters = {"name": ("in", owned) if owned else ("in", [])}
+		filters = {"main_rider_user": user}
 	elif mine:
 		filters = {"name": ("in", [])}
 	else:
