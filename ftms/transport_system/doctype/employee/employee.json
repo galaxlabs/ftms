@@ -24,8 +24,6 @@
   "nationality",
   "employment_section",
   "company",
-  "designation",
-  "department",
   "vehicle_assigned",
   "supervisor_name",
   "column_break_2",
@@ -150,18 +148,6 @@
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company"
-  },
-  {
-   "fieldname": "designation",
-   "fieldtype": "Link",
-   "label": "Designation",
-   "options": "Designation"
-  },
-  {
-   "fieldname": "department",
-   "fieldtype": "Link",
-   "label": "Department",
-   "options": "Department"
   },
   {
    "fieldname": "vehicle_assigned",
