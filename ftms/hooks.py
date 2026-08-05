@@ -86,11 +86,13 @@ doc_events = {
 }
 
 scheduler_events = {
-    "daily": [
+"daily": [
         "ftms.subscriptions.utils.daily_subscription_sync",
         "ftms.commissions.engine.daily_commission_summary",
         "ftms.api.vehicle.mark_due_service_records",
         "ftms.notifications.service.dispatch_queued_notifications",
+        "ftms.maintenance.cleanup.cleanup_old_bookings",
+        "ftms.maintenance.cleanup.cleanup_old_trip_groups",
     ],
     "hourly": [
         "ftms.subscriptions.utils.hourly_trial_check",
