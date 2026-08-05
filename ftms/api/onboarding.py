@@ -85,7 +85,7 @@ def signup_user(email, password, confirm_password, username=None, first_name=Non
         "first_name": first_name,
         "last_name": last_name,
         "enabled": 1,
-        "user_type": "Website User",
+        "user_type": "System User",
         "send_welcome_email": 0,
         "new_password": password,
     })
