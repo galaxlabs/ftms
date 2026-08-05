@@ -152,3 +152,23 @@ def check_payment_status(payment_id):
     if not result:
         frappe.throw("Could not retrieve payment status")
     return {"status": result.get("status"), "amount": result.get("amount")}
+
+
+@frappe.whitelist()
+def test_credit_wallet(amount, currency="SAR", description=None):
+    """Admin-only direct wallet credit for testing Moyasser integration."""
+    user = frappe.session.user
+    if user != "Administrator":
+        frappe.throw("Only Administrator can test-credit wallets", frappe.PermissionError)
+    amount = float(amount)
+    if amount <= 0:
+        frappe.throw("Amount must be positive")
+    result = credit_wallet(
+        user=user,
+        amount=amount,
+        currency=currency or "SAR",
+        external_reference=f"test-{frappe.generate_hash(16)}",
+        description=description or "Administrator test credit",
+    )
+    frappe.db.commit()
+    return {"status": "credited", **result}
