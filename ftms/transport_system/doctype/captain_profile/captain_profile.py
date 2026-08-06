@@ -123,10 +123,12 @@ class CaptainProfile(Document):
 			"status": "Active",
 		})
 		if not existing:
+			code = f"CAP-{self.user.split('@')[0][:6].upper()}-{frappe.generate_hash(4)}"
 			link = frappe.get_doc({
 				"doctype": "User Company Link",
 				"user": self.user,
 				"company": self.current_company,
+				"link_code": code,
 				"role": "Captain",
 				"status": "Active",
 			})
