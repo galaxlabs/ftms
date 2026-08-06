@@ -93,11 +93,16 @@ def list_vehicle_models(make=None, vehicle_type=None, vehicle_category=None, lim
 def list_vehicle_catalog(make=None, vehicle_type=None, vehicle_category=None, model=None, limit=100):
 	"""Return dependent vehicle options for driver forms."""
 	if model:
-		# When a model is selected, filter types by that model's vehicle_type
-		vehicle_type = vehicle_type or frappe.db.get_value("Vehicle Model", model, "vehicle_type")
+		vehicle_category = vehicle_category or frappe.db.get_value("Vehicle Model", model, "vehicle_category")
 	makes = list_vehicle_makes(limit=limit)
 	models = list_vehicle_models(make=make, vehicle_type=vehicle_type, vehicle_category=vehicle_category, limit=limit)
-	types = list_vehicle_types(vehicle_type=vehicle_type, limit=limit)
+	types = list_vehicle_types() if not vehicle_category else frappe.get_all(
+		"Vehicle Type",
+		filters={"vehicle_category": vehicle_category, "is_active": 1},
+		fields=["name", "type_name", "type_name_ar", "vehicle_category", "is_active"],
+		order_by="type_name asc",
+		limit_page_length=int(limit),
+	)
 	return {"types": types, "makes": makes, "models": models}
 
 
