@@ -106,7 +106,7 @@ def list_vehicle_catalog(make=None, vehicle_type=None, vehicle_category=None, mo
 	return {"types": types, "makes": makes, "models": models}
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def create_vehicle(
 	plate_no, vehicle_name=None,
 	vehicle_name_ar=None, plate_no_ar=None,
@@ -123,9 +123,11 @@ def create_vehicle(
 ):
 	user = frappe.session.user
 	if user == "Guest":
-		frappe.throw(_("Login is required"), frappe.PermissionError)
+		user = _resolve_user_from_firebase_auth()
+		if not user:
+			frappe.throw(_("Login is required"), frappe.PermissionError)
 
-	resolved_company = get_user_company()
+	resolved_company = get_user_company(user=user)
 	owner_captain_user = owner_captain_user or user
 	if not resolved_company and not frappe.db.exists("Captain Profile", {"user": user}):
 		frappe.throw(_("Create a captain profile or join a company before registering a vehicle."))
