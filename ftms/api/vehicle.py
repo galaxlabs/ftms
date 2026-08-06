@@ -10,7 +10,7 @@ from ftms.tenant import company_filters, get_user_company, resolve_company
 
 
 def _resolve_user_from_firebase_auth():
-	"""Resolve a user from the Firebase Authorization bearer token."""
+	"""Resolve and login a user from the Firebase Authorization bearer token."""
 	auth_header = frappe.get_request_header("Authorization") or ""
 	if not auth_header.startswith("Bearer "):
 		return None
@@ -18,7 +18,10 @@ def _resolve_user_from_firebase_auth():
 	from ftms.firebase_auth_bridge import verify_id_token, resolve_frappe_user
 	try:
 		claims = verify_id_token(id_token)
-		return resolve_frappe_user(claims)
+		user = resolve_frappe_user(claims, create=True)
+		# Set the session so all subsequent permission checks pass
+		frappe.set_user(user)
+		return user
 	except Exception:
 		return None
 
