@@ -36,12 +36,14 @@ class CaptainProfile(Document):
 		"""Auto-create User, Company, and Employee when a Captain Profile is created."""
 		self._sync_user()
 		self._sync_company()
+		self._sync_company_link()
 		self._sync_employee()
 
 	def on_update(self):
 		"""Sync User, Company, and Employee on every save."""
 		self._sync_user()
 		self._sync_company()
+		self._sync_company_link()
 		self._sync_employee()
 
 	def _sync_user(self):
@@ -110,6 +112,25 @@ class CaptainProfile(Document):
 				self.db_set("current_company", company_name)
 		except Exception as e:
 			frappe.log_error(f"Captain _sync_company failed for {self.name}: {e}", "Captain Profile Sync")
+
+	def _sync_company_link(self):
+		"""Ensure the captain has an active User Company Link for their company."""
+		if not self.current_company:
+			return
+		existing = frappe.db.exists("User Company Link", {
+			"user": self.user,
+			"company": self.current_company,
+			"status": "Active",
+		})
+		if not existing:
+			link = frappe.get_doc({
+				"doctype": "User Company Link",
+				"user": self.user,
+				"company": self.current_company,
+				"role": "Captain",
+				"status": "Active",
+			})
+			link.insert(ignore_permissions=True)
 
 	def _sync_employee(self):
 		"""Create or update an Employee record for this captain.
