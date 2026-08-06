@@ -130,6 +130,14 @@ def create_vehicle(
 		if not user:
 			frappe.throw(_("Login is required"), frappe.PermissionError)
 
+	# Fallback: read from form_dict if args are not passed (POST body parsing issue)
+	fd = frappe.form_dict
+	plate_no = plate_no or fd.get("plate_no")
+	vehicle_make = vehicle_make or fd.get("vehicle_make")
+	vehicle_model = vehicle_model or fd.get("vehicle_model")
+	vehicle_type = vehicle_type or fd.get("vehicle_type")
+	passenger_capacity = passenger_capacity or fd.get("passenger_capacity")
+
 	resolved_company = get_user_company(user=user)
 	owner_captain_user = owner_captain_user or user
 	if not resolved_company and not frappe.db.exists("Captain Profile", {"user": user}):
