@@ -189,8 +189,8 @@ def list_my_vehicles(limit=50):
 	if user == "Guest":
 		user = _resolve_user_from_firebase_auth()
 		if not user:
-			frappe.throw(_("Login is required"), frappe.PermissionError)
-	company = get_user_company()
+			return []  # Unauthenticated — return empty
+	company = get_user_company(user=user)
 	filters = {"owner_captain_user": user}
 	if company:
 		filters = [["company", "=", company], ["assigned_captain_user", "=", user]]
