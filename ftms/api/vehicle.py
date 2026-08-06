@@ -9,6 +9,20 @@ from ftms.notifications.service import emit_event
 from ftms.tenant import company_filters, get_user_company, resolve_company
 
 
+def _resolve_user_from_firebase_auth():
+	"""Resolve a user from the Firebase Authorization bearer token."""
+	auth_header = frappe.get_request_header("Authorization") or ""
+	if not auth_header.startswith("Bearer "):
+		return None
+	id_token = auth_header[7:]
+	from ftms.firebase_auth_bridge import verify_id_token, resolve_frappe_user
+	try:
+		claims = verify_id_token(id_token)
+		return resolve_frappe_user(claims)
+	except Exception:
+		return None
+
+
 @frappe.whitelist(allow_guest=True)
 def list_vehicles(company=None, limit=50):
 	filters = company_filters(company=company)
@@ -161,11 +175,13 @@ def create_vehicle(
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def list_my_vehicles(limit=50):
 	user = frappe.session.user
 	if user == "Guest":
-		frappe.throw(_("Login is required"), frappe.PermissionError)
+		user = _resolve_user_from_firebase_auth()
+		if not user:
+			frappe.throw(_("Login is required"), frappe.PermissionError)
 	company = get_user_company()
 	filters = {"owner_captain_user": user}
 	if company:
