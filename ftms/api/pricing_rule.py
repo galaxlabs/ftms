@@ -143,9 +143,9 @@ def list_pricing_rules(company=None, limit=50):
 	)
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_price_quote(vehicle_type, route=None, distance_km=None, passenger_count=1, vehicle=None, company=None, pricing_rule=None, fare_mode="flat"):
-	company = resolve_company(company=company)
+	company = resolve_company(company=company, allow_missing=True) or None
 	quote = calculate_quote(
 		company,
 		vehicle_type,
