@@ -111,7 +111,7 @@ def list_vehicle_catalog(make=None, vehicle_type=None, vehicle_category=None, mo
 
 @frappe.whitelist(allow_guest=True)
 def create_vehicle(
-	plate_no, vehicle_name=None,
+	plate_no=None, vehicle_name=None,
 	vehicle_name_ar=None, plate_no_ar=None,
 	vehicle_make=None, vehicle_model=None, vehicle_type=None,
 	registration_no=None, model_year=None, color=None,
