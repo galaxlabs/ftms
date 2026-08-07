@@ -16,11 +16,9 @@ def debug_echo_headers():
         if val:
             headers[key] = val[:200]
     body = frappe.request.get_data(as_text=True)[:500]
-    payload = {
+    return {
         "headers": headers,
         "body": body,
         "method": frappe.request.method,
         "protocol": frappe.request.environ.get("SERVER_PROTOCOL", ""),
     }
-    frappe.log_error(json.dumps(payload), "DEBUG HEADERS")
-    return payload
