@@ -148,7 +148,8 @@ def create_vehicle(
 	doc = frappe.get_doc({
 		"doctype": "Vehicle",
 		"company": resolved_company,
-		"owner_captain_user": owner_captain_user if not resolved_company else None,
+		"owner_captain_user": owner_captain_user,
+		"assigned_captain_user": assigned_captain_user or owner_captain_user,
 		# Vehicle controller generates vehicle_code and vehicle_name from
 		# company abbreviation, plate, make, and model.
 		"vehicle_name": vehicle_name or "Pending vehicle name",
