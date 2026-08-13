@@ -54,6 +54,14 @@ def get_driver_active_ride(captain_user):
 	}, "name")
 
 
+def _decline_key(captain_user, booking_name):
+	return f"ftms:booking-declined:{captain_user}:{booking_name}"
+
+
+def booking_declined_by_driver(captain_user, booking_name):
+	return bool(frappe.cache.get_value(_decline_key(captain_user, booking_name)))
+
+
 def match_bookings_for_driver(
 	captain_user,
 	latitude=None,
@@ -98,6 +106,8 @@ def match_bookings_for_driver(
 
 	scored = []
 	for b in bookings:
+		if booking_declined_by_driver(captain_user, b.name):
+			continue
 		if b.pickup_latitude is None or b.pickup_longitude is None:
 			continue
 		dist = _pickup_distance_km(b, latitude or 0, longitude or 0) if latitude is not None else 0
@@ -189,6 +199,27 @@ def driver_matched_bookings(vehicle_type=None, latitude=None, longitude=None, li
 		limit=int(limit or 50),
 	)
 	return [{f: b.get(f) for f in b if b.get(f) is not None} for b in results]
+
+
+@frappe.whitelist(methods=["POST"])
+def decline_booking(booking_name):
+	"""Hide an open booking from the authenticated captain for seven days."""
+	user = frappe.session.user
+	if user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
+	if frappe.db.get_value("Captain Profile", {"user": user}, "status") != "Active":
+		frappe.throw(_("Only active captains can decline ride orders"), frappe.PermissionError)
+	booking = frappe.get_doc("Trip Booking", booking_name)
+	if booking.main_rider_user == user:
+		frappe.throw(_("You cannot decline your own booking"), frappe.PermissionError)
+	if booking.negotiation_status != "Awaiting Offers" or booking.booking_status in ("Cancelled", "Closed"):
+		frappe.throw(_("Booking is no longer available"))
+	frappe.cache.set_value(
+		_decline_key(user, booking.name),
+		1,
+		expires_in_sec=7 * 24 * 60 * 60,
+	)
+	return {"booking": booking.name, "declined": True}
 
 
 @frappe.whitelist()
