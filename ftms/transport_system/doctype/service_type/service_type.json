@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Service Type",
   "module": "Transport System",
   "autoname": "field:service_name",

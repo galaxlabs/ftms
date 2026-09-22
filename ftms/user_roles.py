@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import frappe
 
-
 BUSINESS_ROLES = {
 	"Accountant",
 	"Captain",
 	"Company Admin",
 	"Customer Company",
+	"Driver",
 	"Dispatcher",
 	"Partner",
 	"Passenger",
@@ -81,6 +81,7 @@ def get_business_role(user):
 		"Partner",
 		"Customer Company",
 		"Company Admin",
+		"Driver",
 		"Dispatcher",
 		"Accountant",
 		"Passenger",

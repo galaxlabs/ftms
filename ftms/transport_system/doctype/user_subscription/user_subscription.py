@@ -36,23 +36,34 @@ class UserSubscription(Document):
     def _auto_renew(self):
         """Create next period, mark as overdue until paid."""
         today_date = getdate()
-        from ftms.subscriptions.utils import subscription_settings
-        active_days, hours_per_day, monthly_fee = subscription_settings()
+        from ftms.subscriptions.utils import get_agreement_terms
+        terms = get_agreement_terms(self.company)
+        active_days = terms.active_days
+        hours_per_day = terms.active_hours_per_day
+        monthly_fee = terms.amount
         new_end = add_days(today_date, active_days)
 
         self.append("periods", {
             "period_start": str(today_date),
             "period_end": str(new_end),
+            "subscription_agreement": terms.agreement,
+            "agreement_type": terms.agreement_type,
+            "billing_period_months": terms.billing_period_months,
+            "vehicle_count": terms.vehicle_count,
+            "active_days": active_days,
+            "active_hours_per_day": hours_per_day,
             "amount": monthly_fee,
             "paid": 0,
         })
+        self.subscription_agreement = terms.agreement
+        self.agreement_type = terms.agreement_type
         self.status = "Overdue"
         self.active_days_used = 0
-        self.active_days_remaining = active_days
+        self.active_days_remaining = 0
         self.active_hours_used = 0
         self.active_hours_per_day = hours_per_day
-        self.active_hours_limit = active_days * hours_per_day
-        self.active_hours_remaining = self.active_hours_limit
+        self.active_hours_limit = 0
+        self.active_hours_remaining = 0
         self.rollover_days = 0
 
     def mark_paid(self, invoice=None):
@@ -67,10 +78,11 @@ class UserSubscription(Document):
         period.payment_date = str(today())
         if invoice:
             period.invoice = invoice
+            period.payment_transaction = invoice
         self.current_period_start = str(getdate())
         self.current_period_end = period.period_end
-        from ftms.subscriptions.utils import subscription_settings
-        active_days, hours_per_day, _ = subscription_settings()
+        active_days = period.active_days or 30
+        hours_per_day = period.active_hours_per_day or 8
         self.active_hours_used = 0
         self.active_hours_per_day = hours_per_day
         self.active_hours_limit = active_days * hours_per_day

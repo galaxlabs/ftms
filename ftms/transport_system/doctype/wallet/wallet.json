@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Wallet",
   "module": "Transport System",
   "autoname": "format:WAL-{#####}",

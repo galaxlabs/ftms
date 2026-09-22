@@ -4,8 +4,9 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
-from ftms.tenant import get_user_company, resolve_company
 from ftms.api.membership import _require_company_admin
+from ftms.tenant import get_user_company, resolve_company
+from ftms.user_roles import assign_business_role
 
 
 @frappe.whitelist()
@@ -51,6 +52,27 @@ def create_captain_profile(
 	user = frappe.session.user
 	if not user or user == "Guest":
 		frappe.throw(_("Login is required"), frappe.PermissionError)
+	full_name = (full_name or "").strip()
+	mobile_no = (mobile_no or "").strip()
+	id_document_type = (id_document_type or "").strip()
+	nationality = (nationality or "").strip()
+	identity_no = (iqama_no or national_id or "").strip()
+	license_no = (license_no or "").strip()
+	city = (city or "").strip()
+	address = (address or "").strip()
+	missing = [label for label, value in (
+		(_("Full name"), full_name),
+		(_("Mobile number"), mobile_no),
+		(_("ID document type"), id_document_type),
+		(_("Nationality"), nationality),
+		(_("Identity number"), identity_no),
+		(_("Driving license number"), license_no),
+		(_("License expiry date"), license_expiry_date),
+		(_("City"), city),
+		(_("Address"), address),
+	) if not value]
+	if missing:
+		frappe.throw(_("Complete required captain details: {0}").format(", ".join(missing)))
 
 	existing = frappe.db.get_value("Captain Profile", {"user": user}, "name")
 	if existing:
@@ -58,8 +80,8 @@ def create_captain_profile(
 	else:
 		doc = frappe.get_doc({"doctype": "Captain Profile", "user": user, "status": "Pending"})
 
-	doc.full_name = full_name or doc.full_name or frappe.db.get_value("User", user, "full_name") or user
-	doc.mobile_no = mobile_no or doc.mobile_no
+	doc.full_name = full_name
+	doc.mobile_no = mobile_no
 	if id_document_type:
 		doc.id_document_type = id_document_type
 	if nationality:
@@ -90,8 +112,10 @@ def create_captain_profile(
 		doc.driver_card_document = driver_card_document
 
 	doc.save(ignore_permissions=True)
+	assign_business_role(user, "Captain", onboarded=True)
+	assign_business_role(user, "Driver", onboarded=True)
 	frappe.db.commit()
-	return {"status": "ok", "captain_profile": doc.name, "is_new": not bool(existing)}
+	return {"status": "ok", "captain_profile": doc.name, "profile_status": doc.status, "is_new": not bool(existing)}
 
 
 @frappe.whitelist()

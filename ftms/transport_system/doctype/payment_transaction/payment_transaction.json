@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Payment Transaction",
   "module": "Transport System",
   "autoname": "format:PAY-{YYYY}-{#####}",

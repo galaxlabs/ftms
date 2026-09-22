@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Partnership",
   "module": "Transport System",
   "autoname": "format:PART-{YYYY}-{#####}",

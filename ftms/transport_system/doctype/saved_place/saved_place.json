@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Saved Place",
   "module": "Transport System",
   "autoname": "format:PLACE-{YYYY}-{#####}",

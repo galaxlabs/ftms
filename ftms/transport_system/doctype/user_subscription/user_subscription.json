@@ -7,6 +7,8 @@
  "field_order": [
   "user",
   "company",
+  "subscription_agreement",
+  "agreement_type",
   "status",
   "sb_trial",
   "trial_start",
@@ -53,6 +55,19 @@
    "options": "Company",
    "reqd": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "subscription_agreement",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Subscription Agreement",
+   "options": "Subscription Agreement"
+  },
+  {
+   "fieldname": "agreement_type",
+   "fieldtype": "Data",
+   "label": "Agreement Type",
+   "read_only": 1
   },
   {
    "fieldname": "status",

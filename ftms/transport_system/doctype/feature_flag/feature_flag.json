@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Feature Flag",
   "module": "Transport System",
   "autoname": "field:flag_key",

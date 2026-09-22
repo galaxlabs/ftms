@@ -4,6 +4,7 @@
  "autoname": "format:CJR-{YYYY}-{#####}",
  "creation": "2026-07-19 00:00:00",
  "doctype": "DocType",
+ "owner": "Administrator",
  "engine": "InnoDB",
  "field_order": ["captain_profile", "company", "requested_by", "requested_on", "status", "approved_by", "approved_on", "notes"],
  "fields": [

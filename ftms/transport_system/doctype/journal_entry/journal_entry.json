@@ -3,6 +3,7 @@
  "autoname": "format:JE-{#####}",
  "creation": "2026-07-18 00:00:00",
  "doctype": "DocType",
+ "owner": "Administrator",
  "engine": "InnoDB",
  "field_order": [
   "title",

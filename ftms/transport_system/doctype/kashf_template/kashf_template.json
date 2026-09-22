@@ -1,28 +1,155 @@
 {
-  "doctype": "DocType",
-  "name": "Kashf Template",
-  "module": "Transport System",
-  "autoname": "field:template_name",
-  "engine": "InnoDB",
-  "field_order": ["template_name", "service_type", "country", "column_break_template", "enabled", "language", "provider_identity_source", "show_passenger_documents", "show_passenger_mobile", "show_qr", "section_branding", "company_logo_field", "company_stamp_field", "driver_provider_name_field", "vehicle_card_field", "vehicle_ownership_field", "footer_text"],
-  "fields": [
-    {"fieldname": "template_name", "fieldtype": "Data", "label": "Template Name", "reqd": 1, "unique": 1, "in_list_view": 1},
-    {"fieldname": "service_type", "fieldtype": "Link", "label": "Service Type", "options": "Service Type"},
-    {"fieldname": "country", "fieldtype": "Link", "label": "Country", "options": "Country"},
-    {"fieldname": "column_break_template", "fieldtype": "Column Break"},
-    {"fieldname": "enabled", "fieldtype": "Check", "label": "Enabled", "default": "1", "in_list_view": 1},
-    {"fieldname": "language", "fieldtype": "Select", "label": "Language", "options": "English\nArabic\nBilingual", "default": "Bilingual"},
-    {"fieldname": "provider_identity_source", "fieldtype": "Select", "label": "Provider Identity Source", "options": "Verified Company First\nDriver Provider First\nCompany Only\nDriver Only", "default": "Verified Company First"},
-    {"fieldname": "show_passenger_documents", "fieldtype": "Check", "label": "Show Passenger Documents", "default": "0"},
-    {"fieldname": "show_passenger_mobile", "fieldtype": "Check", "label": "Show Passenger Mobile", "default": "1"},
-    {"fieldname": "show_qr", "fieldtype": "Check", "label": "Show QR", "default": "1"},
-    {"fieldname": "section_branding", "fieldtype": "Section Break", "label": "Provider Branding"},
-    {"fieldname": "company_logo_field", "fieldtype": "Data", "label": "Company Logo Field", "default": "logo"},
-    {"fieldname": "company_stamp_field", "fieldtype": "Data", "label": "Company Stamp Field", "default": "stamp_image"},
-    {"fieldname": "driver_provider_name_field", "fieldtype": "Data", "label": "Driver Provider Name Field", "default": "provider_name"},
-    {"fieldname": "vehicle_card_field", "fieldtype": "Data", "label": "Vehicle Card Field", "default": "vehicle_card_document"},
-    {"fieldname": "vehicle_ownership_field", "fieldtype": "Data", "label": "Vehicle Ownership Field", "default": "vehicle_ownership_document"},
-    {"fieldname": "footer_text", "fieldtype": "Small Text", "label": "Footer Text"}
-  ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+ "actions": [],
+ "autoname": "field:template_name",
+ "creation": "2026-07-30 06:39:07.792495",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "template_name",
+  "service_type",
+  "country",
+  "column_break_template",
+  "enabled",
+  "language",
+  "provider_identity_source",
+  "show_passenger_documents",
+  "show_passenger_mobile",
+  "show_qr",
+  "section_branding",
+  "company_logo_field",
+  "vehicle_card_field",
+  "footer_text",
+  "column_break_lair",
+  "company_stamp_field",
+  "driver_provider_name_field",
+  "vehicle_ownership_field"
+ ],
+ "fields": [
+  {
+   "fieldname": "template_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Template Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "service_type",
+   "fieldtype": "Link",
+   "label": "Service Type",
+   "options": "Service Type"
+  },
+  {
+   "fieldname": "country",
+   "fieldtype": "Link",
+   "label": "Country",
+   "options": "Country"
+  },
+  {
+   "fieldname": "column_break_template",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "default": "Bilingual",
+   "fieldname": "language",
+   "fieldtype": "Select",
+   "label": "Language",
+   "options": "English\nArabic\nBilingual"
+  },
+  {
+   "default": "Verified Company First",
+   "fieldname": "provider_identity_source",
+   "fieldtype": "Select",
+   "label": "Provider Identity Source",
+   "options": "Verified Company First\nDriver Provider First\nCompany Only\nDriver Only"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_passenger_documents",
+   "fieldtype": "Check",
+   "label": "Show Passenger Documents"
+  },
+  {
+   "default": "1",
+   "fieldname": "show_passenger_mobile",
+   "fieldtype": "Check",
+   "label": "Show Passenger Mobile"
+  },
+  {
+   "default": "1",
+   "fieldname": "show_qr",
+   "fieldtype": "Check",
+   "label": "Show QR"
+  },
+  {
+   "fieldname": "section_branding",
+   "fieldtype": "Section Break",
+   "label": "Provider Branding"
+  },
+  {
+   "default": "logo",
+   "fieldname": "company_logo_field",
+   "fieldtype": "Data",
+   "label": "Company Logo Field"
+  },
+  {
+   "default": "stamp_image",
+   "fieldname": "company_stamp_field",
+   "fieldtype": "Data",
+   "label": "Company Stamp Field"
+  },
+  {
+   "default": "provider_name",
+   "fieldname": "driver_provider_name_field",
+   "fieldtype": "Data",
+   "label": "Driver Provider Name Field"
+  },
+  {
+   "default": "vehicle_card_document",
+   "fieldname": "vehicle_card_field",
+   "fieldtype": "Data",
+   "label": "Vehicle Card Field"
+  },
+  {
+   "default": "vehicle_ownership_document",
+   "fieldname": "vehicle_ownership_field",
+   "fieldtype": "Data",
+   "label": "Vehicle Ownership Field"
+  },
+  {
+   "fieldname": "footer_text",
+   "fieldtype": "Small Text",
+   "label": "Footer Text"
+  },
+  {
+   "fieldname": "column_break_lair",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "links": [],
+ "modified": "2026-08-06 03:18:30.388650",
+ "modified_by": "Administrator",
+ "module": "Transport System",
+ "name": "Kashf Template",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
 }

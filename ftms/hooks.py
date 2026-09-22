@@ -112,6 +112,8 @@ has_permission = {
     "Route": "ftms.api.permissions.has_permission",
     "Trip Expense": "ftms.api.permissions.has_permission",
     "Vehicle Assignment": "ftms.api.permissions.has_permission",
+    "Vehicle Inspection Log": "ftms.transport_system.doctype.vehicle_inspection_log.vehicle_inspection_log.has_permission",
+    "Document Extraction": "ftms.transport_system.doctype.document_extraction.document_extraction.has_permission",
 }
 
 get_permission_query_conditions = {
@@ -122,6 +124,8 @@ get_permission_query_conditions = {
     "Route": "ftms.api.permissions.get_permission_query_conditions_for_route",
     "Trip Expense": "ftms.api.permissions.get_permission_query_conditions_for_trip_expense",
     "Vehicle Assignment": "ftms.api.permissions.get_permission_query_conditions_for_vehicle_assignment",
+    "Vehicle Inspection Log": "ftms.transport_system.doctype.vehicle_inspection_log.vehicle_inspection_log.get_permission_query_conditions",
+    "Document Extraction": "ftms.transport_system.doctype.document_extraction.document_extraction.get_permission_query_conditions",
 }
 
 fixtures = [
@@ -138,6 +142,7 @@ zatca_invoice_adapters = {
 }
 
 default_print_format = {
+    "Vehicle Inspection Log": "Kashf Driver",
     "Trip Invoice": "Trip Invoice KSA",
 }
 

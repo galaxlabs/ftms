@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Agreement Template",
   "module": "Transport System",
   "autoname": "field:template_name",

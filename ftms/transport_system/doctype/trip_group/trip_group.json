@@ -53,6 +53,7 @@
  "module": "Transport System",
  "name": "Trip Group",
  "owner": "Administrator",
+ "modified_by": "Administrator",
  "permissions": [
   {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
   {"role": "Company Admin", "read": 1, "write": 1, "create": 1, "delete": 1},

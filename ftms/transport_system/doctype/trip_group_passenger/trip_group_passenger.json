@@ -30,6 +30,7 @@
  "module": "Transport System",
  "name": "Trip Group Passenger",
  "owner": "Administrator",
+ "modified_by": "Administrator",
  "permissions": [],
  "sort_field": "modified",
  "sort_order": "DESC",

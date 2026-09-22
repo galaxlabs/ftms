@@ -7,15 +7,24 @@
  "engine": "InnoDB",
  "field_order": [
   "user",
-  "full_name",
   "mobile_no",
+  "column_break_govl",
+  "full_name",
   "status",
+  "section_verification",
+  "verification_status",
+  "verification_notes",
+  "verified_on",
+  "column_break_jywx",
+  "verified_by",
+  "rejection_reason",
   "section_license",
   "id_document_type",
   "nationality",
   "iqama_no",
   "iqama_expiry_date",
   "national_id",
+  "id_expiry_date",
   "license_no",
   "license_expiry_date",
   "column_break_license",
@@ -39,11 +48,12 @@
   "approved_on",
   "section_documents",
   "id_document",
-  "license_document",
   "driver_card_document",
-  "vehicle_card_document",
   "vehicle_ownership_document",
-  "notes"
+  "notes",
+  "column_break_yfrr",
+  "license_document",
+  "vehicle_card_document"
  ],
  "fields": [
   {
@@ -75,6 +85,42 @@
    "options": "Pending\nActive\nBlocked"
   },
   {
+   "fieldname": "section_verification",
+   "fieldtype": "Section Break",
+   "label": "Verification"
+  },
+  {
+   "default": "Incomplete",
+   "fieldname": "verification_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Verification Status",
+   "options": "Incomplete\nUnder Review\nVerified\nRejected"
+  },
+  {
+   "fieldname": "verification_notes",
+   "fieldtype": "Small Text",
+   "label": "Verification Notes"
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason"
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Link",
+   "label": "Verified By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "verified_on",
+   "fieldtype": "Datetime",
+   "label": "Verified On",
+   "read_only": 1
+  },
+  {
    "fieldname": "section_license",
    "fieldtype": "Section Break",
    "label": "License & Identity"
@@ -104,6 +150,11 @@
    "fieldname": "national_id",
    "fieldtype": "Data",
    "label": "National ID / Iqama"
+  },
+  {
+   "fieldname": "id_expiry_date",
+   "fieldtype": "Date",
+   "label": "ID Expiry Date"
   },
   {
    "fieldname": "license_no",
@@ -235,31 +286,44 @@
    "label": "Notes"
   },
   {
+   "description": "Auto-creates company if not found",
    "fieldname": "company_name",
    "fieldtype": "Data",
-   "label": "Company Name",
-   "description": "Auto-creates company if not found"
+   "label": "Company Name"
   },
   {
+   "description": "Used to lookup or create company",
    "fieldname": "company_tax_id",
    "fieldtype": "Data",
-   "label": "Company Tax ID",
-   "description": "Used to lookup or create company"
+   "label": "Company Tax ID"
   },
   {
    "fieldname": "company_name_ar",
    "fieldtype": "Data",
    "label": "Company Name Arabic"
+  },
+  {
+   "fieldname": "column_break_govl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_jywx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_yfrr",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-19 00:00:00",
+ "modified": "2026-09-22 16:12:01.516423",
  "modified_by": "Administrator",
  "module": "Transport System",
  "name": "Captain Profile",
  "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
  "permissions": [
   {
    "create": 1,

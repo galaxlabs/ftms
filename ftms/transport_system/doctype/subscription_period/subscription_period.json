@@ -7,7 +7,15 @@
  "field_order": [
   "period_start",
   "period_end",
+  "subscription_agreement",
+  "agreement_type",
+  "billing_period_months",
+  "vehicle_count",
+  "active_days",
+  "active_hours_per_day",
   "amount",
+  "payment_transaction",
+  "payment_url",
   "paid",
   "payment_date",
   "invoice"
@@ -34,6 +42,48 @@
    "label": "Amount",
    "options": "currency",
    "reqd": 1
+  },
+  {
+   "fieldname": "subscription_agreement",
+   "fieldtype": "Link",
+   "label": "Subscription Agreement",
+   "options": "Subscription Agreement"
+  },
+  {
+   "fieldname": "agreement_type",
+   "fieldtype": "Data",
+   "label": "Agreement Type"
+  },
+  {
+   "fieldname": "billing_period_months",
+   "fieldtype": "Int",
+   "label": "Billing Period Months"
+  },
+  {
+   "fieldname": "vehicle_count",
+   "fieldtype": "Int",
+   "label": "Vehicle Count"
+  },
+  {
+   "fieldname": "active_days",
+   "fieldtype": "Int",
+   "label": "Active Days"
+  },
+  {
+   "fieldname": "active_hours_per_day",
+   "fieldtype": "Float",
+   "label": "Active Hours Per Day"
+  },
+  {
+   "fieldname": "payment_transaction",
+   "fieldtype": "Link",
+   "label": "Payment Transaction",
+   "options": "Payment Transaction"
+  },
+  {
+   "fieldname": "payment_url",
+   "fieldtype": "Small Text",
+   "label": "Payment URL"
   },
   {
    "default": "0",

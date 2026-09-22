@@ -5,7 +5,9 @@ from frappe.utils import add_days, getdate, today
 from ftms.subscriptions.utils import (
     PERIOD_DAYS,
     MONTHLY_FEE,
+    create_subscription_payment,
     create_subscription_on_link,
+    get_agreement_terms,
     record_activity,
     set_online_status,
     subscription_settings,
@@ -63,19 +65,26 @@ def check_status():
 @frappe.whitelist()
 def get_plans():
     """Return available subscription plans."""
-    active_days, hours_per_day, monthly_fee = subscription_settings()
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw(_("Not authenticated"), frappe.PermissionError)
+    company = frappe.get_value("User Company Link", {"user": user, "status": "Active"}, "company")
+    terms = get_agreement_terms(company)
     return {
         "plans": [
             {
-                "name": "monthly",
-                "label": _("Monthly Active"),
-                "price": monthly_fee,
-                "currency": "SAR",
-                "duration_days": active_days,
-                "active_hours": active_days * hours_per_day,
-                "active_hours_per_day": hours_per_day,
-                "description": _("Subscription is charged by active usage time. "
-                                "Eight online hours count as one active day."),
+                "name": "company_agreement",
+                "label": terms.agreement_type,
+                "price": terms.amount,
+                "currency": terms.currency,
+                "duration_days": terms.active_days,
+                "active_hours": terms.active_days * terms.active_hours_per_day,
+                "active_hours_per_day": terms.active_hours_per_day,
+                "billing_period_months": terms.billing_period_months,
+                "vehicle_count": terms.vehicle_count,
+                "subscription_agreement": terms.agreement,
+                "payment_mode": terms.payment_mode,
+                "description": _("Subscription pricing is based on the active company agreement."),
             }
         ]
     }
@@ -112,7 +121,19 @@ def subscribe():
         sub.insert(ignore_permissions=True)
         sub.renew()
 
-    return {"subscription": sub.name, "status": sub.status, "amount": subscription_settings()[2]}
+    payment = create_subscription_payment(sub)
+    terms = get_agreement_terms(company)
+    frappe.db.commit()
+    return {
+        "subscription": sub.name,
+        "status": sub.status,
+        "amount": terms.amount,
+        "currency": terms.currency,
+        "payment_url": payment.get("payment_url"),
+        "payment_id": payment.get("payment_id"),
+        "payment_transaction": payment.get("payment_transaction"),
+        "payment_mode": payment.get("payment_mode") or terms.payment_mode,
+    }
 
 
 @frappe.whitelist()

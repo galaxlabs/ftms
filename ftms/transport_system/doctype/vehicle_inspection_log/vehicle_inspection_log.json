@@ -13,10 +13,27 @@
   "column_break_h1",
   "inspection_date",
   "driver",
-  "column_break_h2",
+   "captain_user",
+   "company",
+   "trip",
+   "route",
+   "column_break_h2",
   "vehicle",
   "vehicle_type",
   "supervisor",
+  "sec_mobile",
+  "current_city",
+  "target_city",
+  "latitude",
+  "longitude",
+  "detected_address",
+  "odometer",
+  "overall_result",
+  "status",
+  "submitted_on",
+  "front_photo",
+  "rear_photo",
+  "interior_photo",
   "sec_items",
   "items",
   "auto_fill_checklist",
@@ -69,8 +86,35 @@
    "in_list_view": 1,
    "label": "Driver | اسم السائق",
    "link_filters": "[[\"Employee\",\"is_driver\",\"=\",1]]",
-   "options": "Employee",
-   "reqd": 1
+   "options": "Employee"
+  },
+  {
+   "fieldname": "captain_user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Captain User",
+   "options": "User"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "trip",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Trip",
+   "options": "Trip"
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "label": "Route",
+   "options": "Route",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_h2",
@@ -89,6 +133,82 @@
    "fieldname": "vehicle_type",
    "fieldtype": "Data",
    "label": "Vehicle Type | نوع المركبة"
+  },
+  {
+   "fieldname": "sec_mobile",
+   "fieldtype": "Section Break",
+   "label": "Mobile Kashf"
+  },
+  {
+   "fieldname": "current_city",
+   "fieldtype": "Link",
+   "label": "Current City",
+   "options": "KSA City"
+  },
+  {
+   "fieldname": "target_city",
+   "fieldtype": "Link",
+   "label": "Target City",
+   "options": "KSA City"
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "precision": "7"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "precision": "7"
+  },
+  {
+   "fieldname": "detected_address",
+   "fieldtype": "Small Text",
+   "label": "Detected Address"
+  },
+  {
+   "fieldname": "odometer",
+   "fieldtype": "Float",
+   "label": "Odometer (KM)"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "overall_result",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Overall Result",
+   "options": "Pending\nPassed\nFailed\nRequires Attention"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nSubmitted\nApproved\nRejected"
+  },
+  {
+   "fieldname": "submitted_on",
+   "fieldtype": "Datetime",
+   "label": "Submitted On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "front_photo",
+   "fieldtype": "Attach Image",
+   "label": "Front Photo"
+  },
+  {
+   "fieldname": "rear_photo",
+   "fieldtype": "Attach Image",
+   "label": "Rear Photo"
+  },
+  {
+   "fieldname": "interior_photo",
+   "fieldtype": "Attach Image",
+   "label": "Interior Photo"
   },
   {
    "fieldname": "sec_items",
@@ -200,38 +320,36 @@
   },
   {
    "create": 1,
-   "delete": 1,
    "email": 1,
-   "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
    "role": "Driver",
-   "share": 1,
    "write": 1
   },
   {
    "create": 1,
-   "delete": 1,
    "email": 1,
-   "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
    "role": "Desk User",
-   "share": 1,
    "write": 1
   },
   {
    "create": 1,
-   "delete": 1,
    "email": 1,
-   "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
    "role": "Employee",
-   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Captain",
    "write": 1
   }
  ],

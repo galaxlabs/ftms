@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Settlement",
   "module": "Transport System",
   "autoname": "format:SET-{YYYY}-{#####}",

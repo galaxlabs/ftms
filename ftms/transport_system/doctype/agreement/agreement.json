@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Agreement",
   "module": "Transport System",
   "autoname": "format:AGR-{YYYY}-{#####}",

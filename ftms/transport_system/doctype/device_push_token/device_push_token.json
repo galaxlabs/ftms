@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Device Push Token",
   "module": "Transport System",
   "autoname": "hash",

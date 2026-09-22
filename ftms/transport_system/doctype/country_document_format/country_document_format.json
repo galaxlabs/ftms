@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "Country Document Format",
   "module": "Transport System",
   "autoname": "hash",

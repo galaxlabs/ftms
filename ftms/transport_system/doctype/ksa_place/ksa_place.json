@@ -1,5 +1,7 @@
 {
   "doctype": "DocType",
+  "owner": "Administrator",
+  "modified_by": "Administrator",
   "name": "KSA Place",
   "module": "Transport System",
   "autoname": "field:place_code",

@@ -5,6 +5,8 @@ from frappe import _
 from frappe.utils import add_days, get_datetime, getdate, today, now_datetime
 from math import ceil
 
+from ftms.transport_system.doctype.subscription_agreement.subscription_agreement import get_vehicle_count
+
 TRIAL_DAYS = 15
 PERIOD_DAYS = 30
 MONTHLY_FEE = 100
@@ -18,6 +20,50 @@ def subscription_settings():
     except Exception:
         active_days, hours_per_day, monthly_fee = PERIOD_DAYS, 8, MONTHLY_FEE
     return active_days, max(hours_per_day, 1), monthly_fee
+
+
+def get_active_subscription_agreement(company):
+    if not company or not frappe.db.exists("DocType", "Subscription Agreement"):
+        return None
+    name = frappe.db.get_value(
+        "Subscription Agreement",
+        {"company": company, "status": "Active"},
+        "name",
+        order_by="modified desc",
+    )
+    return frappe.get_doc("Subscription Agreement", name) if name else None
+
+
+def get_agreement_terms(company):
+    agreement = get_active_subscription_agreement(company)
+    if not agreement:
+        active_days, hours_per_day, monthly_fee = subscription_settings()
+        return frappe._dict({
+            "agreement": None,
+            "agreement_type": "Monthly",
+            "billing_period_months": 1,
+            "vehicle_count": 0,
+            "amount": monthly_fee,
+            "currency": "SAR",
+            "active_days": active_days,
+            "active_hours_per_day": hours_per_day,
+            "payment_mode": "Moyasar",
+            "auto_create_moyasar_payment": 1,
+        })
+
+    vehicle_count = get_vehicle_count(agreement.company, agreement.vehicle_count_source, agreement.manual_vehicle_count)
+    return frappe._dict({
+        "agreement": agreement.name,
+        "agreement_type": agreement.agreement_type or "Monthly",
+        "billing_period_months": int(agreement.billing_period_months or 1),
+        "vehicle_count": vehicle_count,
+        "amount": float(agreement.calculated_period_amount or 0),
+        "currency": agreement.currency or "SAR",
+        "active_days": int(agreement.active_days or 30),
+        "active_hours_per_day": float(agreement.active_hours_per_day or 8),
+        "payment_mode": agreement.payment_mode or "Moyasar",
+        "auto_create_moyasar_payment": int(agreement.auto_create_moyasar_payment or 0),
+    })
 
 
 def create_subscription_on_link(doc, method):
@@ -134,22 +180,33 @@ def _auto_renew(sub):
     """Auto-create a new period when auto_renew is enabled."""
     today_date = getdate()
 
-    active_days, hours_per_day, monthly_fee = subscription_settings()
+    terms = get_agreement_terms(sub.company)
+    active_days = terms.active_days
+    hours_per_day = terms.active_hours_per_day
+    monthly_fee = terms.amount
     new_end = add_days(today_date, active_days)
 
     sub.append("periods", {
         "period_start": str(today_date),
         "period_end": str(new_end),
+        "subscription_agreement": terms.agreement,
+        "agreement_type": terms.agreement_type,
+        "billing_period_months": terms.billing_period_months,
+        "vehicle_count": terms.vehicle_count,
+        "active_days": active_days,
+        "active_hours_per_day": hours_per_day,
         "amount": monthly_fee,
         "paid": 0,
     })
+    sub.subscription_agreement = terms.agreement
+    sub.agreement_type = terms.agreement_type
     sub.status = "Overdue"
     sub.active_days_used = 0
-    sub.active_days_remaining = active_days
+    sub.active_days_remaining = 0
     sub.active_hours_used = 0
     sub.active_hours_per_day = hours_per_day
-    sub.active_hours_limit = active_days * hours_per_day
-    sub.active_hours_remaining = sub.active_hours_limit
+    sub.active_hours_limit = 0
+    sub.active_hours_remaining = 0
     sub.rollover_days = 0
     sub.save(ignore_permissions=True)
 
@@ -177,6 +234,55 @@ def _create_renewal_invoice(sub):
         sub.db_set("last_invoice", inv.name)
     except Exception as e:
         frappe.log_error(f"Failed to create renewal invoice for {sub.name}: {e}")
+
+
+def create_subscription_payment(sub):
+    """Create Moyasar payment for the first unpaid subscription period."""
+    unpaid = next((p for p in sub.periods if not p.paid), None)
+    if not unpaid:
+        frappe.throw(_("No unpaid subscription period found"))
+
+    if unpaid.payment_transaction or unpaid.payment_url:
+        return {
+            "payment_url": unpaid.payment_url,
+            "payment_id": frappe.db.get_value("Payment Transaction", unpaid.payment_transaction, "gateway_reference") if unpaid.payment_transaction else None,
+            "payment_transaction": unpaid.payment_transaction,
+        }
+
+    terms = get_agreement_terms(sub.company)
+    if terms.payment_mode != "Moyasar" or not terms.auto_create_moyasar_payment:
+        return {"payment_url": None, "payment_id": None, "payment_mode": terms.payment_mode}
+
+    from ftms.payments.moyaser import create_payment
+    payment = create_payment(
+        amount=unpaid.amount,
+        currency=terms.currency,
+        description=f"FTMS subscription {sub.company} {unpaid.period_start} to {unpaid.period_end}",
+        user=sub.user,
+        company=sub.company,
+        metadata={
+            "subscription": sub.name,
+            "subscription_period_start": str(unpaid.period_start),
+            "subscription_period_end": str(unpaid.period_end),
+            "subscription_agreement": unpaid.subscription_agreement or sub.subscription_agreement,
+        },
+    )
+    transaction = frappe.get_doc({
+        "doctype": "Payment Transaction",
+        "user": sub.user,
+        "company": sub.company,
+        "provider": "moyasar",
+        "currency": terms.currency,
+        "amount": unpaid.amount,
+        "gateway_reference": payment.get("payment_id"),
+        "status": "Initiated",
+        "initiated_on": now_datetime(),
+    })
+    transaction.insert(ignore_permissions=True)
+    unpaid.payment_transaction = transaction.name
+    unpaid.payment_url = payment.get("payment_url")
+    sub.save(ignore_permissions=True)
+    return {"payment_url": payment.get("payment_url"), "payment_id": payment.get("payment_id"), "payment_transaction": transaction.name}
 
 
 def _update_status(name, status):

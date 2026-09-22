@@ -1,5 +1,6 @@
 import frappe
 from frappe.model.document import Document
+from frappe.utils import now_datetime
 
 
 def _default_domain():
@@ -21,12 +22,53 @@ class CaptainProfile(Document):
 		)
 		return bool(link and (link.is_owner or link.role == "Company Admin"))
 
+	def _can_review_verification(self):
+		if frappe.session.user == "Administrator" or "System Manager" in frappe.get_roles():
+			return True
+		return self.user != frappe.session.user and self._can_change_approval_status()
+
 	def validate(self):
 		status_changed = (self.is_new() and self.status != "Pending") or (
 			not self.is_new() and self.has_value_changed("status")
 		)
 		if status_changed and not self._can_change_approval_status():
 			frappe.throw("Only a System Manager or company administrator can change captain approval status", frappe.PermissionError)
+		if status_changed and self.status == "Active" and self.verification_status != "Verified":
+			frappe.throw("Captain identity and driving license must be verified before activation")
+		verification_changed = (self.is_new() and self.verification_status != "Incomplete") or (
+			not self.is_new() and self.has_value_changed("verification_status")
+		)
+		can_review_verification = self._can_review_verification()
+		review_fields_changed = not self.is_new() and any(
+			self.has_value_changed(fieldname)
+			for fieldname in ("verification_notes", "rejection_reason", "verified_by", "verified_on")
+		)
+		resubmitting = verification_changed and self.verification_status == "Under Review" and self.user == frappe.session.user
+		if review_fields_changed and not can_review_verification:
+			changed_only_rejection_reason = (
+				self.has_value_changed("rejection_reason")
+				and not any(
+					self.has_value_changed(fieldname)
+					for fieldname in ("verification_notes", "verified_by", "verified_on")
+				)
+			)
+			if not (resubmitting and changed_only_rejection_reason and not self.rejection_reason):
+				frappe.throw("Only an authorized reviewer can change verification review details", frappe.PermissionError)
+		if verification_changed:
+			if self.verification_status in ("Verified", "Rejected") and not can_review_verification:
+				frappe.throw("Only an authorized reviewer can verify or reject captain documents", frappe.PermissionError)
+			if not can_review_verification and (
+				self.user != frappe.session.user or self.verification_status != "Under Review"
+			):
+				frappe.throw("Captains may only submit their own documents for review", frappe.PermissionError)
+			if self.verification_status == "Rejected" and not self.rejection_reason:
+				frappe.throw("Rejection reason is required when rejecting captain documents")
+			if self.verification_status in ("Verified", "Rejected"):
+				self.verified_by = frappe.session.user
+				self.verified_on = now_datetime()
+			else:
+				self.verified_by = None
+				self.verified_on = None
 		if self.user and not self.full_name:
 			self.full_name = frappe.db.get_value("User", self.user, "full_name") or self.user
 		if self.iqama_no and not self.national_id:

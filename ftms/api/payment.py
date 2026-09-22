@@ -52,13 +52,14 @@ def payment_webhook():
     status = str(payload.get("status") or payload.get("payment_status") or "").lower()
     if status not in {"paid", "succeeded", "success", "authorized"}:
         return {"status": "ignored", "payment_status": status}
-    user = payload.get("user") or payload.get("customer_user")
+    metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+    user = payload.get("user") or payload.get("customer_user") or metadata.get("frappe_user")
     amount = payload.get("amount")
     currency = payload.get("currency") or "SAR"
     event_id = payload.get("event_id") or payload.get("payment_id") or payload.get("reference")
     if not user or not amount or not event_id:
         frappe.throw("Payment webhook requires user, amount, and event_id")
-    company = payload.get("company") or frappe.db.get_value(
+    company = payload.get("company") or metadata.get("company") or frappe.db.get_value(
         "User Company Link", {"user": user, "status": "Active"}, "company"
     )
     if not company:
@@ -83,7 +84,7 @@ def payment_webhook():
         "paid_on": now_datetime(),
     })
     payment.insert(ignore_permissions=True)
-    subscription_name = payload.get("subscription")
+    subscription_name = payload.get("subscription") or metadata.get("subscription")
     if subscription_name:
         subscription = frappe.get_doc("User Subscription", subscription_name)
         if subscription.user != user or subscription.company != company:

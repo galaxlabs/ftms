@@ -4,6 +4,7 @@
  "autoname": "format:VAS-{YYYY}-{#####}",
  "creation": "2026-07-19 00:00:00",
  "doctype": "DocType",
+ "owner": "Administrator",
  "engine": "InnoDB",
  "field_order": ["company", "vehicle", "captain_user", "from_date", "to_date", "status", "notes"],
  "fields": [
