@@ -475,7 +475,7 @@ def _handle_route_choice(session, phone, text):
 			notes="Created from WhatsApp",
 		)
 		trip_name = trip.get("name") if isinstance(trip, dict) else trip
-		pdf_bytes = frappe.get_print("Trip", trip_name, as_pdf=True)
+		pdf_bytes = frappe.get_print("Trip", trip_name, print_format="Trip Contract", as_pdf=True)
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "WhatsApp trip creation failed")
 		_send(phone, _t(lang, "trip_failed"))
