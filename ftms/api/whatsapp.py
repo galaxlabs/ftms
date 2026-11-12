@@ -217,6 +217,9 @@ def process_message(payload):
 	data = payload.get("data") or {}
 	key = data.get("key") or {}
 	sender = key.get("remoteJidAlt") or key.get("remoteJid") or ""
+	# Group and broadcast chats are not part of the captain flow.
+	if sender.endswith("@g.us") or sender.endswith("@broadcast") or key.get("remoteJid", "").endswith("@g.us"):
+		return
 	phone = _digits(sender.split("@")[0])
 	if not phone:
 		return
