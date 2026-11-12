@@ -167,6 +167,43 @@ def _country(value):
 	return None
 
 
+CHROME_BINARIES = ("/usr/bin/google-chrome", "/usr/bin/chromium-browser", "/snap/bin/chromium")
+
+
+def _render_pdf_with_chrome(html):
+	"""Render print HTML with headless Chrome (modern CSS and Arabic shaping)."""
+	import os
+	import subprocess
+	import tempfile
+
+	binary = next((b for b in CHROME_BINARIES if os.path.exists(b)), None)
+	if not binary:
+		raise RuntimeError("Chrome is not installed")
+	with tempfile.TemporaryDirectory() as tmp:
+		src = os.path.join(tmp, "trip.html")
+		out = os.path.join(tmp, "trip.pdf")
+		with open(src, "w", encoding="utf-8") as fh:
+			fh.write(html)
+		subprocess.run(
+			[
+				binary, "--headless", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage",
+				"--no-pdf-header-footer", f"--print-to-pdf={out}", "file://" + src,
+			],
+			check=True, timeout=120, capture_output=True,
+		)
+		with open(out, "rb") as fh:
+			return fh.read()
+
+
+def _trip_pdf(trip_name):
+	html = frappe.get_print("Trip", trip_name, print_format="Trip Contract", as_pdf=False)
+	try:
+		return _render_pdf_with_chrome(html)
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "Chrome PDF render failed; using wkhtmltopdf")
+		return frappe.get_print("Trip", trip_name, print_format="Trip Contract", as_pdf=True)
+
+
 def _find_captain(phone):
 	tail = _digits(phone)[-9:]
 	if len(tail) < 9:
@@ -475,7 +512,7 @@ def _handle_route_choice(session, phone, text):
 			notes="Created from WhatsApp",
 		)
 		trip_name = trip.get("name") if isinstance(trip, dict) else trip
-		pdf_bytes = frappe.get_print("Trip", trip_name, print_format="Trip Contract", as_pdf=True)
+		pdf_bytes = _trip_pdf(trip_name)
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "WhatsApp trip creation failed")
 		_send(phone, _t(lang, "trip_failed"))
