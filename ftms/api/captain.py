@@ -55,8 +55,8 @@ def list_captains(company=None, limit=50):
 def get_captain(name, company=None):
 	doc = frappe.get_doc("Captain Profile", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
-	if frappe.session.user != "Administrator" and doc.current_company != resolved_company:
-		frappe.throw("Not permitted for this company")
+	if not is_system_user() and doc.user != frappe.session.user and (not resolved_company or doc.current_company != resolved_company):
+		frappe.throw(_("Not permitted for this company"), frappe.PermissionError)
 	return doc.as_dict()
 
 
