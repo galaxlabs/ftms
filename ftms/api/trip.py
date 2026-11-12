@@ -1,4 +1,7 @@
+import json
+
 import frappe
+from frappe.utils import today
 
 from ftms.tenant import company_filters, get_user_company, has_company_access, resolve_company
 from ftms.config.service import get_public_frontend_url
@@ -72,6 +75,107 @@ def create_trip(route, trip_date, vehicle=None, trip_title=None, trip_code=None,
 	})
 	doc.insert(ignore_permissions=True)
 	return {"name": doc.name, "company": doc.company, "trip_status": doc.trip_status}
+
+
+@frappe.whitelist()
+def create_trip_with_passengers(
+	trip_title=None,
+	trip_date=None,
+	route=None,
+	vehicle=None,
+	assigned_captain_user=None,
+	company=None,
+	status="Draft",
+	passengers=None,
+	notes=None,
+):
+	user = frappe.session.user
+	if user == "Guest":
+		frappe.throw("Login is required", frappe.PermissionError)
+
+	resolved_company = resolve_company(company=company)
+	if status not in ("Draft", "Scheduled"):
+		frappe.throw("New trips must start as Draft or Scheduled")
+	if route and not frappe.db.exists("Route", {"name": route, "company": resolved_company}):
+		frappe.throw("Route does not belong to the selected company", frappe.PermissionError)
+	if vehicle and frappe.db.get_value("Vehicle", vehicle, "company") != resolved_company:
+		frappe.throw("Vehicle does not belong to the selected company", frappe.PermissionError)
+	if assigned_captain_user and not frappe.db.exists(
+		"User Company Link",
+		{"user": assigned_captain_user, "company": resolved_company, "role": "Captain", "status": "Active"},
+	):
+		frappe.throw("Captain does not belong to the selected company", frappe.PermissionError)
+
+	passenger_rows = _parse_passengers(passengers)
+	doc = frappe.get_doc({
+		"doctype": "Trip",
+		"company": resolved_company,
+		"trip_title": (trip_title or f"Scanned Trip {trip_date or today()}").strip(),
+		"trip_date": trip_date or today(),
+		"route": route,
+		"vehicle": vehicle,
+		"assigned_captain_user": assigned_captain_user,
+		"trip_status": status or "Draft",
+		"notes": notes,
+	})
+	for row in passenger_rows:
+		doc.append("passengers", row)
+	doc.insert(ignore_permissions=True)
+	frappe.db.commit()
+	return {
+		"name": doc.name,
+		"company": doc.company,
+		"trip_status": doc.trip_status,
+		"passenger_count": len(doc.passengers or []),
+		"public_uuid": doc.public_uuid,
+		"public_url": doc.public_url,
+	}
+
+
+def _parse_passengers(passengers):
+	if isinstance(passengers, str):
+		passengers = json.loads(passengers or "[]")
+	if not passengers:
+		return []
+	if not isinstance(passengers, list):
+		frappe.throw("Passengers must be a list")
+	rows = []
+	seen = set()
+	for item in passengers:
+		if not isinstance(item, dict):
+			continue
+		name = (item.get("passenger_name") or item.get("name") or item.get("full_name") or "").strip()
+		document_number = (item.get("document_number") or item.get("passport") or item.get("id_no") or "").strip()
+		if not name and not document_number:
+			continue
+		key = (document_number or name).lower()
+		if key in seen:
+			continue
+		seen.add(key)
+		rows.append({
+			"passenger_name": name or document_number,
+			"nationality": item.get("nationality"),
+			"document_type": _normalize_document_type(item.get("document_type")),
+			"document_number": document_number,
+			"mobile_no": item.get("mobile_no") or item.get("contact_no"),
+			"luggage_qty": int(item.get("luggage_qty") or 0),
+			"seat_no": item.get("seat_no"),
+			"source": item.get("source") if item.get("source") in ("Booking", "OCR", "Manual") else "OCR",
+			"notes": item.get("notes"),
+		})
+	return rows
+
+
+def _normalize_document_type(value):
+	value = (value or "").strip()
+	allowed = {"Passport", "National ID", "Residency", "Visa", "Other"}
+	if value in allowed:
+		return value
+	if value.lower() in ("iqama", "residence", "residency id"):
+		return "Residency"
+	if value.lower() in ("id", "national id", "national_id"):
+		return "National ID"
+	return "Passport" if value else None
 
 
 @frappe.whitelist()
