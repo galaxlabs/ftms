@@ -144,6 +144,29 @@ def _send_pdf(phone, pdf_bytes, filename, caption):
 		_send(phone, caption)
 
 
+COUNTRY_NAMES = {
+	"باكستان": "Pakistan", "پاکستان": "Pakistan",
+	"الهند": "India", "الہند": "India", "بھارت": "India",
+	"بنغلاديش": "Bangladesh", "بنگلہ دیش": "Bangladesh",
+	"مصر": "Egypt", "اندونيسيا": "Indonesia", "إندونيسيا": "Indonesia",
+	"سوريا": "Syria", "اليمن": "Yemen", "افغانستان": "Afghanistan",
+	"السعودية": "Saudi Arabia", "سعودي عربيہ": "Saudi Arabia", "سعودی عرب": "Saudi Arabia",
+	"نيبال": "Nepal", "سريلانكا": "Sri Lanka", "الفلبين": "Philippines",
+	"ايران": "Iran", "إيران": "Iran", "تركيا": "Turkey", "الأردن": "Jordan",
+}
+
+
+def _country(value):
+	"""Map OCR nationality text to a valid Country name, or None."""
+	text = (value or "").strip()
+	if not text:
+		return None
+	name = COUNTRY_NAMES.get(text, text)
+	if frappe.db.exists("Country", name):
+		return name
+	return None
+
+
 def _find_captain(phone):
 	tail = _digits(phone)[-9:]
 	if len(tail) < 9:
@@ -441,7 +464,7 @@ def _handle_route_choice(session, phone, text):
 					"passenger_name": r.get("passenger_name"),
 					"document_number": r.get("document_number"),
 					"document_type": r.get("document_type"),
-					"nationality": r.get("nationality"),
+					"nationality": _country(r.get("nationality")),
 					"source": "OCR",
 				}
 				for r in unique
