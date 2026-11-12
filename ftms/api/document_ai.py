@@ -13,3 +13,8 @@ def extract_attachment(attachment_action_id, file_url, target_doctype, target_na
 @frappe.whitelist(methods=["POST"])
 def confirm_extraction(extraction, confirmed_values, corrections=None):
 	return service.confirm_extraction(extraction, confirmed_values, corrections)
+
+
+@frappe.whitelist(methods=["POST"])
+def extract_passenger_document(file_data, mime_type=None):
+	return service.extract_passenger_document(file_data=file_data, mime_type=mime_type)

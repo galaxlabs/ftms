@@ -4,6 +4,7 @@ import hashlib
 import json
 import mimetypes
 import os
+import base64
 from pathlib import Path
 
 import frappe
@@ -22,6 +23,35 @@ ALLOWED_IMAGE_TYPES = {
 	".png": "image/png",
 	".webp": "image/webp",
 }
+
+PASSENGER_EXTRACTION_SCHEMA = {
+	"type": "object",
+	"additionalProperties": False,
+	"properties": {
+		"passengers": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": False,
+				"properties": {
+					"passenger_name": {"type": ["string", "null"]},
+					"document_number": {"type": ["string", "null"]},
+					"document_type": {"type": ["string", "null"]},
+					"nationality": {"type": ["string", "null"]},
+					"confidence": {"type": ["number", "null"]},
+				},
+				"required": ["passenger_name", "document_number", "document_type", "nationality", "confidence"],
+			},
+		},
+	},
+	"required": ["passengers"],
+}
+
+PASSENGER_EXTRACTION_PROMPT = """You are extracting passenger manifest rows from a travel document image.
+Extract only passenger/person information visible in the supplied image.
+Return JSON with key passengers.
+Each passenger must include passenger_name, document_number, document_type, nationality, and confidence.
+Use null for unreadable values. Do not guess. Do not include company names, route names, instructions, or unrelated text."""
 
 
 def _require_user():
@@ -47,6 +77,63 @@ def _settings():
 		"max_file_bytes": min(max(cint(doc.document_ai_max_file_bytes) or 10 * 1024 * 1024, 1024), 25 * 1024 * 1024),
 		"review_confidence": min(max(flt(doc.document_ai_review_confidence) or 0.7, 0), 1),
 	}
+
+
+def _image_from_data_url(file_data, mime_type=None, max_file_bytes=None):
+	value = str(file_data or "")
+	if not value:
+		frappe.throw(_("Document image data is required"))
+	if value.startswith("data:"):
+		header, _, payload = value.partition(",")
+		mime_type = mime_type or header.split(";", 1)[0].replace("data:", "")
+	else:
+		payload = value
+	mime_type = (mime_type or "image/jpeg").lower()
+	if mime_type not in ALLOWED_IMAGE_TYPES.values():
+		frappe.throw(_("Only JPG, PNG, and WebP passenger document images are supported"))
+	try:
+		content = base64.b64decode(payload, validate=True)
+	except Exception:
+		frappe.throw(_("Invalid base64 document image"))
+	if not content:
+		frappe.throw(_("Document image is empty"))
+	if max_file_bytes and len(content) > max_file_bytes:
+		frappe.throw(_("The document image exceeds the configured file-size limit"))
+	return content, mime_type
+
+
+def extract_passenger_document(file_data, mime_type=None):
+	user = _require_user()
+	rate_limit("passenger_document_ai_user", limit=20, seconds=3600, identity=user)
+	settings = _settings()
+	content, mime_type = _image_from_data_url(file_data, mime_type=mime_type, max_file_bytes=settings["max_file_bytes"])
+	file_hash = hashlib.sha256(content).hexdigest()
+	rate_limit("passenger_document_ai_file", limit=3, seconds=3600, identity=f"{user}:{file_hash}")
+	try:
+		result = extract_image(
+			api_key=settings["api_key"],
+			model=settings["model"],
+			prompt=PASSENGER_EXTRACTION_PROMPT,
+			schema=PASSENGER_EXTRACTION_SCHEMA,
+			command="extract_passenger_manifest",
+			image_bytes=content,
+			mime_type=mime_type,
+			timeout=settings["timeout"],
+		)
+	except (DocumentAIProviderError, ValueError) as exc:
+		frappe.throw(_("Passenger document extraction failed: {0}").format(str(exc)))
+	passengers = []
+	for row in result.get("passengers") or []:
+		passenger = {
+			"passenger_name": normalize_value(row.get("passenger_name")),
+			"document_number": normalize_value(row.get("document_number")),
+			"document_type": normalize_value(row.get("document_type")),
+			"nationality": normalize_value(row.get("nationality")),
+			"confidence": flt(row.get("confidence")),
+		}
+		if any(passenger.get(key) for key in ("passenger_name", "document_number", "nationality")):
+			passengers.append(passenger)
+	return {"status": "success", "passengers": passengers, "provider": "OpenAI", "model": settings["model"]}
 
 
 def _get_owned_target(action, target_doctype, target_name, user):
