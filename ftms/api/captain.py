@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 import frappe
 from frappe import _
 from frappe.utils import now_datetime
@@ -7,6 +9,23 @@ from frappe.utils import now_datetime
 from ftms.api.membership import _require_company_admin
 from ftms.tenant import get_user_company, is_system_user, resolve_company
 from ftms.user_roles import assign_business_role
+
+
+def _digits_only(value):
+	return re.sub(r"\D", "", str(value or ""))
+
+
+def _validate_captain_identity(id_document_type, identity_no):
+	identity_no = _digits_only(identity_no)
+	if not identity_no:
+		return identity_no
+	if not re.fullmatch(r"\d{10}", identity_no):
+		frappe.throw(_("Saudi ID/Iqama must be exactly 10 digits"))
+	if id_document_type == "Iqama" and not identity_no.startswith("2"):
+		frappe.throw(_("Iqama number must start with 2"))
+	if id_document_type == "National ID" and not identity_no.startswith("1"):
+		frappe.throw(_("Saudi National ID must start with 1"))
+	return identity_no
 
 
 @frappe.whitelist()
@@ -36,7 +55,7 @@ def list_captains(company=None, limit=50):
 def get_captain(name, company=None):
 	doc = frappe.get_doc("Captain Profile", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
-	if resolved_company and doc.current_company != resolved_company:
+	if frappe.session.user != "Administrator" and doc.current_company != resolved_company:
 		frappe.throw("Not permitted for this company")
 	return doc.as_dict()
 
@@ -59,7 +78,13 @@ def create_captain_profile(
 	mobile_no = (mobile_no or "").strip()
 	id_document_type = (id_document_type or "").strip()
 	nationality = (nationality or "").strip()
-	identity_no = (iqama_no or national_id or "").strip()
+	identity_no = _validate_captain_identity(id_document_type, iqama_no or national_id)
+	if id_document_type == "Iqama":
+		iqama_no = identity_no
+		national_id = None
+	elif id_document_type == "National ID":
+		national_id = identity_no
+		iqama_no = None
 	license_no = (license_no or "").strip()
 	city = (city or "").strip()
 	address = (address or "").strip()
