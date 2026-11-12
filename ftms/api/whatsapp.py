@@ -63,18 +63,38 @@ def webhook():
 	if key.get("fromMe"):
 		return {"ok": True, "ignored": "from_me"}
 
+	message_id = key.get("id") or ""
+	cache = frappe.cache()
+	if message_id:
+		if cache.get_value(f"wa_seen:{message_id}"):
+			return {"ok": True, "ignored": "duplicate"}
+		cache.set_value(f"wa_seen:{message_id}", 1, expires_in_sec=3600)
+
+	frappe.enqueue(
+		"ftms.api.whatsapp.process_message",
+		queue="short",
+		timeout=600,
+		payload=payload,
+		enqueue_after_commit=False,
+	)
+	return {"ok": True, "queued": True}
+
+
+def process_message(payload):
+	data = payload.get("data") or {}
+	key = data.get("key") or {}
 	phone = _digits((key.get("remoteJid") or "").split("@")[0])
 	captain = _find_captain(phone)
 	if not captain:
 		_send_text(phone, "آپ کا نمبر رجسٹرڈ کپتانوں میں نہیں ہے۔ پہلے ایپ میں رجسٹریشن مکمل کریں۔")
-		return {"ok": True, "ignored": "unknown_sender"}
+		return
 
 	message = data.get("message") or {}
 	if "imageMessage" in message:
-		return _handle_image(phone, captain, key, message)
+		_handle_image(phone, captain, key, message)
+		return
 
 	_send_text(phone, "مسافر کی دستاویز کی واضح تصویر بھیجیں۔")
-	return {"ok": True}
 
 
 def _handle_image(phone, captain, key, message):
@@ -88,7 +108,7 @@ def _handle_image(phone, captain, key, message):
 	mime = media.get("mimetype") or (message.get("imageMessage") or {}).get("mimetype") or "image/jpeg"
 	if not b64:
 		_send_text(phone, "تصویر حاصل نہیں ہو سکی۔ دوبارہ بھیجیں۔")
-		return {"ok": True, "ignored": "no_media"}
+		return
 
 	frappe.set_user(captain.user)
 	try:
@@ -96,15 +116,14 @@ def _handle_image(phone, captain, key, message):
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "WhatsApp passenger extraction failed")
 		_send_text(phone, "تصویر پڑھی نہیں جا سکی۔ زیادہ واضح تصویر بھیجیں۔")
-		return {"ok": True, "ignored": "extraction_failed"}
+		return
 	finally:
-		frappe.set_user("Guest")
+		frappe.set_user("Administrator")
 
 	passengers = result.get("passengers") or []
 	if not passengers:
 		_send_text(phone, "تصویر میں کوئی مسافر نہیں ملا۔")
-		return {"ok": True, "passengers": 0}
+		return
 
 	lines = [f"{index}. {p.get('passenger_name') or '-'} ({p.get('document_number') or '-'})" for index, p in enumerate(passengers, 1)]
 	_send_text(phone, f"{len(passengers)} مسافر ملے:\n" + "\n".join(lines) + "\n\nٹرپ بنانے کا اگلا مرحلہ ابھی باقی ہے۔")
-	return {"ok": True, "passengers": len(passengers)}
