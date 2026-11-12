@@ -69,28 +69,76 @@ def verify_id_token(token):
 	raise frappe.AuthenticationError("Invalid Firebase authentication token")
 
 
+def _primary_project_id():
+	return (frappe.db.get_single_value("Integration Settings", "firebase_project_id") or "").strip()
+
+
+def _uid_map(user_name):
+	if not frappe.get_meta("User").has_field("ftms_firebase_uids"):
+		return {}
+	raw = frappe.db.get_value("User", user_name, "ftms_firebase_uids")
+	try:
+		data = json.loads(raw) if raw else {}
+	except ValueError:
+		data = {}
+	return data if isinstance(data, dict) else {}
+
+
+def _uid_for_project(user_name, project_id):
+	if project_id == _primary_project_id():
+		return frappe.db.get_value("User", user_name, "ftms_firebase_uid")
+	return _uid_map(user_name).get(project_id)
+
+
+def _store_uid_for_project(user_name, project_id, uid):
+	if project_id == _primary_project_id():
+		frappe.db.set_value("User", user_name, "ftms_firebase_uid", uid, update_modified=False)
+		return
+	data = _uid_map(user_name)
+	data[project_id] = uid
+	frappe.db.set_value("User", user_name, "ftms_firebase_uids", json.dumps(data), update_modified=False)
+
+
+def _find_user_by_uid(uid, project_id):
+	if project_id == _primary_project_id():
+		return frappe.db.get_value("User", {"ftms_firebase_uid": uid, "enabled": 1}, "name")
+	if not frappe.get_meta("User").has_field("ftms_firebase_uids"):
+		return None
+	candidates = frappe.get_all(
+		"User",
+		filters={"enabled": 1, "ftms_firebase_uids": ["like", f'%"{uid}"%']},
+		pluck="name",
+		limit=20,
+	)
+	for name in candidates:
+		if _uid_map(name).get(project_id) == uid:
+			return name
+	return None
+
+
 def resolve_frappe_user(claims, create=False):
 	uid = claims.get("sub") or claims.get("uid")
+	project_id = claims.get("aud") or _primary_project_id()
 	email = (claims.get("email") or "").strip().lower()
 	if not uid:
 		raise frappe.AuthenticationError("Firebase token has no user ID")
 
-	mapped = frappe.db.get_value("User", {"ftms_firebase_uid": uid, "enabled": 1}, "name")
+	mapped = _find_user_by_uid(uid, project_id)
 	if mapped:
 		return mapped
 	phone = (claims.get("phone_number") or "").strip()
 	if not email and phone and create:
-		return _create_phone_user(uid, phone)
+		return _create_phone_user(uid, phone, project_id)
 	if not email or claims.get("email_verified") is not True:
 		raise frappe.AuthenticationError("Verified Firebase email is required to link this account")
 
 	existing = frappe.db.get_value("User", {"name": email, "enabled": 1}, "name")
 	if existing:
 		frappe.db.sql("SELECT name FROM `tabUser` WHERE name=%s FOR UPDATE", existing)
-		current_uid = frappe.db.get_value("User", existing, "ftms_firebase_uid")
+		current_uid = _uid_for_project(existing, project_id)
 		if current_uid and current_uid != uid:
 			raise frappe.AuthenticationError("Firebase account does not match this Frappe user")
-		frappe.db.set_value("User", existing, "ftms_firebase_uid", uid, update_modified=False)
+		_store_uid_for_project(existing, project_id, uid)
 		return existing
 	if not create:
 		raise frappe.AuthenticationError("No enabled Frappe user matches this Firebase account")
@@ -100,6 +148,7 @@ def resolve_frappe_user(claims, create=False):
 
 	name = (claims.get("name") or "").strip()
 	parts = name.split(" ", 1) if name else []
+	user_fields = _project_uid_fields(uid, project_id)
 	user_doc = frappe.get_doc({
 		"doctype": "User",
 		"email": email,
@@ -110,20 +159,26 @@ def resolve_frappe_user(claims, create=False):
 		"send_welcome_email": 0,
 		"new_password": random_string(24),
 		"user_type": "Website User",
-		"ftms_firebase_uid": uid,
+		**user_fields,
 	})
 	try:
 		user_doc.insert(ignore_permissions=True)
 	except DuplicateEntryError:
 		frappe.db.rollback()
-		existing = frappe.db.get_value("User", {"ftms_firebase_uid": uid, "enabled": 1}, "name")
+		existing = _find_user_by_uid(uid, project_id)
 		if not existing:
 			raise frappe.AuthenticationError("Firebase identity could not be linked")
 		return existing
 	return user_doc.name
 
 
-def _create_phone_user(uid, phone):
+def _project_uid_fields(uid, project_id):
+	if project_id == _primary_project_id():
+		return {"ftms_firebase_uid": uid}
+	return {"ftms_firebase_uids": json.dumps({project_id: uid})}
+
+
+def _create_phone_user(uid, phone, project_id):
 	from frappe.exceptions import DuplicateEntryError
 	from frappe.utils import random_string
 
@@ -138,11 +193,11 @@ def _create_phone_user(uid, phone):
 			"send_welcome_email": 0,
 			"new_password": random_string(24),
 			"user_type": "Website User",
-			"ftms_firebase_uid": uid,
+			**_project_uid_fields(uid, project_id),
 		}).insert(ignore_permissions=True)
 	except DuplicateEntryError:
 		frappe.db.rollback()
-		existing = frappe.db.get_value("User", {"ftms_firebase_uid": uid, "enabled": 1}, "name")
+		existing = _find_user_by_uid(uid, project_id)
 		if not existing:
 			raise frappe.AuthenticationError("Firebase phone identity could not be linked")
 		return existing

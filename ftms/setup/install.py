@@ -174,6 +174,7 @@ def create_custom_fields():
         {"dt": "Address", "fieldname": "additional_no", "fieldtype": "Data", "label": "Additional Number", "insert_after": "district"},
         {"dt": "User", "fieldname": "ftms_identity_section", "fieldtype": "Section Break", "label": "FTMS Identity", "insert_after": "mobile_no"},
         {"dt": "User", "fieldname": "ftms_firebase_uid", "fieldtype": "Data", "label": "Firebase UID", "insert_after": "ftms_identity_section", "unique": 1, "read_only": 1},
+        {"dt": "User", "fieldname": "ftms_firebase_uids", "fieldtype": "Small Text", "label": "Firebase UIDs (per project)", "insert_after": "ftms_firebase_uid", "read_only": 1},
         {"dt": "User", "fieldname": "ftms_id_document_type", "fieldtype": "Select", "label": "ID Document Type", "options": "National ID\nIqama\nPassport\nGCC ID\nOther", "insert_after": "ftms_firebase_uid"},
         {"dt": "User", "fieldname": "ftms_id_no", "fieldtype": "Data", "label": "ID No", "insert_after": "ftms_id_document_type"},
         {"dt": "User", "fieldname": "ftms_nationality", "fieldtype": "Data", "label": "Nationality", "insert_after": "ftms_id_no"},
