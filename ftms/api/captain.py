@@ -5,13 +5,16 @@ from frappe import _
 from frappe.utils import now_datetime
 
 from ftms.api.membership import _require_company_admin
-from ftms.tenant import get_user_company, resolve_company
+from ftms.tenant import get_user_company, is_system_user, resolve_company
 from ftms.user_roles import assign_business_role
 
 
 @frappe.whitelist()
 def list_captains(company=None, limit=50):
 	resolved_company = resolve_company(company=company, allow_missing=True)
+	# Without a company, only platform admins may list captains across all companies.
+	if not resolved_company and not is_system_user():
+		return []
 	filters = {}
 	if resolved_company:
 		filters["current_company"] = resolved_company
