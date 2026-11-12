@@ -149,6 +149,11 @@ def get_current_user():
 
     subscription = _get_subscription_status(user, link.company if link else None)
     captain_profile = _get_captain_profile(user)
+    capabilities = {
+        "passenger": "Passenger" in roles,
+        "captain": "Captain" in roles or bool(captain_profile),
+        "company": any(role in roles for role in ("Company Admin", "Customer Company", "Partner", "Dispatcher")),
+    }
 
     return {
         "is_authenticated": True,
@@ -166,6 +171,8 @@ def get_current_user():
         "id_expiry_date": str(_user_field(user_doc, "ftms_id_expiry_date") or ""),
         "id_document": _user_field(user_doc, "ftms_id_document"),
         "roles": roles,
+        "capabilities": capabilities,
+        "available_modes": [mode for mode, enabled in capabilities.items() if enabled],
         "portal_role": link.role if link else None,
         "company": link.company if link else None,
         "company_data": company_data,
@@ -411,7 +418,7 @@ def _get_captain_profile(user):
     profiles = frappe.get_all(
         "Captain Profile",
         filters={"user": user},
-        fields=["name", "status", "current_company", "license_no", "license_expiry_date", "driver_card_no", "driver_card_expiry_date", "mobile_no"],
+        fields=["name", "status", "current_company", "full_name", "mobile_no", "id_document_type", "nationality", "iqama_no", "national_id", "license_no", "license_expiry_date", "driver_card_no", "driver_card_expiry_date", "city", "address"],
         limit=1,
     )
     return profiles[0] if profiles else None
