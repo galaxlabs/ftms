@@ -38,18 +38,35 @@ def create_custom_token(user):
 	return token.decode("utf-8") if isinstance(token, bytes) else token
 
 
+def _allowed_firebase_project_ids():
+	primary = frappe.db.get_single_value("Integration Settings", "firebase_project_id")
+	extra = frappe.get_site_config().get("firebase_auth_project_ids") or []
+	if isinstance(extra, str):
+		extra = [extra]
+	ids = []
+	for pid in [primary, *extra]:
+		pid = (pid or "").strip()
+		if pid and pid not in ids:
+			ids.append(pid)
+	return ids
+
+
 def verify_id_token(token):
-	project_id = frappe.db.get_single_value("Integration Settings", "firebase_project_id")
-	if not project_id:
+	project_ids = _allowed_firebase_project_ids()
+	if not project_ids:
 		frappe.throw("Firebase project ID is not configured")
-	claims = google_id_token.verify_firebase_token(token, Request(), audience=project_id)
-	if (
-		claims.get("aud") != project_id
-		or claims.get("iss") != f"https://securetoken.google.com/{project_id}"
-		or not claims.get("sub")
-	):
-		raise frappe.AuthenticationError("Invalid Firebase authentication token")
-	return claims
+	for project_id in project_ids:
+		try:
+			claims = google_id_token.verify_firebase_token(token, Request(), audience=project_id)
+		except ValueError:
+			continue
+		if (
+			claims.get("aud") == project_id
+			and claims.get("iss") == f"https://securetoken.google.com/{project_id}"
+			and claims.get("sub")
+		):
+			return claims
+	raise frappe.AuthenticationError("Invalid Firebase authentication token")
 
 
 def resolve_frappe_user(claims, create=False):
