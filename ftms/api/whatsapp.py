@@ -179,6 +179,11 @@ def _render_pdf_with_chrome(html):
 	binary = next((b for b in CHROME_BINARIES if os.path.exists(b)), None)
 	if not binary:
 		raise RuntimeError("Chrome is not installed")
+	font_css = "<style>*{font-family: 'Ubuntu', 'Amiri', sans-serif !important;}</style>"
+	if "</head>" in html:
+		html = html.replace("</head>", font_css + "</head>", 1)
+	else:
+		html = font_css + html
 	with tempfile.TemporaryDirectory() as tmp:
 		src = os.path.join(tmp, "trip.html")
 		out = os.path.join(tmp, "trip.pdf")
