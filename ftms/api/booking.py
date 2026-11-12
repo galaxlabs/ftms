@@ -77,13 +77,11 @@ def _booking_detail_access(booking, user):
 	if _booking_operator_link(user, booking.company):
 		return "company"
 
-	captain_status = frappe.db.get_value("Captain Profile", {"user": user}, "status")
-	if (
-		captain_status == "Active"
-		and booking.negotiation_status == "Awaiting Offers"
-		and booking.booking_status != "Cancelled"
-	):
-		return "captain"
+	profile = _captain_profile(user)
+	if profile and profile.status == "Active" and booking.negotiation_status == "Awaiting Offers" and booking.booking_status != "Cancelled":
+		origin_city = _route_origin_city(booking.route)
+		if origin_city and profile.city == origin_city:
+			return "captain"
 
 	frappe.throw(_("You are not permitted to access this booking"), frappe.PermissionError)
 
@@ -111,6 +109,70 @@ def _captain_booking_view(booking, user):
 		order_by="created_at desc",
 	)
 	return data
+
+
+def _route_origin_city(route):
+	if not route:
+		return None
+	return frappe.db.get_value("Route", route, "source")
+
+
+def _captain_profile(user):
+	return frappe.db.get_value(
+		"Captain Profile",
+		{"user": user},
+		["name", "status", "city"],
+		as_dict=True,
+	)
+
+
+def _assert_captain_origin_match(booking, user):
+	profile = _captain_profile(user)
+	if not profile or profile.status != "Active":
+		frappe.throw(_("Only an approved captain can access available bookings"), frappe.PermissionError)
+	origin_city = _route_origin_city(booking.route)
+	if not origin_city:
+		frappe.throw(_("Booking route origin city is required before captains can offer"))
+	if not profile.city or profile.city != origin_city:
+		frappe.throw(_("This booking is only available to captains in {0}").format(origin_city), frappe.PermissionError)
+	return profile
+
+
+def _eligible_captain_users_for_booking(booking):
+	origin_city = _route_origin_city(booking.route)
+	if not origin_city:
+		return []
+	captains = frappe.get_all(
+		"Captain Profile",
+		filters={"status": "Active", "city": origin_city},
+		fields=["user"],
+		limit_page_length=200,
+	)
+	users = []
+	for row in captains:
+		if not row.user:
+			continue
+		if booking.company and not frappe.db.exists(
+			"User Company Link",
+			{"user": row.user, "company": booking.company, "role": "Captain", "status": "Active"},
+		):
+			continue
+		users.append(row.user)
+	return users
+
+
+def _notify_eligible_captains(booking):
+	for user in _eligible_captain_users_for_booking(booking):
+		emit_event(
+			"New Ride Request",
+			user,
+			"New ride request",
+			f"New ride from {booking.pickup_point or _route_origin_city(booking.route)} to {booking.drop_point or booking.route}. Open the driver app to offer your fare.",
+			company=booking.company,
+			reference_doctype="Trip Booking",
+			reference_name=booking.name,
+			dedupe_key=f"new-ride:{booking.name}:{user}",
+		)
 
 
 def _generate_group_code():
@@ -240,7 +302,7 @@ def create_booking(**kwargs):
 	rate_limit("create_booking", limit=20, seconds=60)
 	required_key = frappe.get_site_config().get("transport_hub_api_key")
 	sent_key = frappe.get_request_header("X-TransportHub-Key") or frappe.form_dict.get("api_key")
-	if required_key and sent_key != required_key:
+	if (required_key and sent_key != required_key) or (not required_key and frappe.session.user == "Guest"):
 		frappe.throw(_("Unauthorized"), frappe.PermissionError)
 
 	data = frappe._dict(kwargs)
@@ -404,6 +466,7 @@ def create_booking(**kwargs):
 			frappe.throw(_("External booking reference belongs to another user"), frappe.PermissionError)
 		existing = frappe.get_doc("Trip Booking", existing_row.name)
 		return _booking_response(existing)
+	_notify_eligible_captains(doc)
 	return _booking_response(doc)
 
 
@@ -482,9 +545,16 @@ def list_bookings(company=None, limit=50, mine=None):
 def list_available_bookings(company=None, vehicle_type=None, limit=50):
 	"""Captains call this to see bookings awaiting offers."""
 	user = frappe.session.user
-	if frappe.db.get_value("Captain Profile", {"user": user}, "status") != "Active":
+	profile = _captain_profile(user)
+	if not profile or profile.status != "Active":
 		frappe.throw(_("Only an approved captain can view available bookings"), frappe.PermissionError)
+	if not profile.city:
+		return []
 	filters = {"negotiation_status": "Awaiting Offers", "booking_status": ("!=", "Cancelled")}
+	routes = frappe.get_all("Route", filters={"source": profile.city}, pluck="name", limit_page_length=500)
+	if not routes:
+		return []
+	filters["route"] = ("in", routes)
 	if company:
 		filters["company"] = company
 	if vehicle_type:
@@ -535,9 +605,7 @@ def make_offer(booking, vehicle, offered_fare, fare_type="Total Trip", captain_n
 		frappe.throw(_("Login required"), frappe.PermissionError)
 
 	booking_doc = frappe.get_doc("Trip Booking", booking)
-	profile = frappe.db.get_value("Captain Profile", {"user": user}, ["name", "status"], as_dict=True)
-	if not profile or profile.status != "Active":
-		frappe.throw(_("Only a registered captain can submit an offer"), frappe.PermissionError)
+	profile = _assert_captain_origin_match(booking_doc, user)
 	if booking_doc.negotiation_status != "Awaiting Offers":
 		frappe.throw(_("Booking is not accepting offers"))
 	if booking_doc.company and not has_company_access(booking_doc.company, user=user):
@@ -634,12 +702,13 @@ def accept_booking_as_captain(booking_name, offered_fare, vehicle=None):
 	from ftms.matching import check_schedule_availability
 
 	user = frappe.session.user
-	profile = frappe.db.get_value("Captain Profile", {"user": user}, ["name", "status"], as_dict=True)
+	profile = _captain_profile(user)
 	if user == "Guest" or not profile or profile.status != "Active":
 		frappe.throw(_("Only a registered captain can accept a booking"), frappe.PermissionError)
 
 	frappe.db.sql("SELECT name FROM `tabTrip Booking` WHERE name=%s FOR UPDATE", booking_name)
 	booking = frappe.get_doc("Trip Booking", booking_name)
+	_assert_captain_origin_match(booking, user)
 	if booking.negotiation_status != "Awaiting Offers":
 		if booking.trip and booking.negotiation_status == "Trip Created":
 			trip = frappe.get_doc("Trip", booking.trip)
