@@ -193,6 +193,18 @@ def webhook():
 def process_message(payload):
 	data = payload.get("data") or {}
 	key = data.get("key") or {}
+	sender = key.get("remoteJidAlt") or key.get("remoteJid") or ""
+	phone = _digits(sender.split("@")[0])
+	if not phone:
+		return
+	# One message at a time per phone: parallel workers were saving the same session.
+	with frappe.cache().lock(f"wa_session_lock:{phone}", timeout=180):
+		_process_message(payload)
+
+
+def _process_message(payload):
+	data = payload.get("data") or {}
+	key = data.get("key") or {}
 	message_id = key.get("id") or ""
 	sender = key.get("remoteJidAlt") or key.get("remoteJid") or ""
 	phone = _digits(sender.split("@")[0])
