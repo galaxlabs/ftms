@@ -161,6 +161,7 @@ def daily_subscription_sync():
         # Accrue only online heartbeat time; offline time is not billable.
         _sync_active_hours(sub)
 
+    monthly_cycle_sync()
     frappe.db.commit()
 
 
@@ -346,3 +347,14 @@ def set_online_status(user, company, online, offline_until=None, reason=None):
         sub.offline_reason = reason
     sub.save(ignore_permissions=True)
     return {"status": sub.status, "is_online": bool(sub.is_online), "offline_until": str(sub.offline_until or "")}
+
+
+def monthly_cycle_sync():
+    """Create this month's unpaid period and lock accounts whose month passed its grace."""
+    for name in frappe.get_all("User Subscription", filters={"status": ["in", ("Active",)]}, pluck="name"):
+        sub = frappe.get_doc("User Subscription", name)
+        created = sub.ensure_current_month_period()
+        locked = sub.apply_monthly_lock()
+        if created or locked:
+            sub.save(ignore_permissions=True)
+    frappe.db.commit()

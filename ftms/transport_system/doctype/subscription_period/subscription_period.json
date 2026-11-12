@@ -101,6 +101,71 @@
    "fieldname": "invoice",
    "fieldtype": "Data",
    "label": "Invoice"
+  },
+  {
+   "fieldname": "receipt",
+   "fieldtype": "Attach",
+   "label": "Payment Receipt"
+  },
+  {
+   "fieldname": "receipt_status",
+   "fieldtype": "Select",
+   "label": "Receipt Status",
+   "options": "\nReceipt Uploaded\nAuto Approved\nNeeds Review\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_uploaded_on",
+   "fieldtype": "Datetime",
+   "label": "Receipt Uploaded On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_note",
+   "fieldtype": "Small Text",
+   "label": "Receipt Note"
+  },
+  {
+   "fieldname": "receipt_reference",
+   "fieldtype": "Data",
+   "label": "Receipt Reference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_payer_name",
+   "fieldtype": "Data",
+   "label": "AI Payer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_account_no",
+   "fieldtype": "Data",
+   "label": "AI Sender Account",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_amount",
+   "fieldtype": "Currency",
+   "label": "AI Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_payment_method",
+   "fieldtype": "Data",
+   "label": "AI Payment Method",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_match_note",
+   "fieldtype": "Small Text",
+   "label": "Match Result",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receipt_ai_json",
+   "fieldtype": "Long Text",
+   "label": "AI Raw Result",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,

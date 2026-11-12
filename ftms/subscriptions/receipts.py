@@ -5,7 +5,7 @@ import re
 
 import frappe
 from frappe import _
-from frappe.utils import flt, now_datetime
+from frappe.utils import flt, now_datetime, today
 
 from ftms.document_ai.openai_vision import DocumentAIProviderError, extract_image
 from ftms.document_ai.service import _image_from_data_url
@@ -227,8 +227,15 @@ def upload_receipt(file_data=None, file_name=None, receipt_note=None):
 
 	period.receipt_status = "Auto Approved"
 	sub.save(ignore_permissions=True)
-	if sub.status == "Overdue":
+	if sub.status in ("Overdue", "Read Only"):
+		sub.status = "Overdue"
+		sub.save(ignore_permissions=True)
 		sub.mark_paid()
+	else:
+		period.paid = 1
+		period.payment_date = today()
+		sub.last_payment_date = today()
+		sub.save(ignore_permissions=True)
 	return {"status": period.receipt_status, "issues": [], "period": period.name}
 
 
