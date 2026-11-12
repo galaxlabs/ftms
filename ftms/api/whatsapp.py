@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import re
 import urllib.request
@@ -59,9 +60,9 @@ TEXT = {
 		"ar": "لا توجد مسارات مسجلة لشركتك.",
 	},
 	"trip_created": {
-		"en": "Trip {trip} created with {count} passengers. Print: {url}",
-		"ur": "ٹرپ {trip} بن گیا، {count} مسافر۔ پرنٹ: {url}",
-		"ar": "تم إنشاء الرحلة {trip} بـ {count} راكبًا. الطباعة: {url}",
+		"en": "Trip {trip} created with {count} passengers. The trip sheet PDF is attached.",
+		"ur": "ٹرپ {trip} بن گیا، {count} مسافر۔ ٹرپ شیٹ کی PDF منسلک ہے۔",
+		"ar": "تم إنشاء الرحلة {trip} بـ {count} راكبًا. ملف PDF لكشف الرحلة مرفق.",
 	},
 	"extraction_failed": {
 		"en": "Could not read this photo. Send a clearer photo.",
@@ -123,6 +124,24 @@ def _send(phone, text):
 		_gateway(f"/message/sendText/{INSTANCE}", {"number": phone, "text": text})
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "WhatsApp send failed")
+
+
+def _send_pdf(phone, pdf_bytes, filename, caption):
+	try:
+		_gateway(
+			f"/message/sendMedia/{INSTANCE}",
+			{
+				"number": phone,
+				"mediatype": "document",
+				"mimetype": "application/pdf",
+				"caption": caption,
+				"media": base64.b64encode(pdf_bytes).decode("ascii"),
+				"fileName": filename,
+			},
+		)
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "WhatsApp PDF send failed")
+		_send(phone, caption)
 
 
 def _find_captain(phone):
@@ -394,7 +413,7 @@ def _handle_route_choice(session, phone, text):
 	captain_user = frappe.db.get_value("Captain Profile", session.captain, "user")
 	company = frappe.db.get_value("Captain Profile", session.captain, "current_company")
 
-	from ftms.api.trip import create_trip_with_passengers, get_public_url
+	from ftms.api.trip import create_trip_with_passengers
 
 	frappe.set_user(captain_user)
 	try:
@@ -418,7 +437,7 @@ def _handle_route_choice(session, phone, text):
 			notes="Created from WhatsApp",
 		)
 		trip_name = trip.get("name") if isinstance(trip, dict) else trip
-		url = get_public_url(trip_name)
+		pdf_bytes = frappe.get_print("Trip", trip_name, as_pdf=True)
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "WhatsApp trip creation failed")
 		_send(phone, _t(lang, "trip_failed"))
@@ -429,7 +448,7 @@ def _handle_route_choice(session, phone, text):
 	session.trip = trip_name
 	session.state = "Done"
 	_save(session)
-	_send(phone, _t(lang, "trip_created", trip=trip_name, count=len(unique), url=url))
+	_send_pdf(phone, pdf_bytes, f"{trip_name}.pdf", _t(lang, "trip_created", trip=trip_name, count=len(unique)))
 
 
 def _handle_image(session, phone, key, message):
