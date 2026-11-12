@@ -84,7 +84,7 @@ def _image_from_data_url(file_data, mime_type=None, max_file_bytes=None):
 	if not value:
 		frappe.throw(_("Document image data is required"))
 	if value.startswith("data:"):
-		header, _, payload = value.partition(",")
+		header, _separator, payload = value.partition(",")
 		mime_type = mime_type or header.split(";", 1)[0].replace("data:", "")
 	else:
 		payload = value

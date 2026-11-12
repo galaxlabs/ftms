@@ -83,7 +83,8 @@ def webhook():
 def process_message(payload):
 	data = payload.get("data") or {}
 	key = data.get("key") or {}
-	phone = _digits((key.get("remoteJid") or "").split("@")[0])
+	sender_jid = key.get("remoteJidAlt") or key.get("remoteJid") or ""
+	phone = _digits(sender_jid.split("@")[0])
 	captain = _find_captain(phone)
 	if not captain:
 		_send_text(phone, "آپ کا نمبر رجسٹرڈ کپتانوں میں نہیں ہے۔ پہلے ایپ میں رجسٹریشن مکمل کریں۔")
