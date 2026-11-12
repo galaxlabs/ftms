@@ -201,6 +201,9 @@ def _render_pdf_with_chrome(html):
 
 
 def _trip_pdf(trip_name):
+	if not frappe.db.get_value("Trip", trip_name, "qr_code"):
+		from ftms.api.trip import generate_qr
+		generate_qr(trip_name)
 	html = frappe.get_print("Trip", trip_name, print_format="Trip Contract", as_pdf=False)
 	try:
 		return _render_pdf_with_chrome(html)
