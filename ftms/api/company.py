@@ -3,21 +3,24 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from ftms.tenant import get_user_company, resolve_company
+from ftms.tenant import get_user_companies, is_system_user, resolve_company
 
 
 @frappe.whitelist(allow_guest=True)
 def list_companies(company=None, limit=100):
 	if frappe.session.user == "Guest":
-		filters = {"status": "Active", "blacklisted": 0}
-		fields = ["name", "company_code", "company_name", "legal_name", "company_name_ar", "domain", "status"]
+		return []
+	elif is_system_user():
+		filters = {"status": "Active"}
+		fields = ["name", "company_code", "company_name", "legal_name", "company_name_ar", "vat_no", "tax_id", "cr_no", "domain", "phone", "email", "status", "blacklisted"]
 	else:
-		active_company = get_user_company()
-		if not active_company:
+		links = get_user_companies()
+		company_names = [link.company for link in links]
+		if not company_names:
 			return []
-		if company and company != active_company:
+		if company and company not in company_names:
 			frappe.throw(_("Not permitted for this company"), frappe.PermissionError)
-		filters = {"name": active_company}
+		filters = {"name": company or ["in", company_names]}
 		fields = ["name", "company_code", "company_name", "legal_name", "company_name_ar", "vat_no", "tax_id", "cr_no", "domain", "phone", "email", "status", "blacklisted"]
 	return frappe.get_all(
 		"Company",
@@ -31,7 +34,7 @@ def list_companies(company=None, limit=100):
 @frappe.whitelist()
 def get_company(name, company=None):
 	resolved_company = resolve_company(company=company, allow_missing=True)
-	if resolved_company and name != resolved_company:
+	if not is_system_user() and name != resolved_company:
 		frappe.throw("Not permitted for this company")
 	doc = frappe.get_doc("Company", name)
 	return doc.as_dict()

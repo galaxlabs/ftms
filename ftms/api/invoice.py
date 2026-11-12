@@ -37,7 +37,7 @@ def list_invoices(company=None, limit=50, mine=None):
 def get_invoice(name, company=None):
 	doc = frappe.get_doc("Trip Invoice", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
-	if resolved_company and doc.company != resolved_company:
+	if frappe.session.user != "Administrator" and doc.company != resolved_company:
 		frappe.throw("Not permitted for this company")
 	return doc.as_dict()
 

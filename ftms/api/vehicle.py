@@ -58,7 +58,7 @@ def list_vehicle_types(limit=50):
 def get_vehicle(name, company=None):
 	doc = frappe.get_doc("Vehicle", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
-	if resolved_company and doc.company != resolved_company:
+	if frappe.session.user != "Administrator" and doc.company != resolved_company:
 		frappe.throw("Not permitted for this company")
 	return doc.as_dict()
 
@@ -176,7 +176,6 @@ def create_vehicle(
 		"operation_card_document": operation_card_document,
 		"registration_document": registration_document,
 		"insurance_document": insurance_document,
-		"assigned_captain_user": assigned_captain_user,
 		"max_luggage_qty": max_luggage_qty or 0,
 		"max_luggage_weight": max_luggage_weight,
 		"max_weight_per_passenger": max_weight_per_passenger,
@@ -207,7 +206,24 @@ def list_my_vehicles(limit=50):
 	company = get_user_company(user=user)
 	filters = {"owner_captain_user": user}
 	if company:
-		filters = [["company", "=", company], ["assigned_captain_user", "=", user]]
+		filters = [
+			["Vehicle", "company", "=", company],
+			["Vehicle", "assigned_captain_user", "=", user],
+		]
+		owned = frappe.get_all(
+			"Vehicle",
+			filters={"owner_captain_user": user},
+			fields=["name"],
+			limit_page_length=int(limit),
+		)
+		assigned = frappe.get_all(
+			"Vehicle",
+			filters=filters,
+			fields=["name"],
+			limit_page_length=int(limit),
+		)
+		vehicle_names = list(dict.fromkeys([row.name for row in owned + assigned]))
+		filters = {"name": ("in", vehicle_names)}
 	return frappe.get_all(
 		"Vehicle",
 		filters=filters,

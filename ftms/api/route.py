@@ -73,6 +73,6 @@ def list_ksa_cities(limit=100):
 def get_route(name, company=None):
 	doc = frappe.get_doc("Route", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
-	if resolved_company and doc.company != resolved_company:
+	if frappe.session.user != "Administrator" and doc.company != resolved_company:
 		frappe.throw("Not permitted for this company")
 	return doc.as_dict()

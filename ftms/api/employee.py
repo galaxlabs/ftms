@@ -21,6 +21,6 @@ def list_employees(company=None, limit=50):
 def get_employee(name, company=None):
 	doc = frappe.get_doc("Employee", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
-	if resolved_company and getattr(doc, "company", None) != resolved_company:
+	if frappe.session.user != "Administrator" and getattr(doc, "company", None) != resolved_company:
 		frappe.throw("Not permitted for this company")
 	return doc.as_dict()

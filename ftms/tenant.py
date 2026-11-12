@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 
 
-SYSTEM_USERS = {"Administrator", "Guest"}
+SYSTEM_USERS = {"Administrator"}
 
 
 def _current_user(user=None):
@@ -12,7 +12,12 @@ def _current_user(user=None):
 
 
 def is_system_user(user=None):
-	return _current_user(user) == "Administrator"
+	user = _current_user(user)
+	if user == "Administrator":
+		return True
+	if not user or user == "Guest":
+		return False
+	return "System Manager" in frappe.get_roles(user)
 
 
 def is_guest(user=None):
@@ -90,6 +95,8 @@ def company_filters(company=None, user=None):
 	company = resolve_company(company=company, user=user, allow_missing=True)
 	if company:
 		return {"company": company}
+	if is_system_user(user):
+		return {}
 	if is_guest(user):
 		return {"company": "__guest_no_company_access__"}
 	return {"company": "__no_company_access__"}

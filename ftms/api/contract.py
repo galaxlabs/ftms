@@ -22,7 +22,7 @@ def list_contracts(company=None, limit=50):
 def get_contract(name, company=None):
 	doc = frappe.get_doc("Employee Transport Contract", name)
 	resolved_company = resolve_company(company=company, allow_missing=True)
-	if resolved_company and doc.company != resolved_company:
+	if frappe.session.user != "Administrator" and doc.company != resolved_company:
 		frappe.throw("Not permitted for this company")
 	return doc.as_dict()
 
