@@ -26,6 +26,11 @@ WELCOME_ALL = (
 NOT_CAPTAIN = "Your number is not registered as a captain. / آپ کا نمبر رجسٹرڈ کپتان نہیں ہے۔"
 
 TEXT = {
+	"still_sending": {
+		"en": "Okay, send the remaining photos. Reply 1 when complete.",
+		"ur": "ٹھیک ہے، باقی تصاویر بھیجیں۔ مکمل ہونے پر 1 لکھیں۔",
+		"ar": "حسناً، أرسل بقية الصور. عند الاكتمال اكتب 1.",
+	},
 	"help": {
 		"en": "Reply 1 to create a trip from passenger documents.\nReply 0 to change language.",
 		"ur": "مسافروں کی دستاویزات سے ٹرپ بنانے کے لیے 1 لکھیں۔\nزبان بدلنے کے لیے 0 لکھیں۔",
@@ -47,9 +52,9 @@ TEXT = {
 		"ar": "كم عدد الركاب في هذه الرحلة؟ اكتب العدد.",
 	},
 	"send_photos": {
-		"en": "Send one document photo per passenger. When all are sent, reply 'done'.",
-		"ur": "ہر مسافر کی دستاویز کی ایک تصویر بھیجیں۔ سب بھیج دیں تو 'done' لکھیں۔",
-		"ar": "أرسل صورة وثيقة واحدة لكل راكب. عند الانتهاء اكتب 'done'.",
+		"en": "Send one document photo per passenger. When all are sent, reply 1 (complete). If not yet, reply 2.",
+		"ur": "ہر مسافر کی دستاویز کی ایک تصویر بھیجیں۔ سب بھیج دیں تو 1 لکھیں (مکمل)۔ ابھی مکمل نہیں تو 2 لکھیں۔",
+		"ar": "أرسل صورة وثيقة واحدة لكل راكب. عند الانتهاء اكتب 1 (مكتمل). إذا لم تنته بعد اكتب 2.",
 	},
 	"photo_received": {
 		"en": "Photo received. Unique passengers so far: {count}.",
@@ -57,9 +62,9 @@ TEXT = {
 		"ar": "تم استلام الصورة. عدد الركاب الفريدين حتى الآن: {count}.",
 	},
 	"need_more": {
-		"en": "You said {expected} passengers, but {count} unique passengers were found. Please send the photos of the remaining {missing}, then reply 'done'.",
-		"ur": "آپ نے {expected} مسافر بتائے، لیکن {count} منفرد مسافر ملے۔ باقی {missing} مسافروں کی تصاویر بھیجیں، پھر 'done' لکھیں۔",
-		"ar": "ذكرت {expected} راكبًا، لكن وجدت {count} راكبًا فريدًا. أرسل صور {missing} المتبقين ثم اكتب 'done'.",
+		"en": "You said {expected} passengers, but {count} unique passengers were found. Please send the photos of the remaining {missing}, then reply 1 when complete, or 2 if not yet.",
+		"ur": "آپ نے {expected} مسافر بتائے، لیکن {count} منفرد مسافر ملے۔ باقی {missing} مسافروں کی تصاویر بھیجیں، پھر مکمل ہونے پر 1 لکھیں، ابھی نہیں تو 2 لکھیں۔",
+		"ar": "ذكرت {expected} راكبًا، لكن وجدت {count} راكبًا فريدًا. أرسل صور {missing} المتبقين ثم اكتب 1 عند الاكتمال، أو 2 إذا لم تنته بعد.",
 	},
 	"more_than_expected": {
 		"en": "You said {expected} passengers, but {count} unique passengers were found. Reply 'ok' to continue with {count}, or reply with the correct number.",
@@ -97,9 +102,9 @@ TEXT = {
 		"ar": "اكتب رقمًا من فضلك.",
 	},
 	"expect_photo": {
-		"en": "Send a passenger document photo, or reply 'done' when finished.",
-		"ur": "مسافر کی دستاویز کی تصویر بھیجیں، یا ختم ہونے پر 'done' لکھیں۔",
-		"ar": "أرسل صورة وثيقة راكب، أو اكتب 'done' عند الانتهاء.",
+		"en": "Send a passenger document photo. Reply 1 when complete, or 2 if not yet.",
+		"ur": "مسافر کی دستاویز کی تصویر بھیجیں۔ مکمل ہونے پر 1 لکھیں، ابھی نہیں تو 2 لکھیں۔",
+		"ar": "أرسل صورة وثيقة راكب. عند الاكتمال اكتب 1، وإذا لم تنته بعد اكتب 2.",
 	},
 	"invalid_option": {
 		"en": "Please reply with a valid option.",
@@ -244,6 +249,7 @@ def _trip_pdf(trip_name):
 		from ftms.api.trip import generate_qr
 		generate_qr(trip_name)
 	html = frappe.get_print("Trip", trip_name, print_format="Trip Contract", as_pdf=False)
+	html = re.sub(r'<div class="action-banner print-hide">.*?</div>', "", html, count=1, flags=re.S)
 	try:
 		return _render_pdf_with_chrome(html)
 	except Exception:
@@ -458,8 +464,10 @@ def _handle_text(session, phone, text):
 		return
 
 	if state == "Photos":
-		if text == "done":
+		if text == "1":
 			_reconcile(session, phone)
+		elif text == "2":
+			_send(phone, _t(lang, "still_sending"))
 		else:
 			_send(phone, _t(lang, "expect_photo"))
 		return
@@ -509,15 +517,20 @@ def _reconcile(session, phone):
 
 
 def _route_rows(session):
-	company = frappe.db.get_value("Captain Profile", session.captain, "current_company")
-	if not company:
-		return []
+	# Shared routes (default on): every company sees all routes. Set whatsapp_shared_routes = 0 in site_config to limit routes to the captain company.
+	if frappe.conf.get("whatsapp_shared_routes", 1):
+		filters = {}
+	else:
+		company = frappe.db.get_value("Captain Profile", session.captain, "current_company")
+		if not company:
+			return []
+		filters = {"company": company}
 	return frappe.get_all(
 		"Route",
-		filters={"company": company},
+		filters=filters,
 		fields=["name", "route_title", "route_name", "source", "destination"],
 		order_by="name asc",
-		limit=9,
+		limit=200,
 	)
 
 
