@@ -119,11 +119,28 @@ def _digits(value):
 	return re.sub(r"\D", "", str(value or ""))
 
 
+def _trace(phone, step, outcome="Info", detail=""):
+	"""One row per bot step in WhatsApp Bot Event, so a stopped flow can be located. Never breaks the bot."""
+	try:
+		frappe.get_doc({
+			"doctype": "WhatsApp Bot Event",
+			"event_time": frappe.utils.now_datetime(),
+			"phone": phone,
+			"step": step,
+			"outcome": outcome,
+			"detail": str(detail or "")[:500],
+		}).insert(ignore_permissions=True)
+	except Exception:
+		pass
+
+
 def _send(phone, text):
 	try:
 		_gateway(f"/message/sendText/{INSTANCE}", {"number": phone, "text": text})
+		_trace(phone, "reply_sent", "OK", text[:120])
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "WhatsApp send failed")
+		_trace(phone, "reply_failed", "Error", "gateway send failed")
 
 
 def _send_pdf(phone, pdf_bytes, filename, caption):
@@ -288,13 +305,16 @@ def _process_message(payload):
 	text = _text_of(message).strip()
 	kind = "image" if "imageMessage" in message else ("text" if text else "other")
 	_log_message(message_id, phone, kind, text)
+	_trace(phone, "received", "Info", f"kind={kind}")
 
 	captain = _find_captain(phone)
 	if not captain:
 		# Numbers that are not captains get no reply.
+		_trace(phone, "ignored_not_captain", "Info", "no captain profile for this number")
 		return
 
 	session = _get_session(phone, captain)
+	_trace(phone, "session", "Info", f"state={session.state or 'Start'}")
 	if kind == "image":
 		_handle_image(session, phone, key, message)
 	else:
@@ -357,11 +377,14 @@ def _reset(session):
 	_save(session)
 
 
+NEW_TRIP_WORDS = {"new", "نیو", "نیا", "نئی", "نیا ٹرپ", "نیا ٹرپ شروع"}
+
+
 def _handle_text(session, phone, text):
 	lang = session.language or "en"
 	state = session.state or "Start"
 
-	if text == "new":
+	if text.strip() in NEW_TRIP_WORDS:
 		_reset(session)
 		_send(phone, WELCOME + "\n\n" + HELP)
 		return
@@ -523,6 +546,7 @@ def _handle_route_choice(session, phone, text):
 		pdf_bytes = _trip_pdf(trip_name)
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "WhatsApp trip creation failed")
+		_trace(phone, "trip_failed", "Error", "create_trip_with_passengers or PDF failed")
 		_send(phone, _t(lang, "trip_failed"))
 		return
 	finally:
@@ -532,6 +556,7 @@ def _handle_route_choice(session, phone, text):
 	session.state = "Done"
 	_save(session)
 	_send_pdf(phone, pdf_bytes, f"{trip_name}.pdf", _t(lang, "trip_created", trip=trip_name, count=len(unique)))
+	_trace(phone, "trip_created", "OK", trip_name)
 
 
 def _handle_image(session, phone, key, message):
