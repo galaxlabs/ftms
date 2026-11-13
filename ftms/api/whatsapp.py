@@ -26,6 +26,31 @@ WELCOME_ALL = (
 NOT_CAPTAIN = "Your number is not registered as a captain. / آپ کا نمبر رجسٹرڈ کپتان نہیں ہے۔"
 
 TEXT = {
+	"ret_ask": {
+		"en": "Return trip from trip {base} to {to}? Reply 1 = Yes, 2 = No.",
+		"ur": "ٹرپ {base} کی واپسی {to} کے لیے بنائیں؟ 1 = ہاں، 2 = نہیں۔",
+		"ar": "رحلة عودة من الرحلة {base} إلى {to}؟ اكتب 1 = نعم، 2 = لا.",
+	},
+	"ret_none": {
+		"en": "This trip has no return route set.",
+		"ur": "اس ٹرپ کے لیے واپسی کا روٹ مقرر نہیں ہے۔",
+		"ar": "لا يوجد مسار عودة مسجل لهذه الرحلة.",
+	},
+	"ret_done": {
+		"en": "Return trip created. The PDF is attached.",
+		"ur": "واپسی کا ٹرپ بن گیا۔ PDF منسلک ہے۔",
+		"ar": "تم إنشاء رحلة العودة. ملف PDF مرفق.",
+	},
+	"ret_cancel": {
+		"en": "Return trip not created.",
+		"ur": "واپسی کا ٹرپ نہیں بنایا گیا۔",
+		"ar": "لم يتم إنشاء رحلة العودة.",
+	},
+	"ret_fail": {
+		"en": "Could not create the return trip. Please try again.",
+		"ur": "واپسی کا ٹرپ نہیں بن سکا۔ دوبارہ کوشش کریں۔",
+		"ar": "تعذر إنشاء رحلة العودة. حاول مرة أخرى.",
+	},
 	"still_sending": {
 		"en": "Okay, send the remaining photos. Reply 1 when complete.",
 		"ur": "ٹھیک ہے، باقی تصاویر بھیجیں۔ مکمل ہونے پر 1 لکھیں۔",
@@ -407,6 +432,88 @@ def _reset(session):
 NEW_TRIP_WORDS = {"new", "نیو", "نیا", "نئی", "نیا ٹرپ", "نیا ٹرپ شروع"}
 
 
+RETURN_WORDS = {"return", "ret", "واپسی", "عودة", "رجوع"}
+
+
+def _start_return(session, phone):
+	lang = session.language or "en"
+	captain_user = frappe.db.get_value("Captain Profile", session.captain, "user")
+	base = frappe.get_all(
+		"Trip",
+		filters={"assigned_captain_user": captain_user, "trip_date": nowdate(), "trip_status": ["!=", "Cancelled"]},
+		fields=["name", "route"],
+		order_by="creation desc",
+		limit=1,
+	)
+	if not base or not base[0].get("route"):
+		_send(phone, _t(lang, "ret_none"))
+		return
+	route = frappe.db.get_value("Route", base[0].route, ["has_return", "return_route"], as_dict=True) or {}
+	if not route.get("has_return") or not route.get("return_route"):
+		_send(phone, _t(lang, "ret_none"))
+		return
+	return_row = frappe.db.get_value("Route", route["return_route"], ["name", "route_title", "route_name", "source", "destination"], as_dict=True)
+	if not return_row:
+		_send(phone, _t(lang, "ret_none"))
+		return
+	session.trip = base[0].name
+	session.state = "ReturnConfirm"
+	_save(session)
+	_send(phone, _t(lang, "ret_ask", base=base[0].name, to=_route_label(return_row)))
+
+
+def _do_return(session, phone):
+	lang = session.language or "en"
+	base_name = session.trip
+	base = frappe.get_doc("Trip", base_name) if base_name and frappe.db.exists("Trip", base_name) else None
+	if not base or not base.get("route"):
+		_send(phone, _t(lang, "ret_fail"))
+		return
+	return_route = frappe.db.get_value("Route", base.route, "return_route")
+	captain_user = frappe.db.get_value("Captain Profile", session.captain, "user")
+	company = frappe.db.get_value("Captain Profile", session.captain, "current_company")
+	passengers = [
+		{
+			"passenger_name": p.get("passenger_name"),
+			"document_number": p.get("document_number"),
+			"document_type": p.get("document_type"),
+			"nationality": p.get("nationality"),
+			"source": "OCR",
+		}
+		for p in (base.get("passengers") or [])
+	]
+
+	from ftms.api.trip import create_trip_with_passengers
+
+	frappe.set_user(captain_user)
+	try:
+		trip = create_trip_with_passengers(
+			trip_title=f"WhatsApp return {nowdate()} from {base_name}",
+			trip_date=nowdate(),
+			route=return_route,
+			assigned_captain_user=captain_user,
+			company=company,
+			status="Draft",
+			passengers=passengers,
+			notes=f"Return of {base_name}, created from WhatsApp",
+		)
+		trip_name = trip.get("name") if isinstance(trip, dict) else trip
+		pdf_bytes = _trip_pdf(trip_name)
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "WhatsApp return trip failed")
+		_trace(phone, "return_failed", "Error", f"base={base_name}")
+		_send(phone, _t(lang, "ret_fail"))
+		return
+	finally:
+		frappe.set_user("Administrator")
+
+	session.trip = trip_name
+	session.state = "Done"
+	_save(session)
+	_trace(phone, "return_created", "OK", f"{trip_name} from {base_name}")
+	_send_pdf(phone, pdf_bytes, f"{trip_name}.pdf", _t(lang, "ret_done"))
+
+
 def _handle_text(session, phone, text):
 	state = session.state or "Start"
 	lang = session.language or "en"
@@ -415,6 +522,21 @@ def _handle_text(session, phone, text):
 	if text in NEW_TRIP_WORDS:
 		_reset(session)
 		_send(phone, _t(session.language or "en", "help"))
+		return
+
+	if state == "ReturnConfirm":
+		if text == "1":
+			_do_return(session, phone)
+		elif text == "2":
+			session.state = "Done"
+			_save(session)
+			_send(phone, _t(lang, "ret_cancel"))
+		else:
+			_send(phone, _t(lang, "invalid_option"))
+		return
+
+	if text in RETURN_WORDS and state in ("Done", "Help"):
+		_start_return(session, phone)
 		return
 
 	if state == "Start":
