@@ -13,12 +13,34 @@ GATEWAY_URL = "http://127.0.0.1:8181"
 INSTANCE = "ftms-driver"
 LANG_CHOICES = {"1": "en", "2": "ur", "3": "ar"}
 
-WELCOME = "Welcome to Al Haramain Taxi.\nالحرمین ٹیکسی میں خوش آمدید۔"
-HELP = "How can I help you? Reply 1 to create a trip from passenger documents.\nمیں آپ کی کیا مدد کر سکتا ہوں؟ مسافروں کی دستاویز سے ٹرپ بنانے کے لیے 1 لکھیں۔"
-LANG_MENU = "Choose your language: 1 = English, 2 = اردو, 3 = العربية"
+WELCOME_ALL = (
+	"Al Haramain Taxi | الحرمين ٹیکسی | حرمين تاكسي\n"
+	"-----------------------------\n"
+	"Welcome | خوش آمدید | أهلاً وسهلاً\n\n"
+	"Choose your language | اپنی زبان منتخب کریں | اختر لغتك:\n"
+	"1 - English\n"
+	"2 - اردو\n"
+	"3 - العربية\n\n"
+	"Reply 1, 2 or 3 | 1 یا 2 یا 3 لکھیں | اكتب 1 أو 2 أو 3"
+)
 NOT_CAPTAIN = "Your number is not registered as a captain. / آپ کا نمبر رجسٹرڈ کپتان نہیں ہے۔"
 
 TEXT = {
+	"help": {
+		"en": "Reply 1 to create a trip from passenger documents.\nReply 0 to change language.",
+		"ur": "مسافروں کی دستاویزات سے ٹرپ بنانے کے لیے 1 لکھیں۔\nزبان بدلنے کے لیے 0 لکھیں۔",
+		"ar": "لإنشاء رحلة من وثائق الركاب اكتب 1.\nلتغيير اللغة اكتب 0.",
+	},
+	"lang_set": {
+		"en": "Language set to English.",
+		"ur": "زبان اردو منتخب ہو گئی۔",
+		"ar": "تم اختيار اللغة العربية.",
+	},
+	"lang_busy": {
+		"en": "To change language, finish the current trip first, or type 'new'.",
+		"ur": "زبان بدلنے کے لیے پہلے موجودہ ٹرپ مکمل کریں، یا 'new' لکھیں۔",
+		"ar": "لتغيير اللغة أكمل الرحلة الحالية أولاً، أو اكتب 'new'.",
+	},
 	"ask_count": {
 		"en": "How many passengers are in this trip? Reply with the number.",
 		"ur": "اس ٹرپ میں کتنے مسافر ہیں؟ تعداد لکھیں۔",
@@ -370,7 +392,6 @@ def _unique(rows):
 
 def _reset(session):
 	session.state = "Help"
-	session.language = "en"
 	session.expected_count = 0
 	session.photos = "[]"
 	session.trip = None
@@ -381,37 +402,49 @@ NEW_TRIP_WORDS = {"new", "نیو", "نیا", "نئی", "نیا ٹرپ", "نیا 
 
 
 def _handle_text(session, phone, text):
-	lang = session.language or "en"
 	state = session.state or "Start"
+	lang = session.language or "en"
+	text = text.strip()
 
-	if text.strip() in NEW_TRIP_WORDS:
+	if text in NEW_TRIP_WORDS:
 		_reset(session)
-		_send(phone, WELCOME + "\n\n" + HELP)
+		_send(phone, _t(session.language or "en", "help"))
 		return
 
 	if state == "Start":
-		session.state = "Help"
+		session.state = "Language"
 		_save(session)
-		_send(phone, WELCOME + "\n\n" + HELP)
-		return
-
-	if state == "Help":
-		if text == "1":
-			session.state = "Language"
-			_save(session)
-			_send(phone, LANG_MENU)
-		else:
-			_send(phone, HELP)
+		_send(phone, WELCOME_ALL)
 		return
 
 	if state == "Language":
 		if text in LANG_CHOICES:
 			session.language = LANG_CHOICES[text]
+			session.state = "Help"
+			_save(session)
+			_send(phone, _t(session.language, "lang_set"))
+			_send(phone, _t(session.language, "help"))
+		else:
+			_send(phone, WELCOME_ALL)
+		return
+
+	if text == "0" and state in ("Help", "Done"):
+		session.state = "Language"
+		_save(session)
+		_send(phone, WELCOME_ALL)
+		return
+
+	if state == "Help":
+		if text == "1":
 			session.state = "Count"
 			_save(session)
-			_send(phone, _t(session.language, "ask_count"))
+			_send(phone, _t(lang, "ask_count"))
 		else:
-			_send(phone, LANG_MENU)
+			_send(phone, _t(lang, "help"))
+		return
+
+	if text == "0":
+		_send(phone, _t(lang, "lang_busy"))
 		return
 
 	if state == "Count":
@@ -562,7 +595,7 @@ def _handle_route_choice(session, phone, text):
 def _handle_image(session, phone, key, message):
 	lang = session.language or "en"
 	if session.state != "Photos":
-		_send(phone, HELP if session.state in ("Start", "Help") else _t(lang, "expect_photo"))
+		_send(phone, _t(lang, "help") if session.state in ("Start", "Help", "Language") else _t(lang, "expect_photo"))
 		return
 
 	from ftms.document_ai.service import extract_passenger_document
