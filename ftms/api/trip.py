@@ -96,8 +96,11 @@ def create_trip_with_passengers(
 	resolved_company = resolve_company(company=company)
 	if status not in ("Draft", "Scheduled"):
 		frappe.throw("New trips must start as Draft or Scheduled")
-	if route and not frappe.db.exists("Route", {"name": route, "company": resolved_company}):
-		frappe.throw("Route does not belong to the selected company", frappe.PermissionError)
+	if route:
+		# Shared routes have no company; a company-bound route must match the trip company.
+		route_row = frappe.db.get_value("Route", route, ["company", "is_shared"], as_dict=True) or {}
+		if not route_row or (not route_row.get("is_shared") and route_row.get("company") != resolved_company):
+			frappe.throw("Route does not belong to the selected company", frappe.PermissionError)
 	if vehicle and frappe.db.get_value("Vehicle", vehicle, "company") != resolved_company:
 		frappe.throw("Vehicle does not belong to the selected company", frappe.PermissionError)
 	if assigned_captain_user and not frappe.db.exists(

@@ -25,7 +25,8 @@ def city_lat_lng(city):
 
 class Route(Document):
 	def validate(self):
-		require_company(self)
+		if not self.get("is_shared"):
+			require_company(self)
 		if self.source and self.destination:
 			if self.source == self.destination:
 				frappe.throw("Source and Destination cannot be the same city.")
