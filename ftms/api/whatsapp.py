@@ -26,6 +26,11 @@ WELCOME_ALL = (
 NOT_CAPTAIN = "Your number is not registered as a captain. / آپ کا نمبر رجسٹرڈ کپتان نہیں ہے۔"
 
 TEXT = {
+	"no_vehicle": {
+		"en": "No vehicle is assigned to your account. Please ask your company admin to assign one, then start again with 'new'.",
+		"ur": "آپ کے اکاؤنٹ کے ساتھ کوئی گاڑی جڑی نہیں ہے۔ کمپنی ایڈمن سے گاڑی جڑوائیں، پھر 'new' لکھ کر دوبارہ شروع کریں۔",
+		"ar": "لا توجد مركبة مرتبطة بحسابك. اطلب من مشرف الشركة ربط مركبة، ثم ابدأ من جديد بكتابة 'new'.",
+	},
 	"ret_ask": {
 		"en": "Return trip from trip {base} to {to}? Reply 1 = Yes, 2 = No.",
 		"ur": "ٹرپ {base} کی واپسی {to} کے لیے بنائیں؟ 1 = ہاں، 2 = نہیں۔",
@@ -429,6 +434,9 @@ def _reset(session):
 	_save(session)
 
 
+DIGIT_MAP = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
+CHANGE_LANG_WORDS = {"0", "زبان", "لغة", "language", "change", "change language"}
+
 NEW_TRIP_WORDS = {"new", "نیو", "نیا", "نئی", "نیا ٹرپ", "نیا ٹرپ شروع"}
 
 
@@ -517,7 +525,7 @@ def _do_return(session, phone):
 def _handle_text(session, phone, text):
 	state = session.state or "Start"
 	lang = session.language or "en"
-	text = text.strip()
+	text = text.strip().translate(DIGIT_MAP)
 
 	if text in NEW_TRIP_WORDS:
 		_reset(session)
@@ -556,7 +564,7 @@ def _handle_text(session, phone, text):
 			_send(phone, WELCOME_ALL)
 		return
 
-	if text == "0" and state in ("Help", "Done"):
+	if text in CHANGE_LANG_WORDS and state in ("Help", "Done"):
 		session.state = "Language"
 		_save(session)
 		_send(phone, WELCOME_ALL)
@@ -571,7 +579,7 @@ def _handle_text(session, phone, text):
 			_send(phone, _t(lang, "help"))
 		return
 
-	if text == "0":
+	if text in CHANGE_LANG_WORDS:
 		_send(phone, _t(lang, "lang_busy"))
 		return
 
@@ -687,6 +695,19 @@ def _handle_route_choice(session, phone, text):
 	captain_user = frappe.db.get_value("Captain Profile", session.captain, "user")
 	company = frappe.db.get_value("Captain Profile", session.captain, "current_company")
 
+	# The trip takes the captain's assigned vehicle and that vehicle's driver (inspection is matched on both).
+	vehicle = frappe.db.get_value(
+		"Vehicle",
+		{"assigned_captain_user": captain_user, "company": company},
+		"name",
+		order_by="modified desc",
+	)
+	if not vehicle:
+		_trace(phone, "no_vehicle", "Warn", f"captain={session.captain}")
+		_send(phone, _t(lang, "no_vehicle"))
+		return
+	vehicle_driver = frappe.db.get_value("Vehicle", vehicle, "assigned_driver")
+
 	from ftms.api.trip import create_trip_with_passengers
 
 	frappe.set_user(captain_user)
@@ -709,8 +730,11 @@ def _handle_route_choice(session, phone, text):
 				for r in unique
 			],
 			notes="Created from WhatsApp",
+			vehicle=vehicle,
 		)
 		trip_name = trip.get("name") if isinstance(trip, dict) else trip
+		if vehicle_driver:
+			frappe.db.set_value("Trip", trip_name, "driver", vehicle_driver)
 		pdf_bytes = _trip_pdf(trip_name)
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "WhatsApp trip creation failed")
