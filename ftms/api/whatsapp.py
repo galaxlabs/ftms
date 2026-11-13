@@ -291,7 +291,7 @@ def _process_message(payload):
 
 	captain = _find_captain(phone)
 	if not captain:
-		_send(phone, NOT_CAPTAIN)
+		# Numbers that are not captains get no reply.
 		return
 
 	session = _get_session(phone, captain)
